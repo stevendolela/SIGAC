@@ -41,8 +41,11 @@ export const dossierApi = {
     const resp = await api.post(`/Dossiers/${dossierId}/attribuer-rapporteur`, { rapporteurId })
     return resp.data
   },
-  async changerStatut(dossierId: string, nouveauStatut: string, commentaire?: string) {
-    const resp = await api.post(`/Dossiers/${dossierId}/changer-statut`, { nouveauStatut, commentaire })
+  async changerStatut(dossierId: string, nouveauStatutNumber: number, commentaire?: string) {
+    const resp = await api.post(`/Dossiers/${dossierId}/changer-statut`, { 
+      nouveauStatut: nouveauStatutNumber, 
+      commentaire 
+    })
     return resp.data
   }
 }

@@ -2,6 +2,15 @@ import api from './api-client'
 import type { PaginatedResult } from '../types/pagination'
 import type { UserDto } from '../types/user'
 
+interface CreateUserPayload {
+  username: string
+  email: string
+  password: string
+  role: number
+  nomComplet?: string | null
+  matricule?: string | null
+}
+
 export const userApi = {
   async list(page = 1, pageSize = 10, search?: string) {
     const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
@@ -11,6 +20,10 @@ export const userApi = {
   },
   async get(id: string) {
     const resp = await api.get<UserDto>(`/Users/${id}`)
+    return resp.data
+  },
+  async create(payload: CreateUserPayload) {
+    const resp = await api.post<UserDto>('/Users', payload)
     return resp.data
   },
   async activate(id: string) {

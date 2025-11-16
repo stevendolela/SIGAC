@@ -83,16 +83,27 @@ export default function DossierDetailPage({ dossierId }: Props) {
 
   async function changerStatut() {
     try {
-      if (!nouveauStatut) { setError('Veuillez choisir un statut'); return }
-      await dossierApi.changerStatut(dossierId, nouveauStatut, commentaire)
+      if (!nouveauStatut) { 
+        setError('Veuillez choisir un statut')
+        notify({ type: 'error', message: 'Veuillez choisir un statut' })
+        return 
+      }
+      
+      // Convertir le statut en nombre (StatusDossier enum côté backend)
+      const statutNumber = Number(nouveauStatut)
+      
+      await dossierApi.changerStatut(dossierId, statutNumber, commentaire || undefined)
       setCommentaire('')
-      // Optionnel: recharger le détail pour refléter le nouveau statut
+      setNouveauStatut('')
+      
+      // Recharger le détail pour refléter le nouveau statut
       const d = await dossierApi.getById(dossierId)
       setDetail(d)
-      notify({ type: 'success', message: 'Statut modifié' })
+      notify({ type: 'success', message: `✅ Statut modifié avec succès` })
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Changement de statut impossible')
-      notify({ type: 'error', message: e?.response?.data?.message || e?.message || 'Changement de statut impossible' })
+      const errorMsg = e?.response?.data?.message || e?.message || 'Changement de statut impossible'
+      setError(errorMsg)
+      notify({ type: 'error', message: errorMsg })
     }
   }
 
@@ -158,11 +169,11 @@ export default function DossierDetailPage({ dossierId }: Props) {
                 style={{ padding: 6, border: '1px solid #e5e7eb', borderRadius: 6 }}
               >
                 <option value="">Nouveau statut…</option>
-                <option value="Nouveau">Nouveau</option>
-                <option value="EnInstruction">EnInstruction</option>
-                <option value="EnDelibere">EnDelibere</option>
-                <option value="Juge">Juge</option>
-                <option value="Classe">Classe</option>
+                <option value="1">🆕 Nouveau</option>
+                <option value="2">📝 En Instruction</option>
+                <option value="3">💭 En Délibéré</option>
+                <option value="4">✅ Jugé</option>
+                <option value="5">📦 Classé</option>
               </select>
               <input
                 placeholder="Commentaire (optionnel)"
