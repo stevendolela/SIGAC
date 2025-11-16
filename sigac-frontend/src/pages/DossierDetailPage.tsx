@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { dossierApi } from '../api/dossierApi'
-import { documentApi } from '../api/documentApi'
+import { documentApi, type DocumentVisualisationLogDto } from '../api/documentApi'
 import type { DossierDetailDto } from '../types/dossierDetail'
 import type { DocumentDto } from '../types/document'
 import { useToast } from '../components/common/ToastProvider'
@@ -12,11 +12,13 @@ interface Props {
 export default function DossierDetailPage({ dossierId }: Props) {
   const [detail, setDetail] = useState<DossierDetailDto | null>(null)
   const [docs, setDocs] = useState<DocumentDto[]>([])
+  const [visualisations, setVisualisations] = useState<DocumentVisualisationLogDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rapporteurId, setRapporteurId] = useState('')
   const [nouveauStatut, setNouveauStatut] = useState('')
   const [commentaire, setCommentaire] = useState('')
+  const [showVisHistory, setShowVisHistory] = useState(false)
   const { notify } = useToast()
 
   useEffect(() => {
@@ -50,10 +52,44 @@ export default function DossierDetailPage({ dossierId }: Props) {
       a.download = doc.nomFichier
       a.click()
       URL.revokeObjectURL(url)
+      notify({ type: 'success', message: '📥 Document téléchargé' })
     } catch (e) {
       setError('Téléchargement impossible')
       notify({ type: 'error', message: 'Téléchargement impossible' })
     }
+  }
+
+  async function viewDocument(doc: DocumentDto) {
+    try {
+      const blob = await documentApi.view(doc.id)
+      const url = URL.createObjectURL(blob)
+      // Ouvrir dans un nouvel onglet
+      window.open(url, '_blank')
+      notify({ type: 'success', message: '👁️ Document ouvert' })
+      // Recharger l'historique si affiché
+      if (showVisHistory) {
+        loadVisualisations()
+      }
+    } catch (e) {
+      setError('Visualisation impossible')
+      notify({ type: 'error', message: 'Visualisation impossible' })
+    }
+  }
+
+  async function loadVisualisations() {
+    try {
+      const vis = await documentApi.getDossierVisualisations(dossierId)
+      setVisualisations(vis)
+    } catch (e) {
+      console.error('Erreur chargement historique visualisations', e)
+    }
+  }
+
+  async function toggleVisHistory() {
+    if (!showVisHistory) {
+      await loadVisualisations()
+    }
+    setShowVisHistory(!showVisHistory)
   }
 
   async function remove(doc: DocumentDto) {
@@ -121,7 +157,12 @@ export default function DossierDetailPage({ dossierId }: Props) {
           {detail.description && <div style={{ marginTop: 6 }}>{detail.description}</div>}
 
           <div className="panel" style={{ marginTop: 12 }}>
-            <div className="panel-title">Documents</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="panel-title">Documents</div>
+              <button className="btn" onClick={toggleVisHistory} style={{ fontSize: 13 }}>
+                {showVisHistory ? '🔽 Masquer historique' : '📊 Voir historique visualisations'}
+              </button>
+            </div>
             <div className="table-wrapper">
               <table className="table">
                 <thead>
@@ -130,7 +171,7 @@ export default function DossierDetailPage({ dossierId }: Props) {
                     <th>MIME</th>
                     <th>Taille</th>
                     <th>Version</th>
-                    <th></th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,14 +182,62 @@ export default function DossierDetailPage({ dossierId }: Props) {
                       <td>{(doc.tailleFichier / 1024).toFixed(1)} Ko</td>
                       <td>{doc.numeroVersion}</td>
                       <td>
-                        <button className="btn" onClick={() => download(doc)}>Télécharger</button>{' '}
-                        <button className="btn" onClick={() => remove(doc)}>Supprimer</button>
+                        <button className="btn" onClick={() => viewDocument(doc)} title="Ouvrir dans le navigateur">👁️ Voir</button>{' '}
+                        <button className="btn" onClick={() => download(doc)} title="Télécharger">📥 Télécharger</button>{' '}
+                        <button className="btn" onClick={() => remove(doc)} title="Supprimer">🗑️ Supprimer</button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            
+            {showVisHistory && (
+              <div style={{ marginTop: 20, padding: 16, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#1e293b' }}>
+                  📊 Historique des Visualisations ({visualisations.length})
+                </div>
+                {visualisations.length === 0 ? (
+                  <div style={{ color: '#64748b', fontSize: 14 }}>Aucune visualisation enregistrée</div>
+                ) : (
+                  <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                    <table className="table" style={{ fontSize: 13 }}>
+                      <thead>
+                        <tr>
+                          <th>Date/Heure</th>
+                          <th>Utilisateur</th>
+                          <th>Document</th>
+                          <th>Type</th>
+                          <th>IP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visualisations.map(v => (
+                          <tr key={v.id}>
+                            <td>{new Date(v.dateVisualisation).toLocaleString()}</td>
+                            <td>{v.userNomComplet}</td>
+                            <td>{v.documentNom}</td>
+                            <td>
+                              <span style={{ 
+                                padding: '2px 8px', 
+                                borderRadius: 4, 
+                                fontSize: 11, 
+                                fontWeight: 600,
+                                background: v.typeVisualisation === 'view' ? '#dbeafe' : '#fef3c7',
+                                color: v.typeVisualisation === 'view' ? '#1e40af' : '#92400e'
+                              }}>
+                                {v.typeVisualisation === 'view' ? '👁️ Vue' : '📥 Téléchargement'}
+                              </span>
+                            </td>
+                            <td style={{ fontSize: 11, color: '#64748b' }}>{v.ipAddress || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="panel" style={{ marginTop: 12, display: 'grid', gap: 12 }}>

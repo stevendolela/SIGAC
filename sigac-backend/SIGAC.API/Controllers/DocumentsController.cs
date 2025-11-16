@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Interfaces;
+using SIGAC.Core.Entities;
+using SIGAC.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
@@ -20,6 +23,7 @@ public class DocumentsController : ControllerBase
     private readonly IDossierRepository _dossierRepository;
     private readonly ILogger<DocumentsController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _context;
 
     // Configuration des uploads
     private const long MAX_FILE_SIZE = 52428800; // 50 MB en bytes
@@ -41,12 +45,14 @@ public class DocumentsController : ControllerBase
         IDocumentService documentService,
         IDossierRepository dossierRepository,
         ILogger<DocumentsController> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ApplicationDbContext context)
     {
         _documentService = documentService;
         _dossierRepository = dossierRepository;
         _logger = logger;
         _configuration = configuration;
+        _context = context;
     }
 
     /// <summary>
@@ -203,6 +209,9 @@ public class DocumentsController : ControllerBase
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             var fileName = document.NomFichier;
 
+            // Enregistrer la visualisation
+            await LogDocumentVisualisation(id, "download");
+
             _logger.LogInformation(
                 "Utilisateur {UserId} a téléchargé le document {DocumentId} ({FileName})",
                 GetCurrentUserId(), id, fileName);
@@ -212,6 +221,135 @@ public class DocumentsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors du téléchargement du document {DocumentId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Visualise un document dans le navigateur sans le télécharger
+    /// </summary>
+    [HttpGet("view/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ViewDocument(Guid id)
+    {
+        try
+        {
+            var document = await _documentService.GetByIdAsync(id);
+            if (document == null)
+                return NotFound(new { message = "Document non trouvé" });
+
+            // Construire le chemin physique du fichier
+            var uploadDir = GetUploadDirectory();
+            var filePath = Path.Combine(uploadDir, Path.GetFileName(document.CheminFichier));
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                _logger.LogWarning("Fichier physique non trouvé: {FilePath}", filePath);
+                return NotFound(new { message = "Fichier non trouvé sur le serveur" });
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+            // Enregistrer la visualisation
+            await LogDocumentVisualisation(id, "view");
+
+            _logger.LogInformation(
+                "Utilisateur {UserId} a visualisé le document {DocumentId} ({FileName})",
+                GetCurrentUserId(), id, document.NomFichier);
+
+            // Forcer l'affichage en ligne (pas de téléchargement)
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{document.NomFichier}\"");
+            
+            return File(fileBytes, document.MimeType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la visualisation du document {DocumentId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Obtient l'historique de visualisation d'un document
+    /// </summary>
+    [HttpGet("{id}/visualisations")]
+    [ProducesResponseType(typeof(List<DocumentVisualisationLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<DocumentVisualisationLogDto>>> GetDocumentVisualisations(Guid id)
+    {
+        try
+        {
+            var document = await _documentService.GetByIdAsync(id);
+            if (document == null)
+                return NotFound(new { message = "Document non trouvé" });
+
+            var logs = await _context.DocumentVisualisationLogs
+                .Include(v => v.User)
+                .Include(v => v.Document)
+                .Where(v => v.DocumentId == id)
+                .OrderByDescending(v => v.DateVisualisation)
+                .Take(100) // Limiter aux 100 dernières
+                .Select(v => new DocumentVisualisationLogDto
+                {
+                    Id = v.Id,
+                    DocumentId = v.DocumentId,
+                    DocumentNom = v.Document.NomFichier,
+                    UserId = v.UserId,
+                    UserNomComplet = v.User.NomComplet ?? v.User.Username,
+                    DateVisualisation = v.DateVisualisation,
+                    TypeVisualisation = v.TypeVisualisation,
+                    IpAddress = v.IpAddress
+                })
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de l'historique du document {DocumentId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Obtient l'historique de visualisation pour un dossier
+    /// </summary>
+    [HttpGet("dossier/{dossierId}/visualisations")]
+    [ProducesResponseType(typeof(List<DocumentVisualisationLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<DocumentVisualisationLogDto>>> GetDossierDocumentVisualisations(Guid dossierId)
+    {
+        try
+        {
+            var dossier = await _dossierRepository.GetByIdAsync(dossierId);
+            if (dossier == null)
+                return NotFound(new { message = "Dossier non trouvé" });
+
+            var logs = await _context.DocumentVisualisationLogs
+                .Include(v => v.User)
+                .Include(v => v.Document)
+                .Where(v => v.Document.DossierId == dossierId)
+                .OrderByDescending(v => v.DateVisualisation)
+                .Take(200) // Limiter aux 200 dernières
+                .Select(v => new DocumentVisualisationLogDto
+                {
+                    Id = v.Id,
+                    DocumentId = v.DocumentId,
+                    DocumentNom = v.Document.NomFichier,
+                    UserId = v.UserId,
+                    UserNomComplet = v.User.NomComplet ?? v.User.Username,
+                    DateVisualisation = v.DateVisualisation,
+                    TypeVisualisation = v.TypeVisualisation,
+                    IpAddress = v.IpAddress
+                })
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de l'historique du dossier {DossierId}", dossierId);
             return StatusCode(500, new { message = "Erreur interne du serveur" });
         }
     }
@@ -326,6 +464,35 @@ public class DocumentsController : ControllerBase
         using var stream = file.OpenReadStream();
         var hash = await Task.Run(() => sha256.ComputeHash(stream));
         return BitConverter.ToString(hash).Replace("-", "").ToLower();
+    }
+
+    private async Task LogDocumentVisualisation(Guid documentId, string typeVisualisation)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
+
+            var log = new DocumentVisualisationLog
+            {
+                Id = Guid.NewGuid(),
+                DocumentId = documentId,
+                UserId = userId,
+                DateVisualisation = DateTime.UtcNow,
+                TypeVisualisation = typeVisualisation,
+                IpAddress = ipAddress,
+                UserAgent = userAgent?.Length > 500 ? userAgent.Substring(0, 500) : userAgent
+            };
+
+            _context.DocumentVisualisationLogs.Add(log);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Erreur lors de l'enregistrement de la visualisation du document {DocumentId}", documentId);
+            // Ne pas faire échouer la requête si le log échoue
+        }
     }
 
     #endregion

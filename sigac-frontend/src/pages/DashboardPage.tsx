@@ -48,16 +48,16 @@ export default function DashboardPage() {
 
   const statusColors: Record<string, string> = {
     'Nouveau': '#3b82f6',
-    'EnInstruction': '#f59e0b', 
-    'EnDelibere': '#6366f1',
+    'En Instruction': '#f59e0b', 
+    'En Déliberé': '#6366f1',
     'Juge': '#10b981',
     'Classe': '#6b7280'
   }
 
   const statusIcons: Record<string, string> = {
     'Nouveau': '🆕',
-    'EnInstruction': '📝',
-    'EnDelibere': '💭', 
+    'En Instruction': '📝',
+    'En Déliberé': '💭', 
     'Juge': '✅',
     'Classe': '📦'
   }
@@ -130,8 +130,8 @@ export default function DashboardPage() {
               <div style={{ display: 'grid', gap: 12 }}>
                 {dossierStats && [
                   { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
-                  { key: 'EnInstruction', value: dossierStats.enInstruction },
-                  { key: 'EnDelibere', value: dossierStats.enDelibere },
+                  { key: 'En Instruction', value: dossierStats.enInstruction },
+                  { key: 'En Déliberé', value: dossierStats.enDelibere },
                   { key: 'Juge', value: dossierStats.juges },
                   { key: 'Classe', value: dossierStats.classes }
                 ].map(({ key, value }) => {

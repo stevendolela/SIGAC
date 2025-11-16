@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Document> Documents { get; set; }
     public DbSet<Historique> Historiques { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<DocumentVisualisationLog> DocumentVisualisationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +88,26 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.AuditLogs)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuration DocumentVisualisationLog
+        modelBuilder.Entity<DocumentVisualisationLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DateVisualisation);
+            entity.HasIndex(e => e.DocumentId);
+            entity.HasIndex(e => e.UserId);
+            entity.Property(e => e.TypeVisualisation).IsRequired().HasMaxLength(20);
+
+            entity.HasOne(v => v.Document)
+                .WithMany()
+                .HasForeignKey(v => v.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(v => v.User)
+                .WithMany()
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
