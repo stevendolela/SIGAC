@@ -8,28 +8,43 @@ export default function DashboardPage() {
   const [userStats, setUserStats] = useState<any | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [lastRefresh, setLastRefresh] = useState(new Date())
+
+  const loadStats = async (mounted: { current: boolean }) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [ds, us] = await Promise.allSettled([
+        dossierApi.statistiques(),
+        userApi.statsAdmin()
+      ])
+      if (!mounted.current) return
+      if (ds.status === 'fulfilled') setDossierStats(ds.value)
+      if (us.status === 'fulfilled') setUserStats(us.value)
+      if (ds.status === 'rejected' && us.status === 'rejected') setError('Impossible de charger les statistiques')
+      setLastRefresh(new Date())
+    } catch (e: any) {
+      if (mounted.current) setError(e?.message || 'Erreur')
+    } finally {
+      if (mounted.current) setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
-    ;(async () => {
-      try {
-        const [ds, us] = await Promise.allSettled([
-          dossierApi.statistiques(),
-          userApi.statsAdmin()
-        ])
-        if (!mounted) return
-        if (ds.status === 'fulfilled') setDossierStats(ds.value)
-        if (us.status === 'fulfilled') setUserStats(us.value)
-        if (ds.status === 'rejected' && us.status === 'rejected') setError('Impossible de charger les statistiques')
-      } catch (e: any) {
-        if (mounted) setError(e?.message || 'Erreur')
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    })()
-    return () => { mounted = false }
-  }, [])
+    const mounted = { current: true }
+    loadStats(mounted)
+    
+    // Auto-refresh toutes les 30 secondes
+    const interval = setInterval(() => {
+      if (mounted.current) loadStats(mounted)
+    }, 30000)
+    
+    return () => { 
+      mounted.current = false
+      clearInterval(interval)
+    }
+  }, [refreshKey])
 
   const statusColors: Record<string, string> = {
     'Nouveau': '#3b82f6',
@@ -50,7 +65,22 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="panel">
-        <div className="panel-title">📊 Tableau de Bord - Vue d'Ensemble</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div className="panel-title">📊 Tableau de Bord - Vue d'Ensemble</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 12, color: '#64748b' }}>
+              Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
+            </span>
+            <button 
+              className="btn" 
+              onClick={() => setRefreshKey(k => k + 1)}
+              disabled={loading}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              🔄 {loading ? 'Chargement...' : 'Actualiser'}
+            </button>
+          </div>
+        </div>
         {error && <div className="error">{error}</div>}
         
         {loading ? (
@@ -62,7 +92,7 @@ export default function DashboardPage() {
               <div className="card" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)', borderLeft: '4px solid #3b82f6' }}>
                 <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>Total des Dossiers</div>
                 <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
-                  {dossierStats?.total ?? 0}
+                  {dossierStats?.totalDossiers ?? 0}
                 </div>
                 <div style={{ fontSize: 12, color: '#64748b' }}>📁 Affaires constitutionnelles</div>
               </div>
@@ -70,7 +100,7 @@ export default function DashboardPage() {
               <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)', borderLeft: '4px solid #10b981' }}>
                 <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>Dossiers Jugés</div>
                 <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
-                  {dossierStats?.parStatut?.['Juge'] ?? 0}
+                  {dossierStats?.juges ?? 0}
                 </div>
                 <div style={{ fontSize: 12, color: '#64748b' }}>✅ Affaires traitées</div>
               </div>
@@ -78,7 +108,7 @@ export default function DashboardPage() {
               <div className="card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)', borderLeft: '4px solid #f59e0b' }}>
                 <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>En Instruction</div>
                 <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
-                  {dossierStats?.parStatut?.['EnInstruction'] ?? 0}
+                  {dossierStats?.enInstruction ?? 0}
                 </div>
                 <div style={{ fontSize: 12, color: '#64748b' }}>📝 En cours de traitement</div>
               </div>
@@ -98,21 +128,27 @@ export default function DashboardPage() {
                 📈 Répartition des Dossiers par Statut
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
-                {dossierStats && Object.entries(dossierStats.parStatut || {}).map(([status, count]) => {
-                  const total = dossierStats.total || 1
-                  const percentage = Math.round((count as number / total) * 100)
+                {dossierStats && [
+                  { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
+                  { key: 'EnInstruction', value: dossierStats.enInstruction },
+                  { key: 'EnDelibere', value: dossierStats.enDelibere },
+                  { key: 'Juge', value: dossierStats.juges },
+                  { key: 'Classe', value: dossierStats.classes }
+                ].map(({ key, value }) => {
+                  const total = dossierStats.totalDossiers || 1
+                  const percentage = Math.round((value / total) * 100)
                   return (
-                    <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ minWidth: 140, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 20 }}>{statusIcons[status] || '📋'}</span>
-                        <span style={{ fontWeight: 500, color: '#475569' }}>{status}</span>
+                        <span style={{ fontSize: 20 }}>{statusIcons[key] || '📋'}</span>
+                        <span style={{ fontWeight: 500, color: '#475569' }}>{key}</span>
                       </div>
                       <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 8, height: 32, position: 'relative', overflow: 'hidden' }}>
                         <div 
                           style={{ 
                             width: `${percentage}%`, 
                             height: '100%', 
-                            background: `linear-gradient(90deg, ${statusColors[status] || '#94a3b8'}, ${statusColors[status] || '#94a3b8'}dd)`,
+                            background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`,
                             transition: 'width 0.5s ease',
                             display: 'flex',
                             alignItems: 'center',
@@ -122,7 +158,7 @@ export default function DashboardPage() {
                             fontSize: 14
                           }}
                         >
-                          {count as number} ({percentage}%)
+                          {value} ({percentage}%)
                         </div>
                       </div>
                     </div>
@@ -140,7 +176,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, background: 'rgba(102, 126, 234, 0.05)', borderRadius: 12 }}>
                   <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Taux de Traitement</div>
                   <div style={{ fontSize: 28, fontWeight: 700, color: '#667eea' }}>
-                    {dossierStats ? Math.round(((dossierStats.parStatut?.['Juge'] ?? 0) / (dossierStats.total || 1)) * 100) : 0}%
+                    {dossierStats ? Math.round(((dossierStats.juges ?? 0) / (dossierStats.totalDossiers || 1)) * 100) : 0}%
                   </div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Affaires jugées / Total</div>
                 </div>
@@ -148,7 +184,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, background: 'rgba(245, 158, 11, 0.05)', borderRadius: 12 }}>
                   <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Dossiers en Cours</div>
                   <div style={{ fontSize: 28, fontWeight: 700, color: '#f59e0b' }}>
-                    {(dossierStats?.parStatut?.['EnInstruction'] ?? 0) + (dossierStats?.parStatut?.['EnDelibere'] ?? 0)}
+                    {(dossierStats?.enInstruction ?? 0) + (dossierStats?.enDelibere ?? 0)}
                   </div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Instruction + Délibéré</div>
                 </div>
@@ -156,7 +192,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, background: 'rgba(59, 130, 246, 0.05)', borderRadius: 12 }}>
                   <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Nouveaux Dossiers</div>
                   <div style={{ fontSize: 28, fontWeight: 700, color: '#3b82f6' }}>
-                    {dossierStats?.parStatut?.['Nouveau'] ?? 0}
+                    {dossierStats?.nouveauxDossiers ?? 0}
                   </div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>En attente d'attribution</div>
                 </div>
@@ -164,7 +200,7 @@ export default function DashboardPage() {
                 <div style={{ padding: 16, background: 'rgba(107, 114, 128, 0.05)', borderRadius: 12 }}>
                   <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Dossiers Classés</div>
                   <div style={{ fontSize: 28, fontWeight: 700, color: '#6b7280' }}>
-                    {dossierStats?.parStatut?.['Classe'] ?? 0}
+                    {dossierStats?.classes ?? 0}
                   </div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Archivés</div>
                 </div>
