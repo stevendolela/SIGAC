@@ -287,7 +287,8 @@ public class DossierService : IDossierService
         Guid dossierId, StatusDossier nouveauStatut, string? commentaire, 
         Guid userId, UserRole userRole)
     {
-        var dossier = await _dossierRepository.GetByIdAsync(dossierId);
+        // Charger le dossier SANS les historiques pour éviter les problèmes de concurrence EF
+        var dossier = await _dossierRepository.GetByIdWithoutHistoriquesAsync(dossierId);
         if (dossier == null)
         {
             return false;
@@ -306,15 +307,19 @@ public class DossierService : IDossierService
             dossier.DateDecision = DateTime.UtcNow;
         }
 
-        // Historique
-        var details = commentaire ?? $"Passage de {ancienStatut} à {nouveauStatut}";
+        // Historique - Initialiser la collection si nécessaire puis ajouter
+        if (dossier.Historiques == null)
+        {
+            dossier.Historiques = new List<Historique>();
+        }
+        
         dossier.Historiques.Add(new Historique
         {
             Id = Guid.NewGuid(),
             DossierId = dossier.Id,
             DateAction = DateTime.UtcNow,
             Action = $"Changement de statut: {nouveauStatut}",
-            Details = details,
+            Details = commentaire ?? $"Passage de {ancienStatut} à {nouveauStatut}",
             UserId = userId
         });
 

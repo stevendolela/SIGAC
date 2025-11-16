@@ -89,6 +89,14 @@ public class DossierRepository : IDossierRepository
             .FirstOrDefaultAsync(d => d.Id == id);
     }
 
+    public async Task<Dossier?> GetByIdWithoutHistoriquesAsync(Guid id)
+    {
+        // Charge le dossier SANS les historiques pour éviter les problèmes de concurrence
+        return await _context.Dossiers
+            .Include(d => d.Rapporteur)
+            .FirstOrDefaultAsync(d => d.Id == id);
+    }
+
     public async Task<Dossier?> GetByNumeroDossierAsync(string numeroDossier)
     {
         return await _context.Dossiers

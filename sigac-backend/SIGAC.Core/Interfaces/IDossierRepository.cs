@@ -12,6 +12,7 @@ public interface IDossierRepository
         DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId);
     
     Task<Dossier?> GetByIdAsync(Guid id);
+    Task<Dossier?> GetByIdWithoutHistoriquesAsync(Guid id);
     Task<Dossier?> GetByNumeroDossierAsync(string numeroDossier);
     Task<int> GetLastDossierNumberForYearAsync(int year);
     Task<DossierStatistics> GetStatisticsAsync(Guid? rapporteurId = null);
