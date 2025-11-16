@@ -92,7 +92,7 @@ export default function DossierDetailPage({ dossierId }: Props) {
       // Convertir le statut en nombre (StatusDossier enum côté backend)
       const statutNumber = Number(nouveauStatut)
       
-      await dossierApi.changerStatut(dossierId, statutNumber, commentaire || undefined)
+      await dossierApi.changerStatut(dossierId, statutNumber, commentaire)
       setCommentaire('')
       setNouveauStatut('')
       

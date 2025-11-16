@@ -44,7 +44,7 @@ export const dossierApi = {
   async changerStatut(dossierId: string, nouveauStatutNumber: number, commentaire?: string) {
     const resp = await api.post(`/Dossiers/${dossierId}/changer-statut`, { 
       nouveauStatut: nouveauStatutNumber, 
-      commentaire 
+      commentaire: commentaire && commentaire.trim() ? commentaire.trim() : null
     })
     return resp.data
   }
