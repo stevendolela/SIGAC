@@ -19,5 +19,6 @@ public interface IDossierRepository
     Task AddAsync(Dossier dossier);
     Task UpdateAsync(Dossier dossier);
     Task DeleteAsync(Guid id);
+    Task AddHistoriqueAsync(Historique historique);
     Task<int> SaveChangesAsync();
 }

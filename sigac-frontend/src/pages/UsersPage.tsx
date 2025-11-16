@@ -93,12 +93,12 @@ export default function UsersPage() {
     
     try {
       const payload = {
-  Username: formData.username.trim(),
-  Email: formData.email.trim(),
-  Password: formData.password.trim(),
-  Role: Number(formData.role),
-  NomComplet: formData.nomComplet.trim() || null,
-  Matricule: formData.matricule.trim() || null
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password.trim(),
+        role: Number(formData.role),
+        nomComplet: formData.nomComplet.trim() || null,
+        matricule: formData.matricule.trim() || null
       }
       
       const newUser = await userApi.create(payload)

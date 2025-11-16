@@ -187,7 +187,7 @@ public class DossierService : IDossierService
         dossier.ModifiedAt = DateTime.UtcNow;
 
         // Ajout à l'historique
-        dossier.Historiques.Add(new Historique
+        var histoUpdate = new Historique
         {
             Id = Guid.NewGuid(),
             DossierId = dossier.Id,
@@ -195,9 +195,11 @@ public class DossierService : IDossierService
             Action = "Modification du dossier",
             Details = "Mise à jour des informations",
             UserId = userId
-        });
+        };
+        dossier.Historiques.Add(histoUpdate);
+        await _dossierRepository.AddHistoriqueAsync(histoUpdate);
 
-        await _dossierRepository.UpdateAsync(dossier);
+        // Le dossier est tracké, SaveChanges suffit
         await _dossierRepository.SaveChangesAsync();
 
         // Audit log
@@ -222,7 +224,7 @@ public class DossierService : IDossierService
         dossier.ModifiedBy = userId;
         dossier.ModifiedAt = DateTime.UtcNow;
 
-        dossier.Historiques.Add(new Historique
+        var histoDelete = new Historique
         {
             Id = Guid.NewGuid(),
             DossierId = dossier.Id,
@@ -230,9 +232,10 @@ public class DossierService : IDossierService
             Action = "Dossier classé",
             Details = "Suppression logique du dossier",
             UserId = userId
-        });
+        };
+        dossier.Historiques.Add(histoDelete);
+        await _dossierRepository.AddHistoriqueAsync(histoDelete);
 
-        await _dossierRepository.UpdateAsync(dossier);
         await _dossierRepository.SaveChangesAsync();
 
         // Audit log
@@ -268,16 +271,17 @@ public class DossierService : IDossierService
             ? $"Changement de rapporteur: {rapporteur.NomComplet}"
             : $"Attribution du rapporteur: {rapporteur.NomComplet}";
 
-        dossier.Historiques.Add(new Historique
+        var histoRap = new Historique
         {
             Id = Guid.NewGuid(),
             DossierId = dossier.Id,
             DateAction = DateTime.UtcNow,
             Action = message,
             UserId = userId
-        });
+        };
+        dossier.Historiques.Add(histoRap);
+        await _dossierRepository.AddHistoriqueAsync(histoRap);
 
-        await _dossierRepository.UpdateAsync(dossier);
         await _dossierRepository.SaveChangesAsync();
 
         return true;
@@ -307,13 +311,8 @@ public class DossierService : IDossierService
             dossier.DateDecision = DateTime.UtcNow;
         }
 
-        // Historique - Initialiser la collection si nécessaire puis ajouter
-        if (dossier.Historiques == null)
-        {
-            dossier.Historiques = new List<Historique>();
-        }
-        
-        dossier.Historiques.Add(new Historique
+        // Historique - créer l'entrée et l'insérer explicitement pour éviter tout UPDATE intempestif
+        var histo = new Historique
         {
             Id = Guid.NewGuid(),
             DossierId = dossier.Id,
@@ -321,9 +320,14 @@ public class DossierService : IDossierService
             Action = $"Changement de statut: {nouveauStatut}",
             Details = commentaire ?? $"Passage de {ancienStatut} à {nouveauStatut}",
             UserId = userId
-        });
+        };
 
-        await _dossierRepository.UpdateAsync(dossier);
+        // Optionnel: garder la cohérence en mémoire
+        if (dossier.Historiques == null) dossier.Historiques = new List<Historique>();
+        dossier.Historiques.Add(histo);
+
+        await _dossierRepository.AddHistoriqueAsync(histo);
+        // Le dossier est déjà tracké par le DbContext, pas besoin d'appeler Update()
         await _dossierRepository.SaveChangesAsync();
 
         return true;

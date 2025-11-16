@@ -37,13 +37,13 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
     try {
       const payload = {
-  // PascalCase pour correspondre exactement au DTO backend
-  Titre: titre.trim(),
-  Type: Number(typeAffaire),
-  Priorite: Number(priorite),
-  Demandeur: demandeur.trim(),
-  Defendeur: defendeur.trim() || null,
-  Resume: resume.trim() || null
+        // Le binder ASP.NET Core est case-insensitive; camelCase ok
+        titre: titre.trim(),
+        type: Number(typeAffaire),
+        priorite: Number(priorite),
+        demandeur: demandeur.trim(),
+        defendeur: defendeur.trim() || null,
+        resume: resume.trim() || null
       }
 
       const response = await api.post('/Dossiers', payload)

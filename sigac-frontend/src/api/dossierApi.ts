@@ -38,13 +38,13 @@ export const dossierApi = {
     return resp.data
   },
   async attribuerRapporteur(dossierId: string, rapporteurId: string) {
-  const resp = await api.post(`/Dossiers/${dossierId}/attribuer-rapporteur`, { RapporteurId: rapporteurId })
+    const resp = await api.post(`/Dossiers/${dossierId}/attribuer-rapporteur`, { rapporteurId })
     return resp.data
   },
   async changerStatut(dossierId: string, nouveauStatutNumber: number, commentaire?: string) {
     const resp = await api.post(`/Dossiers/${dossierId}/changer-statut`, { 
-      NouveauStatut: nouveauStatutNumber, 
-      Commentaire: commentaire && commentaire.trim() ? commentaire.trim() : null
+      nouveauStatut: nouveauStatutNumber, 
+      commentaire: commentaire && commentaire.trim() ? commentaire.trim() : null
     })
     return resp.data
   }

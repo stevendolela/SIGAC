@@ -175,6 +175,11 @@ public class DossierRepository : IDossierRepository
         }
     }
 
+    public async Task AddHistoriqueAsync(Historique historique)
+    {
+        await _context.Historiques.AddAsync(historique);
+    }
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

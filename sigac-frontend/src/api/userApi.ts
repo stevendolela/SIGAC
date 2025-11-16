@@ -3,12 +3,12 @@ import type { PaginatedResult } from '../types/pagination'
 import type { UserDto } from '../types/user'
 
 interface CreateUserPayload {
-  Username: string
-  Email: string
-  Password: string
-  Role: number
-  NomComplet?: string | null
-  Matricule?: string | null
+  username: string
+  email: string
+  password: string
+  role: number
+  nomComplet?: string | null
+  matricule?: string | null
 }
 
 export const userApi = {
