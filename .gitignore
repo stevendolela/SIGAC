@@ -1,0 +1,43 @@
+# Backend .NET
+sigac-backend/**/bin/
+sigac-backend/**/obj/
+sigac-backend/**/*.user
+sigac-backend/**/*.suo
+sigac-backend/**/logs/
+sigac-backend/.vs/
+
+# Frontend Node
+sigac-frontend/node_modules/
+sigac-frontend/dist/
+sigac-frontend/.env.local
+sigac-frontend/.vite/
+
+# Database
+database/data/
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary
+temp/
+tmp/

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sigac-postgres
+    environment:
+      POSTGRES_DB: sigac_db
+      POSTGRES_USER: sigac_user
+      POSTGRES_PASSWORD: SecurePassword2024!
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sigac_user -d sigac_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigac-network
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  sigac-network:
+    driver: bridge
