@@ -9,7 +9,7 @@ projects:
     - type: web
       name: sigac-api
       runtime: docker
-      plan: starter
+      plan: free
       region: frankfurt
       autoDeploy: true
       healthCheckPath: /api/health
@@ -34,15 +34,11 @@ projects:
       - key: Cors__AllowedOrigins
         value: '["https://sigac.yourdomain.com","http://localhost:5173"]'
       - key: FileStorage__BasePath
-        value: /var/data/uploads
+        value: /tmp/uploads
       - key: FileStorage__MaxFileSize
         value: "52428800"
       - key: Serilog__MinimumLevel
         value: Information
-      disk:
-        name: uploads
-        mountPath: /var/data
-        sizeGB: 5
     
     databases:
     - name: postgresql-sigac
