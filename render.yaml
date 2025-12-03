@@ -42,7 +42,7 @@ projects:
       disk:
         name: uploads
         mountPath: /var/data
-        sizeGB: 5
+        sizeGB: 1
     
     databases:
     - name: postgresql-sigac
