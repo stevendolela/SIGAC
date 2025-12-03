@@ -220,10 +220,17 @@ app.UseHttpsRedirection();
 app.UseCors("AllowedOrigins");
 
 // Servir les fichiers statiques (uploads)
+// Utiliser le chemin configuré dans FileStorage:BasePath
+var uploadsPath = builder.Configuration["FileStorage:BasePath"] ?? "/tmp/uploads";
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+    Log.Information("Created uploads directory: {UploadsPath}", uploadsPath);
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 
