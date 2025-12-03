@@ -23,7 +23,6 @@ projects:
           property: connectionString
       - key: Jwt__SecretKey
         generateValue: true
-        sync: false
       - key: Jwt__Issuer
         value: SIGAC.CourConstitutionnelle.RDC
       - key: Jwt__Audience
