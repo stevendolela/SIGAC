@@ -1,0 +1,22 @@
+# Frontend build (Vite) + Caddy (HTTPS auto via Let's Encrypt)
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY sigac-frontend/package.json sigac-frontend/package-lock.json ./sigac-frontend/
+RUN cd sigac-frontend && npm ci
+COPY sigac-frontend/ ./sigac-frontend/
+
+# Production API path defaults to /api (proxied by Caddy)
+ENV VITE_API_URL=/api
+RUN cd sigac-frontend && npm run build
+
+FROM caddy:2.7-alpine AS final
+WORKDIR /usr/share/caddy
+
+# Copy built frontend
+COPY --from=build /app/sigac-frontend/dist/ .
+
+# Caddy config
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80 443
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

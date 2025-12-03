@@ -1,6 +1,6 @@
-# SIGAC - Système de Gestion des Affaires Constitutionnelles
+# TAJI - Système de gestion des affaires judiciaires
 
-Projet SIGAC pour la Cour Constitutionnelle RDC
+Projet TAJI pour la Cour Constitutionnelle RDC
 
 ## 🎯 Description
 

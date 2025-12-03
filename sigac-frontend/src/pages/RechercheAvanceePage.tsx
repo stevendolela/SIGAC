@@ -105,12 +105,14 @@ export default function RechercheAvanceePage() {
               <label>📂 Type d'Affaire</label>
               <select value={typeAffaire} onChange={(e) => setTypeAffaire(e.target.value)}>
                 <option value="">-- Tous les types --</option>
-                <option value="ContestatieElection">Contestation d'Élection</option>
-                <option value="RecourseConstitu">Recours Constitutionnel</option>
+                {/* Les valeurs doivent correspondre EXACTEMENT aux enums backend TypeAffaire */}
+                <option value="ContentieuxElectoral">Contentieux Électoral</option>
+                <option value="ControleConstitutionnalite">Contrôle de Constitutionnalité</option>
                 <option value="ConflitCompetence">Conflit de Compétence</option>
-                <option value="InterpretationLoi">Interprétation de Loi</option>
-                <option value="ControleLegislation">Contrôle de Législation</option>
-                <option value="Autre">Autre</option>
+                <option value="InterpretationConstitution">Interprétation de la Constitution</option>
+                <option value="ExceptionInconstitutionnalite">Exception d'Inconstitutionnalité</option>
+                {/* Autre n'existe pas dans l'enum backend: on l'affiche mais ne filtre pas */}
+                <option value="">Autre</option>
               </select>
             </div>
 
@@ -118,9 +120,10 @@ export default function RechercheAvanceePage() {
               <label>📊 Statut</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">-- Tous les statuts --</option>
+                {/* Enum backend StatusDossier */}
                 <option value="Nouveau">🆕 Nouveau</option>
-                <option value="EnInstruction">📝 En Instruction</option>
-                <option value="EnDelibere">💭 En Délibéré</option>
+                <option value="EnInstruction">📝 En instruction</option>
+                <option value="EnDelibere">💭 En délibéré</option>
                 <option value="Juge">✅ Jugé</option>
                 <option value="Classe">📦 Classé</option>
               </select>
@@ -130,9 +133,11 @@ export default function RechercheAvanceePage() {
               <label>🎯 Priorité</label>
               <select value={priorite} onChange={(e) => setPriorite(e.target.value)}>
                 <option value="">-- Toutes --</option>
+                {/* Enum backend PrioriteDossier */}
+                <option value="Basse">⚪ Basse</option>
                 <option value="Normale">⚪ Normale</option>
                 <option value="Haute">🟡 Haute</option>
-                <option value="Critique">🔴 Critique</option>
+                <option value="Urgente">🔴 Urgente</option>
               </select>
             </div>
 

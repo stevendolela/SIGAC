@@ -31,9 +31,9 @@ export default function LoginPage() {
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Logo size={120} />
-          <h2 style={{ marginBottom: 8 }}>SIGAC</h2>
+          <h2 style={{ marginBottom: 8 }}>TAJI</h2>
           <p style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>
-            Système de Gestion des Affaires Constitutionnelles
+            Système de gestion des affaires judiciaires
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
           fontSize: 12,
           color: '#9ca3af'
         }}>
-          Cour Constitutionnelle RDC © 2025
+          Taji@2025
         </div>
       </div>
     </div>

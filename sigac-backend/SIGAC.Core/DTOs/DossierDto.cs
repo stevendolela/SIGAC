@@ -5,7 +5,8 @@ public class DossierDto
     public Guid Id { get; set; }
     public string NumeroDossier { get; set; } = string.Empty;
     public string Titre { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
+    public Guid? TypeAffaireId { get; set; }
+    public string? TypeAffaireNom { get; set; }
     public string Demandeur { get; set; } = string.Empty;
     public string? Defendeur { get; set; }
     public DateTime DateDepot { get; set; }

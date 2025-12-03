@@ -1,6 +1,7 @@
 using SIGAC.Core.Entities;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Interfaces;
+using SIGAC.Core.Enums;
 using SIGAC.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -92,5 +93,13 @@ public class UserRepository : IUserRepository
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<User>> GetByRoleAsync(UserRole role)
+    {
+        return await _context.Users
+            .Where(u => u.Role == role && u.IsActive)
+            .OrderBy(u => u.NomComplet)
+            .ToListAsync();
     }
 }

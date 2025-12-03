@@ -3,6 +3,7 @@ import { userApi } from '../api/userApi'
 import type { UserDto } from '../types/user'
 import type { PaginationMetadata } from '../types/pagination'
 import { useToast } from '../components/common/ToastProvider'
+import { AdminResetPasswordModal } from '../components/common/AdminResetPasswordModal'
 
 export default function UsersPage() {
   const [items, setItems] = useState<UserDto[]>([])
@@ -15,6 +16,10 @@ export default function UsersPage() {
   const [pendingSearch, setPendingSearch] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserDto | null>(null)
+  const [editForm, setEditForm] = useState<{ email?: string; nomComplet?: string; role?: string; matricule?: string }>({})
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserDto | null>(null)
   const { notify } = useToast()
 
   // Vérification du rôle administrateur
@@ -70,6 +75,49 @@ export default function UsersPage() {
       setError(e?.response?.data?.message || e?.message || 'Erreur lors de la mise à jour de l\'utilisateur')
       notify({ type: 'error', message: e?.response?.data?.message || e?.message || "Erreur lors de la mise à jour de l'utilisateur" })
     }
+  }
+
+  function openEdit(u: UserDto) {
+    setEditingUser(u)
+    setEditForm({
+      email: u.email,
+      nomComplet: u.nomComplet || '',
+      role: u.role,
+      matricule: u.matricule || ''
+    })
+  }
+
+  function closeEdit() {
+    setEditingUser(null)
+    setEditForm({})
+    setSavingEdit(false)
+  }
+
+  async function submitEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingUser) return
+    setSavingEdit(true)
+    try {
+      // Optimistic update
+      const optimistic: UserDto = { 
+        ...editingUser, 
+        email: editForm.email || editingUser.email, 
+        nomComplet: (editForm.nomComplet && editForm.nomComplet.trim()) || undefined, 
+        role: (editForm.role as any) || editingUser.role, 
+        matricule: (editForm.matricule && editForm.matricule.trim()) || undefined 
+      }
+      setItems(prev => prev.map(x => x.id === optimistic.id ? optimistic : x))
+      await userApi.update(editingUser.id, {
+        email: editForm.email,
+        nomComplet: editForm.nomComplet,
+        role: optimistic.role as any,
+        matricule: editForm.matricule
+      })
+      notify({ type: 'success', message: '✅ Utilisateur mis à jour' })
+      closeEdit()
+    } catch (e: any) {
+      notify({ type: 'error', message: e?.response?.data?.message || 'Erreur mise à jour utilisateur' })
+    } finally { setSavingEdit(false) }
   }
 
   async function handleCreateUser(e: React.FormEvent) {
@@ -412,6 +460,21 @@ export default function UsersPage() {
                         >
                           {u.isActive ? '⛔ Désactiver' : '✅ Activer'}
                         </button>
+                        <button
+                          className="btn"
+                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
+                          onClick={() => openEdit(u)}
+                        >✏️ Éditer</button>
+                        <button
+                          className="btn"
+                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}
+                          onClick={() => setResetPasswordUser(u)}
+                        >🔐 Réinitialiser MDP</button>
+                        <button
+                          className="btn"
+                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%)' }}
+                          onClick={() => { window.location.href = `/admin/users/${u.id}` }}
+                        >🔗 Page avancée</button>
                       </td>
                     </tr>
                   )
@@ -443,6 +506,50 @@ export default function UsersPage() {
             Suivant →
           </button>
         </div>
+      )}
+
+      {editingUser && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Édition utilisateur">
+          <div className="panel" style={{ maxWidth: 520 }}>
+            <div className="panel-title">✏️ Modifier {editingUser.username}</div>
+            <form onSubmit={submitEdit} style={{ display: 'grid', gap: 16 }}>
+              <label>
+                Email
+                <input type="email" value={editForm.email || ''} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+              </label>
+              <label>
+                Nom complet
+                <input value={editForm.nomComplet || ''} onChange={e => setEditForm(f => ({ ...f, nomComplet: e.target.value }))} />
+              </label>
+              <label>
+                Rôle
+                <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))}>
+                  <option value="Administrateur">Administrateur</option>
+                  <option value="President">President</option>
+                  <option value="JugeConstitutionnel">Juge Constitutionnel</option>
+                  <option value="Greffier">Greffier</option>
+                  <option value="GreffierAdjoint">Greffier Adjoint</option>
+                  <option value="Consultant">Consultant</option>
+                </select>
+              </label>
+              <label>
+                Matricule
+                <input value={editForm.matricule || ''} onChange={e => setEditForm(f => ({ ...f, matricule: e.target.value }))} />
+              </label>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
+                <button type="button" className="btn btn-secondary" onClick={closeEdit}>Annuler</button>
+                <button type="submit" className="btn" disabled={savingEdit}>{savingEdit ? '⏳ Sauvegarde...' : '💾 Enregistrer'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {resetPasswordUser && (
+        <AdminResetPasswordModal
+          userId={resetPasswordUser.id}
+          onClose={() => setResetPasswordUser(null)}
+        />
       )}
     </div>
   )

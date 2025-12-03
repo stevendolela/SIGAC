@@ -19,15 +19,21 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IAuthService _authService;
+    private readonly IUserRepository _userRepository;
+    private readonly IEmailNotificationService _emailNotificationService;
     private readonly ILogger<UsersController> _logger;
 
     public UsersController(
         IUserService userService,
         IAuthService authService,
+        IUserRepository userRepository,
+        IEmailNotificationService emailNotificationService,
         ILogger<UsersController> logger)
     {
         _userService = userService;
         _authService = authService;
+        _userRepository = userRepository;
+        _emailNotificationService = emailNotificationService;
         _logger = logger;
     }
 
@@ -80,7 +86,7 @@ public class UsersController : ControllerBase
     /// <response code="200">Utilisateur trouvé</response>
     /// <response code="401">Non authentifié</response>
     /// <response code="404">Utilisateur non trouvé</response>
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -184,6 +190,13 @@ public class UsersController : ControllerBase
                 createUserDto.Role,
                 GetCurrentUserId());
 
+            // Envoi email de bienvenue avec le mot de passe temporaire
+            var userEntity = await _userRepository.GetByIdAsync(newUser.Id);
+            if (userEntity != null)
+            {
+                await _emailNotificationService.SendWelcomeEmailAsync(userEntity, createUserDto.Password);
+            }
+
             _logger.LogInformation(
                 "Utilisateur {AdminId} a créé un nouvel utilisateur: {NewUserId} ({Username})",
                 GetCurrentUserId(), newUser.Id, newUser.Username);
@@ -241,6 +254,9 @@ public class UsersController : ControllerBase
                 id,
                 updateUserDto.Email,
                 updateUserDto.Role,
+                updateUserDto.NomComplet,
+                updateUserDto.IsActive,
+                updateUserDto.Matricule,
                 currentUserId);
 
             if (!updated)
@@ -257,6 +273,30 @@ public class UsersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la modification de l'utilisateur {UserId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Liste tous les juges constitutionnels actifs.
+    /// </summary>
+    /// <returns>Liste des juges</returns>
+    /// <response code="200">Liste récupérée</response>
+    /// <response code="401">Non authentifié</response>
+    [HttpGet("juges")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<UserDto>>> GetJuges()
+    {
+        try
+        {
+            var juges = await _userService.GetJugesAsync();
+            _logger.LogInformation("Utilisateur {UserId} a récupéré la liste des juges ({Count})", GetCurrentUserId(), juges.Count);
+            return Ok(juges);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des juges");
             return StatusCode(500, new { message = "Erreur interne du serveur" });
         }
     }
@@ -499,6 +539,141 @@ public class UsersController : ControllerBase
             _logger.LogError(ex, "Erreur lors de la récupération des statistiques");
             return StatusCode(500, new { message = "Erreur interne du serveur" });
         }
+    }
+
+    /// <summary>
+    /// Upload d'avatar pour l'utilisateur connecté.
+    /// </summary>
+    /// <param name="file">Fichier image (max 2MB, formats: jpg, png, gif)</param>
+    /// <returns>URL de l'avatar uploadé</returns>
+    [HttpPost("avatar")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<object>> UploadAvatar(IFormFile file)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            
+            // Validation
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "Aucun fichier fourni" });
+
+            if (file.Length > 2 * 1024 * 1024) // 2MB
+                return BadRequest(new { message = "Le fichier ne doit pas dépasser 2 MB" });
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new { message = "Format non autorisé. Utilisez jpg, png ou gif" });
+
+            // Créer le répertoire si nécessaire
+            var uploadsPath = Path.Combine("uploads", "avatars");
+            Directory.CreateDirectory(uploadsPath);
+
+            // Générer un nom unique
+            var fileName = $"{userId}_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsPath, fileName);
+
+            // Sauvegarder le fichier
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Mettre à jour l'utilisateur
+            var avatarUrl = $"/uploads/avatars/{fileName}";
+            await _userService.UpdateAvatarAsync(userId, avatarUrl);
+
+            _logger.LogInformation("Avatar uploadé pour l'utilisateur {UserId}: {AvatarUrl}", userId, avatarUrl);
+
+            return Ok(new { avatarUrl });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'upload de l'avatar");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Mise à jour du profil de l'utilisateur connecté.
+    /// </summary>
+    /// <param name="dto">Données à mettre à jour</param>
+    /// <returns>Profil utilisateur mis à jour</returns>
+    [HttpPut("profile")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateProfileDto dto)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            
+            var updatedUser = await _userService.UpdateProfileAsync(userId, dto);
+
+            _logger.LogInformation("Profil mis à jour pour l'utilisateur {UserId}", userId);
+
+            return Ok(updatedUser);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour du profil");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    // ===== Password management endpoints =====
+
+    /// <summary>
+    /// Admin: réinitialise le mot de passe d'un utilisateur.
+    /// </summary>
+    [HttpPost("admin/{id:guid}/reset-password")]
+    [Authorize(Roles = nameof(UserRole.Administrateur))]
+    public async Task<IActionResult> AdminResetPassword([FromRoute] Guid id, [FromBody] AdminResetPasswordDto dto)
+    {
+        var adminIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(adminIdStr)) return Unauthorized();
+        var adminId = Guid.Parse(adminIdStr);
+
+        // Forcer le UserId du DTO à partir de la route
+        dto.UserId = id;
+        await _userService.AdminResetPasswordAsync(dto, adminId);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Utilisateur: demande un changement de mot de passe (envoi d'un code 2FA).
+    /// </summary>
+    [HttpPost("password-change/request")]
+    [Authorize]
+    public async Task<IActionResult> RequestPasswordChange([FromBody] RequestPasswordChangeDto dto)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+        var userId = Guid.Parse(userIdStr);
+
+        var result = await _userService.RequestPasswordChangeAsync(dto, userId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Utilisateur: vérifie le code 2FA et applique le nouveau mot de passe.
+    /// </summary>
+    [HttpPost("password-change/verify")]
+    [Authorize]
+    public async Task<IActionResult> VerifyPasswordChange([FromBody] VerifyPasswordChangeDto dto)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+        var userId = Guid.Parse(userIdStr);
+
+        var ok = await _userService.VerifyPasswordChangeAsync(dto, userId);
+        return ok ? NoContent() : BadRequest("Vérification du code échouée");
     }
 
     #region Helpers

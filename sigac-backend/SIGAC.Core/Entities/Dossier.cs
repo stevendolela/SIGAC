@@ -7,7 +7,9 @@ public class Dossier
     public Guid Id { get; set; }
     public string NumeroDossier { get; set; } = string.Empty;
     public string Titre { get; set; } = string.Empty;
-    public TypeAffaire Type { get; set; }
+    // Nouveau modèle: FK TypeAffaireId + navigation
+    public Guid? TypeAffaireId { get; set; }
+    public TypeAffaire? TypeAffaire { get; set; }
     public string Demandeur { get; set; } = string.Empty;
     public string? Defendeur { get; set; }
     public DateTime DateDepot { get; set; } = DateTime.UtcNow;

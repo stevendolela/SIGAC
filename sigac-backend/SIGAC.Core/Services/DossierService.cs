@@ -11,22 +11,31 @@ public class DossierService : IDossierService
     private readonly IDossierRepository _dossierRepository;
     private readonly IUserRepository _userRepository;
     private readonly IAuditLogRepository _auditLogRepository;
+    private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
+    private readonly IEmailNotificationService _emailNotificationService;
     private readonly IMapper _mapper;
 
     public DossierService(
         IDossierRepository dossierRepository,
         IUserRepository userRepository,
         IAuditLogRepository auditLogRepository,
+        INotificationService notificationService,
+        IEmailService emailService,
+        IEmailNotificationService emailNotificationService,
         IMapper mapper)
     {
         _dossierRepository = dossierRepository;
         _userRepository = userRepository;
         _auditLogRepository = auditLogRepository;
+        _notificationService = notificationService;
+        _emailService = emailService;
+        _emailNotificationService = emailNotificationService;
         _mapper = mapper;
     }
 
     public async Task<PaginatedResult<DossierListDto>> GetDossiersAsync(
-        int page, int pageSize, string? search, TypeAffaire? type, StatusDossier? status,
+        int page, int pageSize, string? search, Guid? typeAffaireId, StatusDossier? status,
         PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax,
         Guid? rapporteurId, Guid userId, UserRole userRole)
     {
@@ -42,7 +51,7 @@ public class DossierService : IDossierService
         }
 
         var (dossiers, totalCount) = await _dossierRepository.GetDossiersAsync(
-            page, pageSize, search, type, status, priorite,
+            page, pageSize, search, typeAffaireId, status, priorite,
             dateDebutMin, dateDebutMax, filtreRapporteur);
 
         // Manual projection to avoid AutoMapper runtime mapping issues in current runtime
@@ -51,7 +60,7 @@ public class DossierService : IDossierService
             Id = d.Id,
             NumeroDossier = d.NumeroDossier,
             Titre = d.Titre,
-            Type = d.Type.ToString(),
+            Type = d.TypeAffaire != null ? d.TypeAffaire.Nom : string.Empty,
             Demandeur = d.Demandeur,
             Status = d.Status.ToString(),
             Priorite = d.Priorite.ToString(),
@@ -112,7 +121,7 @@ public class DossierService : IDossierService
             Id = Guid.NewGuid(),
             NumeroDossier = numeroDossier,
             Titre = createDto.Titre.Trim(),
-            Type = createDto.Type,
+            TypeAffaireId = createDto.TypeAffaireId,
             Demandeur = createDto.Demandeur.Trim(),
             Defendeur = createDto.Defendeur?.Trim(),
             DateDepot = DateTime.UtcNow,
@@ -129,7 +138,7 @@ public class DossierService : IDossierService
                     Id = Guid.NewGuid(),
                     DateAction = DateTime.UtcNow,
                     Action = "Création du dossier",
-                    Details = $"Dossier créé - Type: {createDto.Type}",
+                    Details = $"Dossier créé - TypeAffaireId: {createDto.TypeAffaireId}",
                     UserId = userId
                 }
             }
@@ -142,6 +151,23 @@ public class DossierService : IDossierService
         await _auditLogRepository.LogActionAsync(
             userId, "CREATE", "Dossier", dossier.Id.ToString(),
             null, System.Text.Json.JsonSerializer.Serialize(dossier));
+
+        // Envoi de notification email si un rapporteur est assigné
+        if (dossier.RapporteurId.HasValue)
+        {
+            var rapporteur = await _userRepository.GetByIdAsync(dossier.RapporteurId.Value);
+            var createdByUser = await _userRepository.GetByIdAsync(userId);
+            
+            if (rapporteur != null && createdByUser != null)
+            {
+                // Mapper vers DTOs pour éviter les références circulaires
+                var dossierDto = _mapper.Map<DossierDto>(dossier);
+                var rapporteurDto = _mapper.Map<UserDto>(rapporteur);
+                var createdByDto = _mapper.Map<UserDto>(createdByUser);
+                
+                await _emailNotificationService.SendDossierCreatedEmailAsync(dossierDto, rapporteurDto, createdByDto);
+            }
+        }
 
         return _mapper.Map<DossierDto>(dossier);
     }
@@ -162,8 +188,8 @@ public class DossierService : IDossierService
         if (!string.IsNullOrWhiteSpace(updateDto.Titre))
             dossier.Titre = updateDto.Titre.Trim();
 
-        if (updateDto.Type.HasValue)
-            dossier.Type = updateDto.Type.Value;
+        if (updateDto.TypeAffaireId.HasValue)
+            dossier.TypeAffaireId = updateDto.TypeAffaireId.Value;
 
         if (!string.IsNullOrWhiteSpace(updateDto.Demandeur))
             dossier.Demandeur = updateDto.Demandeur.Trim();
@@ -284,6 +310,36 @@ public class DossierService : IDossierService
 
         await _dossierRepository.SaveChangesAsync();
 
+        // Notification in-app pour le rapporteur
+        try
+        {
+            var lien = $"/dossiers/{dossier.Id}";
+            await _notificationService.CreateAsync(new CreateNotificationDto
+            {
+                UserId = rapporteur.Id,
+                Titre = "Nouveau dossier assigné",
+                Message = $"Le dossier {dossier.NumeroDossier} - {dossier.Titre} vous a été attribué en tant que juge rapporteur.",
+                Lien = lien
+            }, userId);
+
+            // Email professionnel avec le nouveau système de notifications
+            var assignedByUser = await _userRepository.GetByIdAsync(userId);
+            if (assignedByUser != null)
+            {
+                // Mapper l'entité Dossier vers DTO pour éviter les références circulaires
+                var dossierDto = _mapper.Map<DossierDto>(dossier);
+                var rapporteurDto = _mapper.Map<UserDto>(rapporteur);
+                var assignedByDto = _mapper.Map<UserDto>(assignedByUser);
+                
+                await _emailNotificationService.SendDossierCreatedEmailAsync(dossierDto, rapporteurDto, assignedByDto);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Ne pas casser le flux d'attribution si l'envoi notification/email échoue
+            try { System.Console.Error.WriteLine($"[AttribuerRapporteurAsync] Notification/email error: {ex.Message}"); } catch { }
+        }
+
         return true;
     }
 
@@ -329,6 +385,17 @@ public class DossierService : IDossierService
         await _dossierRepository.AddHistoriqueAsync(histo);
         // Le dossier est déjà tracké par le DbContext, pas besoin d'appeler Update()
         await _dossierRepository.SaveChangesAsync();
+
+        // Envoi de notification email pour changement de statut
+        var changedByUser = await _userRepository.GetByIdAsync(userId);
+        if (changedByUser != null)
+        {
+            // Mapper vers DTOs pour éviter les références circulaires
+            var dossierDto = _mapper.Map<DossierDto>(dossier);
+            var changedByDto = _mapper.Map<UserDto>(changedByUser);
+            
+            await _emailNotificationService.SendDossierStatusChangedEmailAsync(dossierDto, ancienStatut, nouveauStatut, changedByDto);
+        }
 
         return true;
     }

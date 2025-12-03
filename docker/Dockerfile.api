@@ -1,0 +1,41 @@
+# Backend API - .NET 8 (build + runtime)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy solution and restore
+COPY sigac-backend/SIGAC.sln ./
+COPY sigac-backend/SIGAC.API/SIGAC.API.csproj sigac-backend/SIGAC.API/
+COPY sigac-backend/SIGAC.Core/SIGAC.Core.csproj sigac-backend/SIGAC.Core/
+COPY sigac-backend/SIGAC.Infrastructure/SIGAC.Infrastructure.csproj sigac-backend/SIGAC.Infrastructure/
+COPY sigac-backend/SIGAC.Tests/SIGAC.Tests.csproj sigac-backend/SIGAC.Tests/
+RUN dotnet restore sigac-backend/SIGAC.API/SIGAC.API.csproj
+
+# Copy source
+COPY sigac-backend/ sigac-backend/
+
+# Publish
+RUN dotnet publish sigac-backend/SIGAC.API/SIGAC.API.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+
+# Timezone and dependencies (optional)
+ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 5000
+
+# Create uploads directory
+RUN mkdir -p /var/sigac/uploads
+VOLUME ["/var/sigac/uploads"]
+
+COPY --from=build /app/publish .
+
+# Environment variables (override via compose)
+ENV ConnectionStrings__DefaultConnection="Host=postgres;Port=5432;Database=sigac_db;Username=sigac_user;Password=SecurePassword2024!" \
+    FileStorage__BasePath="/var/sigac/uploads" \
+    Cors__AllowedOrigins__0="https://example.com" \
+    Jwt__SecretKey="CHANGE_ME_MIN_32_CHARS_SECRET" \
+    Jwt__Issuer="SIGAC.CourConstitutionnelle.RDC" \
+    Jwt__Audience="SIGAC.Client" \
+    DOTNET_EnableDiagnostics=0
+
+ENTRYPOINT ["dotnet", "SIGAC.API.dll"]

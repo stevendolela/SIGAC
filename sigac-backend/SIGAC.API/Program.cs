@@ -10,6 +10,7 @@ using SIGAC.Core.Interfaces;
 using SIGAC.Core.Services;
 using SIGAC.Infrastructure.Data;
 using SIGAC.Infrastructure.Repositories;
+using SIGAC.Infrastructure.Services;
 using Serilog;
 using System.Text;
 
@@ -75,12 +76,35 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDossierService, DossierService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISalleService, SalleService>();
+builder.Services.AddScoped<IAudienceService, AudienceService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<ISmtpEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
+builder.Services.AddScoped<IFormationService, FormationService>();
+builder.Services.AddScoped<IJugeProfileService, JugeProfileService>();
+builder.Services.AddScoped<ISystemConfigService, SIGAC.Infrastructure.Services.SystemConfigService>();
+builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
+builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
+builder.Services.AddScoped<ISalleRepository, SalleRepository>();
+builder.Services.AddScoped<IAudienceRepository, AudienceRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
+builder.Services.AddScoped<IFormationRepository, FormationRepository>();
+builder.Services.AddScoped<IJugeProfileRepository, JugeProfileRepository>();
+builder.Services.AddScoped<ISmtpConfigurationRepository, SmtpConfigurationRepository>();
+builder.Services.AddScoped<ITypeAffaireRepository, TypeAffaireRepository>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -195,6 +219,14 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowedOrigins");
 
+// Servir les fichiers statiques (uploads)
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+    RequestPath = "/uploads"
+});
+
 // Middleware de gestion des erreurs en tête pour capturer toutes les exceptions
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -229,9 +261,10 @@ try
     }
 
     // Seed des données initiales
-    await DbInitializer.Initialize(context);
+    // TEMPORAIREMENT COMMENTÉ POUR DEBUG
+    // await DbInitializer.Initialize(context);
 
-    Log.Information("Base de données initialisée avec succès");
+    Log.Information("Base de données initialisée avec succès (DbInitializer désactivé temporairement)");
 }
 catch (Exception ex)
 {

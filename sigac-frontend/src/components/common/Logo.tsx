@@ -21,7 +21,12 @@ export default function Logo({ size = 48, alt = 'Taji Logo', style, onClick }: P
       alt={alt}
       width={size}
       height={size}
-      style={{ width: size, height: size, objectFit: 'contain', ...style }}
+      style={{ 
+        width: size, 
+        height: size, 
+        objectFit: 'contain',
+        ...style 
+      }}
       onClick={onClick}
       onError={() => setSrc(svgFallback)}
     />

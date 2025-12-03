@@ -29,13 +29,13 @@ public class DossiersController : ControllerBase
     public async Task<ActionResult<PaginatedResult<DossierListDto>>> GetDossiers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] string? search = null,
-        [FromQuery] TypeAffaire? type = null,
-        [FromQuery] StatusDossier? status = null,
-        [FromQuery] PrioriteDossier? priorite = null,
-        [FromQuery] DateTime? dateDebutMin = null,
-        [FromQuery] DateTime? dateDebutMax = null,
-        [FromQuery] Guid? rapporteurId = null)
+    [FromQuery] string? search = null,
+    [FromQuery] Guid? typeAffaireId = null,
+    [FromQuery] StatusDossier? status = null,
+    [FromQuery] PrioriteDossier? priorite = null,
+    [FromQuery] DateTime? dateDebutMin = null,
+    [FromQuery] DateTime? dateDebutMax = null,
+    [FromQuery] Guid? rapporteurId = null)
     {
         try
         {
@@ -43,7 +43,7 @@ public class DossiersController : ControllerBase
             var userRole = GetCurrentUserRole();
 
             var result = await _dossierService.GetDossiersAsync(
-                page, pageSize, search, type, status, priorite, 
+                page, pageSize, search, typeAffaireId, status, priorite,
                 dateDebutMin, dateDebutMax, rapporteurId, userId, userRole);
 
             return Ok(result);

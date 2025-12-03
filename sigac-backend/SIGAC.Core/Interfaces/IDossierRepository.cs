@@ -7,8 +7,8 @@ namespace SIGAC.Core.Interfaces;
 public interface IDossierRepository
 {
     Task<(List<Dossier> dossiers, int totalCount)> GetDossiersAsync(
-        int page, int pageSize, string? search, TypeAffaire? type, 
-        StatusDossier? status, PrioriteDossier? priorite, 
+        int page, int pageSize, string? search, Guid? typeAffaireId,
+        StatusDossier? status, PrioriteDossier? priorite,
         DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId);
     
     Task<Dossier?> GetByIdAsync(Guid id);

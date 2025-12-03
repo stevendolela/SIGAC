@@ -2,6 +2,7 @@ namespace SIGAC.Core.Interfaces;
 
 using SIGAC.Core.Entities;
 using SIGAC.Core.DTOs;
+using SIGAC.Core.Enums;
 
 public interface IUserRepository
 {
@@ -11,6 +12,7 @@ public interface IUserRepository
     Task<User?> GetByRefreshTokenAsync(string refreshToken);
     Task<User?> GetByPasswordResetTokenAsync(string token);
     Task<(List<User> Items, PaginationMetadata Pagination)> GetUsersAsync(int page = 1, int pageSize = 10, string? search = null);
+    Task<List<User>> GetByRoleAsync(UserRole role);
     Task AddAsync(User user);
     void Update(User user);
     void Delete(User user);

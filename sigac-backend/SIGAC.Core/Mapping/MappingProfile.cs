@@ -13,27 +13,16 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
 
         // Map Dossier -> DossierListDto (lean version without relations)
-        CreateMap<Dossier, DossierListDto>()
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.Priorite, opt => opt.MapFrom(src => src.Priorite.ToString()))
-            .ForMember(dest => dest.NombreDocuments, opt => opt.MapFrom(src => src.Documents.Count))
-            .ForMember(dest => dest.Rapporteur, opt => opt.MapFrom(src => src.Rapporteur));
-
-        // Map Dossier -> DossierDetailDto (full version with relations)
-        CreateMap<Dossier, DossierDetailDto>()
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.Priorite, opt => opt.MapFrom(src => src.Priorite.ToString()))
-            .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents))
-            .ForMember(dest => dest.Historiques, opt => opt.MapFrom(src => src.Historiques))
-            .ForMember(dest => dest.Rapporteur, opt => opt.MapFrom(src => src.Rapporteur));
+        // Mapping Dossier → DossierListDto et DossierDetailDto est géré dans DossierMappingProfile.cs
 
         // Map Historique -> HistoriqueDto
         CreateMap<Historique, HistoriqueDto>();
 
         // Map Document -> DocumentDto
         CreateMap<Document, DocumentDto>();
+
+        // Map Notification -> NotificationDto
+        CreateMap<Notification, NotificationDto>();
 
         // Map CreateDossierDto -> Dossier (for reverse mapping)
         CreateMap<CreateDossierDto, Dossier>()

@@ -10,19 +10,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user')
+      const user = userStr ? JSON.parse(userStr) : null
+      setIsAdmin(user?.role === 'Administrateur')
+    } catch {
+      setIsAdmin(false)
+    }
+  }, [])
 
   const loadStats = async (mounted: { current: boolean }) => {
     setLoading(true)
     setError(null)
     try {
-      const [ds, us] = await Promise.allSettled([
-        dossierApi.statistiques(),
-        userApi.statsAdmin()
-      ])
+      const promises: Promise<any>[] = [dossierApi.statistiques()]
+      if (isAdmin) promises.push(userApi.statsAdmin())
+      const results = await Promise.allSettled(promises)
       if (!mounted.current) return
-      if (ds.status === 'fulfilled') setDossierStats(ds.value)
-      if (us.status === 'fulfilled') setUserStats(us.value)
-      if (ds.status === 'rejected' && us.status === 'rejected') setError('Impossible de charger les statistiques')
+      const ds = results[0]
+      const us = results[1]
+      if (ds?.status === 'fulfilled') setDossierStats(ds.value)
+      if (isAdmin && us && us.status === 'fulfilled') setUserStats(us.value)
+      if (ds?.status === 'rejected' && (!isAdmin || (us && us.status === 'rejected'))) setError('Impossible de charger les statistiques')
       setLastRefresh(new Date())
     } catch (e: any) {
       if (mounted.current) setError(e?.message || 'Erreur')
@@ -44,7 +56,7 @@ export default function DashboardPage() {
       mounted.current = false
       clearInterval(interval)
     }
-  }, [refreshKey])
+  }, [refreshKey, isAdmin])
 
   const statusColors: Record<string, string> = {
     'Nouveau': '#3b82f6',
@@ -58,8 +70,8 @@ export default function DashboardPage() {
     'Nouveau': '🆕',
     'En Instruction': '📝',
     'En Déliberé': '💭', 
-    'Juge': '✅',
-    'Classe': '📦'
+    'Jugé': '✅',
+    'Classé': '📦'
   }
 
   return (
@@ -132,8 +144,8 @@ export default function DashboardPage() {
                   { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
                   { key: 'En Instruction', value: dossierStats.enInstruction },
                   { key: 'En Déliberé', value: dossierStats.enDelibere },
-                  { key: 'Juge', value: dossierStats.juges },
-                  { key: 'Classe', value: dossierStats.classes }
+                  { key: 'Jugé', value: dossierStats.juges },
+                  { key: 'Classé', value: dossierStats.classes }
                 ].map(({ key, value }) => {
                   const total = dossierStats.totalDossiers || 1
                   const percentage = Math.round((value / total) * 100)

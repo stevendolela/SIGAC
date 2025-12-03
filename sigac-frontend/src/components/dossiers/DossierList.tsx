@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { StatusBadge } from './StatusBadge'
 import api from '../../api/api-client'
 import type { DossierListDto } from '../../types/dossier'
 import type { PaginatedResult, PaginationMetadata } from '../../types/pagination'
@@ -18,6 +19,13 @@ export default function DossierList({ onSelect }: Props) {
   const [pendingSearch, setPendingSearch] = useState('')
   const [status, setStatus] = useState<string>('')
   const [priorite, setPriorite] = useState<string>('')
+
+  // Helper pour formater le type d'affaire avec des espaces
+  const formatTypeAffaire = (type?: string | null): string => {
+    if (!type) return '-'
+    // Ajoute un espace avant chaque majuscule (sauf la première)
+    return type.replace(/([A-Z])/g, ' $1').trim()
+  }
 
   const fetchDossiers = useMemo(() => async (p: number, q: string, st: string, pr: string) => {
     setLoading(true)
@@ -64,6 +72,7 @@ export default function DossierList({ onSelect }: Props) {
           style={{ minWidth: 140 }}
         >
           <option value="">📋 Tous statuts</option>
+          {/* Valeurs exactes du enum backend StatusDossier */}
           <option value="Nouveau">🆕 Nouveau</option>
           <option value="EnInstruction">📝 En instruction</option>
           <option value="EnDelibere">💭 En délibéré</option>
@@ -76,9 +85,11 @@ export default function DossierList({ onSelect }: Props) {
           style={{ minWidth: 130 }}
         >
           <option value="">🎯 Toutes priorités</option>
+          {/* Valeurs exactes du enum backend PrioriteDossier */}
+          <option value="Basse">⚪ Basse</option>
           <option value="Normale">⚪ Normale</option>
           <option value="Haute">🟡 Haute</option>
-          <option value="Critique">🔴 Critique</option>
+          <option value="Urgente">🔴 Urgente</option>
         </select>
         {(status || priorite || search) && (
           <button className="btn" onClick={() => { setPendingSearch(''); setSearch(''); setStatus(''); setPriorite(''); setPage(1) }}>Effacer</button>
@@ -106,26 +117,15 @@ export default function DossierList({ onSelect }: Props) {
                 <tr key={d.id}>
                   <td>{d.numeroDossier}</td>
                   <td>{d.titre}</td>
-                  <td>{d.typeAffaire || '-'}</td>
+                  <td>{formatTypeAffaire(d.type || d.typeAffaire)}</td>
+                  <td><StatusBadge kind="status" status={d.status as any} /></td>
+                  <td><StatusBadge kind="priorite" priorite={d.priorite as any} /></td>
                   <td>
-                    <span className={`badge status-${d.status?.toLowerCase() || 'nouveau'}`}>
-                      {d.status === 'Nouveau' && '🆕'}
-                      {d.status === 'EnInstruction' && '📝'}
-                      {d.status === 'EnDelibere' && '💭'}
-                      {d.status === 'Juge' && '✅'}
-                      {d.status === 'Classe' && '📦'}
-                      {' '}{d.status || '-'}
-                    </span>
+                    {(d.dateDepot || d.dateDebut) 
+                      ? new Date(d.dateDepot || d.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : '-'
+                    }
                   </td>
-                  <td>
-                    <span className={`badge priorite-${d.priorite?.toLowerCase() || 'normale'}`}>
-                      {d.priorite === 'Critique' && '🔴'}
-                      {d.priorite === 'Haute' && '🟡'}
-                      {d.priorite === 'Normale' && '⚪'}
-                      {' '}{d.priorite || '-'}
-                    </span>
-                  </td>
-                  <td>{d.dateDebut ? new Date(d.dateDebut).toLocaleDateString() : '-'}</td>
                   <td>
                     {onSelect && (
                       <button className="btn" onClick={() => onSelect(d)}>Sélectionner</button>

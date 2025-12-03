@@ -8,7 +8,7 @@ public class UpdateDossierDto
     [StringLength(500, MinimumLength = 10)]
     public string? Titre { get; set; }
 
-    public TypeAffaire? Type { get; set; }
+    public Guid? TypeAffaireId { get; set; }
 
     [StringLength(200, MinimumLength = 3)]
     public string? Demandeur { get; set; }

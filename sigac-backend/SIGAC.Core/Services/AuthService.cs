@@ -16,17 +16,20 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IAuditLogRepository _auditLogRepository;
+    private readonly IEmailNotificationService _emailNotificationService;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
 
     public AuthService(
         IUserRepository userRepository,
         IAuditLogRepository auditLogRepository,
+        IEmailNotificationService emailNotificationService,
         IConfiguration configuration,
         IMapper mapper)
     {
         _userRepository = userRepository;
         _auditLogRepository = auditLogRepository;
+        _emailNotificationService = emailNotificationService;
         _configuration = configuration;
         _mapper = mapper;
     }
@@ -180,8 +183,8 @@ public class AuthService : IAuthService
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            // TODO: Envoyer email avec le token
-            // await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+            // Envoyer email de réinitialisation de mot de passe
+            await _emailNotificationService.SendPasswordResetEmailAsync(user, resetToken);
 
             await _auditLogRepository.LogActionAsync(
                 user.Id, "PASSWORD_RESET_REQUESTED", "User", user.Id.ToString(), null, null);

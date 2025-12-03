@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sigac-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sigac_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sigac_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeStrong!}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sigac
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    image: ghcr.io/stevendolela/sigac-api:latest
+    container_name: sigac-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-sigac_db};Username=${POSTGRES_USER:-sigac_user};Password=${POSTGRES_PASSWORD:-ChangeMeStrong!}
+      FileStorage__BasePath: /var/sigac/uploads
+      Cors__AllowedOrigins__0: https://${DOMAIN}
+      Cors__AllowedOrigins__1: http://${DOMAIN}
+      Jwt__SecretKey: ${JWT_SECRET}
+      Jwt__Issuer: SIGAC.CourConstitutionnelle.RDC
+      Jwt__Audience: SIGAC.Client
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/var/sigac/uploads
+    networks:
+      - sigac
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    image: ghcr.io/stevendolela/sigac-web:latest
+    container_name: sigac-web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - sigac
+
+networks:
+  sigac:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  uploads:

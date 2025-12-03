@@ -17,7 +17,7 @@ public class DossierRepository : IDossierRepository
     }
 
     public async Task<(List<Dossier> dossiers, int totalCount)> GetDossiersAsync(
-        int page, int pageSize, string? search, TypeAffaire? type, StatusDossier? status,
+        int page, int pageSize, string? search, Guid? typeAffaireId, StatusDossier? status,
         PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId)
     {
         var query = _context.Dossiers
@@ -34,9 +34,9 @@ public class DossierRepository : IDossierRepository
                 d.Demandeur.Contains(search));
         }
 
-        if (type.HasValue)
+        if (typeAffaireId.HasValue)
         {
-            query = query.Where(d => d.Type == type.Value);
+            query = query.Where(d => d.TypeAffaireId == typeAffaireId.Value);
         }
 
         if (status.HasValue)
@@ -142,10 +142,16 @@ public class DossierRepository : IDossierRepository
             EnDelibere = await query.CountAsync(d => d.Status == StatusDossier.EnDelibere),
             Juges = await query.CountAsync(d => d.Status == StatusDossier.Juge),
             Classes = await query.CountAsync(d => d.Status == StatusDossier.Classe),
-            ParType = await query
-                .GroupBy(d => d.Type)
-                .Select(g => new { Type = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.Type.ToString(), x => x.Count),
+            ParType = await _context.Dossiers
+                .GroupBy(d => d.TypeAffaireId)
+                .Select(g => new {
+                    TypeNom = _context.TypeAffaires
+                        .Where(t => t.Id == g.Key)
+                        .Select(t => t.Nom)
+                        .FirstOrDefault() ?? "(Non spécifié)",
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(x => x.TypeNom, x => x.Count),
             ParPriorite = await query
                 .GroupBy(d => d.Priorite)
                 .Select(g => new { Priorite = g.Key, Count = g.Count() })

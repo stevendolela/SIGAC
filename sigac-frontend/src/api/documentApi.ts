@@ -17,6 +17,17 @@ export const documentApi = {
     const resp = await api.get<DocumentDto[]>(`/Documents/dossier/${dossierId}`)
     return resp.data
   },
+  async upload(dossierId: string, file: File, typeDocument: string = 'Document') {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('typeDocument', typeDocument)
+    const resp = await api.post<DocumentDto>(`/Documents/upload/${dossierId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return resp.data
+  },
   async download(id: string) {
     const resp = await api.get(`/Documents/download/${id}`, { responseType: 'blob' })
     return resp.data as Blob

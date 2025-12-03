@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: sigac-api
+    env: docker
+    plan: starter
+    region: frankfurt
+    runtime: docker
+    autoDeploy: true
+    healthCheckPath: /api/health
+    dockerfilePath: docker/Dockerfile.api
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__SecretKey
+        sync: false
+      - key: Jwt__Issuer
+        value: SIGAC.CourConstitutionnelle.RDC
+      - key: Jwt__Audience
+        value: SIGAC.Client
+      - key: Jwt__ExpirationMinutes
+        value: "30"
+      - key: Cors__AllowedOrigins
+        value: "[\"https://sigac.freebox\", \"https://YOUR-DOMAIN\"]"
+      - key: FileStorage__BasePath
+        value: /var/data/uploads
+      - key: FileStorage__MaxFileSize
+        value: "52428800"
+    disks:
+      - name: uploads
+        mountPath: /var/data
+        sizeGB: 5
+
+  - type: postgres
+    name: sigac-db
+    plan: starter
+    region: frankfurt
+    version: 15
+    databases:
+      - name: sigac_db
+    ipAllowList: []

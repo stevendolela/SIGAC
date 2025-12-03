@@ -65,3 +65,4 @@
 /Users/steve/Projects/SIGAC/tools/query-users/obj/Debug/net10.0/QueryUsers.pdb
 /Users/steve/Projects/SIGAC/tools/query-users/obj/Debug/net10.0/QueryUsers.genruntimeconfig.cache
 /Users/steve/Projects/SIGAC/tools/query-users/obj/Debug/net10.0/ref/QueryUsers.dll
+/Users/steve/Projects/SIGAC/tools/query-users/obj/Debug/net10.0/QueryUsers.sourcelink.json

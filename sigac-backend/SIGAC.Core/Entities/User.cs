@@ -11,6 +11,8 @@ public class User
     public string NomComplet { get; set; } = string.Empty;
     public UserRole Role { get; set; }
     public string? Matricule { get; set; }
+    public string? AvatarUrl { get; set; }
+    public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; } = true;
     
     // Authentification

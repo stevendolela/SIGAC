@@ -1,34 +1,25 @@
 using SIGAC.Core.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace SIGAC.Core.DTOs;
 
 /// <summary>
-/// DTO pour la modification d'un utilisateur existant.
+/// DTO unique pour la mise à jour d'un utilisateur existant.
+/// Tous les champs sont optionnels.
 /// </summary>
 public class UpdateUserDto
 {
-    /// <summary>
-    /// Nouvelle adresse email (optionnel).
-    /// </summary>
+    [EmailAddress]
+    [MaxLength(255)]
     public string? Email { get; set; }
 
-    /// <summary>
-    /// Nouveau rôle (optionnel, admin seulement).
-    /// </summary>
     public UserRole? Role { get; set; }
 
-    /// <summary>
-    /// Nom complet (optionnel).
-    /// </summary>
+    [MaxLength(200)]
     public string? NomComplet { get; set; }
 
-    /// <summary>
-    /// Matricule (optionnel).
-    /// </summary>
+    [MaxLength(50)]
     public string? Matricule { get; set; }
 
-    /// <summary>
-    /// État actif/inactif (optionnel).
-    /// </summary>
     public bool? IsActive { get; set; }
 }

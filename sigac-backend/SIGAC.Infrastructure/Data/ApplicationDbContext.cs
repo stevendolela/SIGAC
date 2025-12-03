@@ -16,6 +16,16 @@ public class ApplicationDbContext : DbContext
     public DbSet<Historique> Historiques { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<DocumentVisualisationLog> DocumentVisualisationLogs { get; set; }
+    public DbSet<Salle> Salles { get; set; }
+    public DbSet<Audience> Audiences { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<CalendarEvent> CalendarEvents { get; set; }
+    public DbSet<Formation> Formations { get; set; }
+    public DbSet<FormationParticipation> FormationParticipations { get; set; }
+    public DbSet<JugeProfile> JugeProfiles { get; set; }
+    public DbSet<PasswordChangeRequest> PasswordChangeRequests { get; set; }
+    public DbSet<SmtpConfiguration> SmtpConfigurations { get; set; }
+    public DbSet<TypeAffaire> TypeAffaires { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +65,20 @@ public class ApplicationDbContext : DbContext
                 .WithOne(h => h.Dossier)
                 .HasForeignKey(h => h.DossierId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Ajout FK TypeAffaire (navigation explicite)
+            entity.HasOne(d => d.TypeAffaire)
+                .WithMany()
+                .HasForeignKey(d => d.TypeAffaireId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuration TypeAffaire
+        modelBuilder.Entity<TypeAffaire>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nom).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
         });
 
         // Configuration Document
@@ -108,6 +132,68 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(v => v.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration Audience
+        modelBuilder.Entity<Audience>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DateAudience);
+            entity.HasIndex(e => e.DossierId);
+            entity.Property(e => e.Lieu).IsRequired().HasMaxLength(200);
+
+            entity.HasOne(a => a.Dossier)
+                .WithMany()
+                .HasForeignKey(a => a.DossierId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration Salle (corrige la clé étrangère CreatedBy pour éviter la colonne fantôme CreatedByUserId)
+        modelBuilder.Entity<Salle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Nom).IsUnique();
+            entity.Property(e => e.Nom).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(200);
+            entity.Property(e => e.Capacite).IsRequired();
+
+            // Forcer EF à utiliser la colonne CreatedBy comme FK vers Users et supprimer l'ancien schéma basé sur CreatedByUserId
+            entity.HasOne(s => s.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(s => s.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration PasswordChangeRequest
+        modelBuilder.Entity<PasswordChangeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Code);
+            entity.HasIndex(e => e.UserId);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.Method).IsRequired().HasMaxLength(10);
+
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration SmtpConfiguration
+        modelBuilder.Entity<SmtpConfiguration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Host).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.From).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.FromName).HasMaxLength(200);
+            entity.Property(e => e.Username).HasMaxLength(255);
+            entity.Property(e => e.EncryptedPassword).HasMaxLength(1000);
+            entity.Property(e => e.LastTestError).HasMaxLength(2000);
         });
     }
 }

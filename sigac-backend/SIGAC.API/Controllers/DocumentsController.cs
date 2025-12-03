@@ -143,8 +143,10 @@ public class DocumentsController : ControllerBase
             // Calculer le hash SHA256 du fichier
             string hashSHA256 = await CalculateSHA256HashAsync(file);
 
-            // Créer le répertoire de stockage s'il n'existe pas
-            var uploadDir = GetUploadDirectory();
+            // Préparer répertoires de stockage (racine + sous-dossier date)
+            var baseUploadDir = GetBaseUploadDirectory();
+            var subDir = GetCurrentUploadSubdirectory(); // yyyy/MM
+            var uploadDir = Path.Combine(baseUploadDir, subDir);
             Directory.CreateDirectory(uploadDir);
 
             // Générer un nom de fichier sécurisé (GUID + extension)
@@ -163,10 +165,12 @@ public class DocumentsController : ControllerBase
 
             // Enregistrer le document en base de données
             var userId = GetCurrentUserId();
+            // Stocker chemin relatif (yyyy/MM/filename) sans préfixe 'uploads' pour éviter dépendance au mois courant
+            var relativeStoredPath = Path.Combine(subDir, storedFileName);
             var document = await _documentService.UploadAsync(
                 dossierId,
                 file.FileName,
-                Path.Combine("uploads", DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString("D2"), storedFileName),
+                relativeStoredPath,
                 typeDocument,
                 file.Length,
                 file.ContentType,
@@ -196,9 +200,8 @@ public class DocumentsController : ControllerBase
             if (document == null)
                 return NotFound(new { message = "Document non trouvé" });
 
-            // Construire le chemin physique du fichier
-            var uploadDir = GetUploadDirectory();
-            var filePath = Path.Combine(uploadDir, Path.GetFileName(document.CheminFichier));
+            // Construire le chemin physique (indépendant du mois courant)
+            var filePath = GetAbsoluteFilePath(document.CheminFichier);
 
             if (!System.IO.File.Exists(filePath))
             {
@@ -237,15 +240,19 @@ public class DocumentsController : ControllerBase
         {
             var document = await _documentService.GetByIdAsync(id);
             if (document == null)
+            {
+                _logger.LogWarning("ViewDocument 404: Document {DocumentId} introuvable en base", id);
                 return NotFound(new { message = "Document non trouvé" });
+            }
 
-            // Construire le chemin physique du fichier
-            var uploadDir = GetUploadDirectory();
-            var filePath = Path.Combine(uploadDir, Path.GetFileName(document.CheminFichier));
+            // Construire le chemin physique (indépendant du mois courant)
+            var filePath = GetAbsoluteFilePath(document.CheminFichier);
 
             if (!System.IO.File.Exists(filePath))
             {
-                _logger.LogWarning("Fichier physique non trouvé: {FilePath}", filePath);
+                _logger.LogWarning(
+                    "ViewDocument 404: Fichier physique introuvable pour document {DocumentId}. Chemin enregistré='{CheminEnregistre}' Chemin résolu='{CheminResolu}'", 
+                    id, document.CheminFichier, filePath);
                 return NotFound(new { message = "Fichier non trouvé sur le serveur" });
             }
 
@@ -373,8 +380,7 @@ public class DocumentsController : ControllerBase
             // Supprimer le fichier physique (optionnel - peut garder l'archive)
             try
             {
-                var uploadDir = GetUploadDirectory();
-                var filePath = Path.Combine(uploadDir, Path.GetFileName(document.CheminFichier));
+                var filePath = GetAbsoluteFilePath(document.CheminFichier);
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
@@ -413,7 +419,8 @@ public class DocumentsController : ControllerBase
     {
         try
         {
-            var uploadDir = GetUploadDirectory();
+            // Statistiques sur l'ensemble du répertoire racine (toutes années/mois)
+            var uploadDir = GetBaseUploadDirectory();
             long totalSize = 0;
             int fileCount = 0;
 
@@ -451,11 +458,23 @@ public class DocumentsController : ControllerBase
         return claim != null && Guid.TryParse(claim.Value, out var userId) ? userId : Guid.Empty;
     }
 
-    private string GetUploadDirectory()
+    private string GetBaseUploadDirectory()
     {
-        var baseDir = _configuration["FileStorage:BasePath"] ?? Path.Combine(AppContext.BaseDirectory, "uploads");
-        var yearMonth = DateTime.Now.ToString("yyyy/MM");
-        return Path.Combine(baseDir, yearMonth);
+        return _configuration["FileStorage:BasePath"] ?? Path.Combine(AppContext.BaseDirectory, "uploads");
+    }
+
+    private string GetCurrentUploadSubdirectory() => DateTime.Now.ToString("yyyy/MM");
+
+    private string GetAbsoluteFilePath(string cheminFichier)
+    {
+        var baseDir = GetBaseUploadDirectory();
+        if (string.IsNullOrWhiteSpace(cheminFichier)) return baseDir;
+        var normalized = cheminFichier.Replace("\\", "/").TrimStart('/', ' ');
+        if (normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized.Substring("uploads/".Length);
+        }
+        return Path.Combine(baseDir, normalized.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private async Task<string> CalculateSHA256HashAsync(IFormFile file)

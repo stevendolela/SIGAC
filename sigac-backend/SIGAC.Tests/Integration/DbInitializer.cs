@@ -1,6 +1,7 @@
 using SIGAC.Core.Entities;
 using SIGAC.Core.Enums;
 using SIGAC.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SIGAC.Tests.Integration;
 
@@ -149,6 +150,13 @@ public static class DbInitializer
         // =====================================================
         // CRÉATION DES DOSSIERS
         // =====================================================
+        
+        // Récupérer les TypeAffaires créés
+        var typeContentieux = await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Contentieux Électoral");
+        var typeControle = await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Contrôle de Constitutionnalité");
+        var typeConflit = await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Conflit de Compétence");
+        var typeInterpretation = await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Interprétation de la Constitution");
+        var typeException = await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Exception d'Inconstitutionnalité");
 
         var dossiers = new List<Dossier>
         {
@@ -158,7 +166,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-001",
                 Titre = "Contentieux électoral - Province du Nord-Kivu - Contestation résultats législatives",
-                Type = TypeAffaire.ContentieuxElectoral,
+                TypeAffaireId = typeContentieux?.Id,
                 Demandeur = "Parti Politique ENSEMBLE pour la République",
                 Defendeur = "Commission Électorale Nationale Indépendante (CENI)",
                 DateDepot = new DateTime(2024, 11, 1, 10, 0, 0, DateTimeKind.Utc),
@@ -204,7 +212,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-002",
                 Titre = "Contrôle de constitutionnalité - Loi de finances pour l'exercice 2025",
-                Type = TypeAffaire.ControleConstitutionnalite,
+                TypeAffaireId = typeControle?.Id,
                 Demandeur = "Assemblée Nationale de la RDC",
                 DateDepot = new DateTime(2024, 10, 28, 15, 0, 0, DateTimeKind.Utc),
                 DateAudience = new DateTime(2024, 11, 10, 14, 0, 0, DateTimeKind.Utc),
@@ -249,7 +257,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-003",
                 Titre = "Conflit de compétence - Gouverneur Province Équateur vs Assemblée Provinciale",
-                Type = TypeAffaire.ConflitCompetence,
+                TypeAffaireId = typeConflit?.Id,
                 Demandeur = "Gouverneur de la Province de l'Équateur",
                 Defendeur = "Assemblée Provinciale de l'Équateur",
                 DateDepot = new DateTime(2024, 11, 7, 11, 30, 0, DateTimeKind.Utc),
@@ -277,7 +285,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-004",
                 Titre = "Interprétation de l'article 78 de la Constitution - Durée du mandat présidentiel",
-                Type = TypeAffaire.InterpretationConstitution,
+                TypeAffaireId = typeInterpretation?.Id,
                 Demandeur = "Groupe Parlementaire Union pour la Démocratie et le Progrès Social",
                 DateDepot = new DateTime(2024, 10, 15, 9, 0, 0, DateTimeKind.Utc),
                 DateDecision = new DateTime(2024, 11, 3, 10, 0, 0, DateTimeKind.Utc),
@@ -331,7 +339,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-005",
                 Titre = "Exception d'inconstitutionnalité - Loi n°08/012 du 31/07/2008 sur l'organisation judiciaire",
-                Type = TypeAffaire.ExceptionInconstitutionnalite,
+                TypeAffaireId = typeException?.Id,
                 Demandeur = "Cour d'Appel de Lubumbashi",
                 DateDepot = new DateTime(2024, 11, 8, 10, 0, 0, DateTimeKind.Utc),
                 Status = StatusDossier.Nouveau,

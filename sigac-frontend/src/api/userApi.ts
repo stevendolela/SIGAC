@@ -1,6 +1,6 @@
 import api from './api-client'
 import type { PaginatedResult } from '../types/pagination'
-import type { UserDto } from '../types/user'
+import type { UserDto, UpdateUserDto } from '../types/user'
 
 interface CreateUserPayload {
   username: string
@@ -26,6 +26,10 @@ export const userApi = {
     const resp = await api.post<UserDto>('/Users', payload)
     return resp.data
   },
+  async update(id: string, payload: UpdateUserDto) {
+    const resp = await api.put<UserDto>(`/Users/${id}`, payload)
+    return resp.data
+  },
   async activate(id: string) {
     const resp = await api.post<UserDto>(`/Users/${id}/activate`, {})
     return resp.data
@@ -37,5 +41,9 @@ export const userApi = {
   async statsAdmin() {
     const resp = await api.get(`/Users/admin/stats`)
     return resp.data as any
+  },
+  async listJuges() {
+    const resp = await api.get<UserDto[]>(`/Users/juges`)
+    return resp.data
   }
 }

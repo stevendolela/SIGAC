@@ -10,7 +10,7 @@ public class CreateDossierDto
     public string Titre { get; set; } = string.Empty;
 
     [Required]
-    public TypeAffaire Type { get; set; }
+    public Guid TypeAffaireId { get; set; }
 
     [Required]
     [StringLength(200, MinimumLength = 3)]

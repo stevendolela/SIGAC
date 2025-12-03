@@ -6,9 +6,9 @@ namespace SIGAC.Core.Interfaces;
 public interface IDossierService
 {
     Task<PaginatedResult<DossierListDto>> GetDossiersAsync(
-        int page, int pageSize, string? search, TypeAffaire? type, 
-        StatusDossier? status, PrioriteDossier? priorite, 
-        DateTime? dateDebutMin, DateTime? dateDebutMax, 
+        int page, int pageSize, string? search, Guid? typeAffaireId,
+        StatusDossier? status, PrioriteDossier? priorite,
+        DateTime? dateDebutMin, DateTime? dateDebutMax,
         Guid? rapporteurId, Guid userId, UserRole userRole);
     
     Task<DossierDetailDto?> GetDossierByIdAsync(Guid id, Guid userId, UserRole userRole);

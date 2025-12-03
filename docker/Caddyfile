@@ -1,0 +1,24 @@
+{
+	# Email pour Let's Encrypt (ACME)
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	root * /usr/share/caddy
+
+	# Proxy API
+	handle_path /api/* {
+		reverse_proxy api:5000
+	}
+
+	# SPA fallback (toutes routes -> index.html sauf fichiers existants et /api)
+	handle {
+		@notFile {
+			not file
+			not path /api/*
+		}
+		rewrite @notFile /index.html
+		file_server
+	}
+}

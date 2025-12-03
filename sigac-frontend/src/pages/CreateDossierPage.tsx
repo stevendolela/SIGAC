@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import api from '../api/api-client'
 import { useToast } from '../components/common/ToastProvider'
+import { TypeAffaireSelect } from '../components/dossiers/TypeAffaireSelect'
 
 export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => void }) {
   const { notify } = useToast()
@@ -8,7 +9,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
   // Champs du formulaire
   const [titre, setTitre] = useState('')
-  const [typeAffaire, setTypeAffaire] = useState('') // enum TypeAffaire (1..5)
+  const [typeAffaireId, setTypeAffaireId] = useState<string | null>(null)
   const [priorite, setPriorite] = useState('2') // PrioriteDossier (1:Basse,2:Normale,3:Haute,4:Urgente)
   const [demandeur, setDemandeur] = useState('')
   const [defendeur, setDefendeur] = useState('')
@@ -23,7 +24,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       return
     }
     
-    if (!typeAffaire) {
+    if (!typeAffaireId) {
       notify({ type: 'error', message: '⚠️ Le type d\'affaire est obligatoire' })
       return
     }
@@ -39,7 +40,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       const payload = {
         // Le binder ASP.NET Core est case-insensitive; camelCase ok
         titre: titre.trim(),
-        type: Number(typeAffaire),
+        typeAffaireId: typeAffaireId,
         priorite: Number(priorite),
         demandeur: demandeur.trim(),
         defendeur: defendeur.trim() || null,
@@ -51,8 +52,8 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       notify({ type: 'success', message: `✅ Dossier créé avec succès: ${response.data.numeroDossier}` })
       
       // Réinitialiser le formulaire
-      setTitre('')
-      setTypeAffaire('')
+  setTitre('')
+  setTypeAffaireId(null)
   setPriorite('2')
       setDemandeur('')
       setDefendeur('')
@@ -73,8 +74,8 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
   }
 
   function handleReset() {
-    setTitre('')
-    setTypeAffaire('')
+  setTitre('')
+  setTypeAffaireId(null)
     setPriorite('2')
     setDemandeur('')
     setDefendeur('')
@@ -109,14 +110,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
               <div className="form-group">
                 <label>Type d'Affaire *</label>
-                <select value={typeAffaire} onChange={(e) => setTypeAffaire(e.target.value)} required>
-                  <option value="">-- Sélectionner --</option>
-                  <option value="1">Contentieux électoral</option>
-                  <option value="2">Contrôle de constitutionnalité</option>
-                  <option value="3">Conflit de compétence</option>
-                  <option value="4">Interprétation de la Constitution</option>
-                  <option value="5">Exception d'inconstitutionnalité</option>
-                </select>
+                <TypeAffaireSelect value={typeAffaireId} onChange={setTypeAffaireId} />
               </div>
 
               <div className="form-group">

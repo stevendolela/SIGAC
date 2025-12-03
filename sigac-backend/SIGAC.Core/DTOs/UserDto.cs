@@ -8,6 +8,8 @@ public class UserDto
     public string NomComplet { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public string? Matricule { get; set; }
+    public string? AvatarUrl { get; set; }
+    public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastLogin { get; set; }
 }

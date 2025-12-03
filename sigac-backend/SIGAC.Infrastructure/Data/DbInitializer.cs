@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 using SIGAC.Core.Entities;
 using SIGAC.Core.Enums;
@@ -95,6 +96,32 @@ public static class DbInitializer
         // CRÉATION DES DOSSIERS
         // =====================================================
 
+        // Préparer des TypeAffaires par défaut si absents
+        var defaultTypes = new[]
+        {
+            "Contentieux Électoral",
+            "Contrôle de Constitutionnalité",
+            "Conflit de Compétence"
+        };
+        foreach (var nom in defaultTypes)
+        {
+            if (!await context.TypeAffaires.AnyAsync(t => t.Nom == nom))
+            {
+                await context.TypeAffaires.AddAsync(new TypeAffaire
+                {
+                    Id = Guid.NewGuid(),
+                    Nom = nom,
+                    Description = null,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+        await context.SaveChangesAsync();
+
+        Guid? typeContentieuxId = (await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Contentieux Électoral"))?.Id;
+        Guid? typeControleId = (await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Contrôle de Constitutionnalité"))?.Id;
+        Guid? typeConflitId = (await context.TypeAffaires.FirstOrDefaultAsync(t => t.Nom == "Conflit de Compétence"))?.Id;
+
         var dossiers = new List<Dossier>
         {
             // Dossier 1 - Contentieux Électoral
@@ -103,7 +130,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-001",
                 Titre = "Contentieux électoral - Province du Nord-Kivu",
-                Type = TypeAffaire.ContentieuxElectoral,
+                TypeAffaireId = typeContentieuxId,
                 Demandeur = "Parti Politique ENSEMBLE",
                 Defendeur = "Commission Électorale Nationale Indépendante",
                 DateDepot = DateTime.UtcNow.AddDays(-10),
@@ -121,7 +148,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-002",
                 Titre = "Contrôle de constitutionnalité - Loi de finances 2025",
-                Type = TypeAffaire.ControleConstitutionnalite,
+                TypeAffaireId = typeControleId,
                 Demandeur = "Assemblée Nationale de la RDC",
                 DateDepot = DateTime.UtcNow.AddDays(-15),
                 Status = StatusDossier.EnDelibere,
@@ -138,7 +165,7 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 NumeroDossier = "CC-2024-003",
                 Titre = "Conflit de compétence - Gouverneur vs Assemblée Provinciale",
-                Type = TypeAffaire.ConflitCompetence,
+                TypeAffaireId = typeConflitId,
                 Demandeur = "Gouverneur de la Province de l'Équateur",
                 Defendeur = "Assemblée Provinciale de l'Équateur",
                 DateDepot = DateTime.UtcNow.AddDays(-3),
