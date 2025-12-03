@@ -1,19 +1,28 @@
-services:
-  - type: web
-    name: sigac-api
-    env: docker
-    plan: starter
-    region: frankfurt
-    runtime: docker
-    autoDeploy: true
-    healthCheckPath: /api/health
-    dockerfilePath: docker/Dockerfile.api
-    envVars:
+# Exported from Render on 2025-12-03T22:45:49Z
+# Updated: Service Web API SIGAC configuré avec PostgreSQL existant
+version: "1"
+projects:
+- name: TAJI
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: sigac-api
+      runtime: docker
+      plan: starter
+      region: frankfurt
+      autoDeploy: true
+      healthCheckPath: /api/health
+      dockerfilePath: docker/Dockerfile.api
+      envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
-        sync: false
+        fromDatabase:
+          name: postgresql-sigac
+          property: connectionString
       - key: Jwt__SecretKey
+        generateValue: true
         sync: false
       - key: Jwt__Issuer
         value: SIGAC.CourConstitutionnelle.RDC
@@ -21,22 +30,28 @@ services:
         value: SIGAC.Client
       - key: Jwt__ExpirationMinutes
         value: "30"
+      - key: Jwt__RefreshTokenExpirationDays
+        value: "7"
       - key: Cors__AllowedOrigins
-        value: "[\"https://sigac.freebox\", \"https://YOUR-DOMAIN\"]"
+        value: '["https://sigac.yourdomain.com","http://localhost:5173"]'
       - key: FileStorage__BasePath
         value: /var/data/uploads
       - key: FileStorage__MaxFileSize
         value: "52428800"
-    disks:
-      - name: uploads
+      - key: Serilog__MinimumLevel
+        value: Information
+      disk:
+        name: uploads
         mountPath: /var/data
         sizeGB: 5
-
-  - type: postgres
-    name: sigac-db
-    plan: starter
-    region: frankfurt
-    version: 15
+    
     databases:
-      - name: sigac_db
-    ipAllowList: []
+    - name: postgresql-sigac
+      databaseName: postgresql_sigac_e1f4
+      user: postgresql_sigac_e1f4_user
+      plan: free
+      region: frankfurt
+      ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+      postgresMajorVersion: "15"
