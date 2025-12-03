@@ -23,15 +23,14 @@ WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
 
-# Create uploads directory
-RUN mkdir -p /var/sigac/uploads
-VOLUME ["/var/sigac/uploads"]
+# Create uploads directory in /tmp (ephemeral, no disk needed for Free plan)
+RUN mkdir -p /tmp/uploads
 
 COPY --from=build /app/publish .
 
 # Environment variables (override via compose)
 ENV ConnectionStrings__DefaultConnection="Host=postgres;Port=5432;Database=sigac_db;Username=sigac_user;Password=SecurePassword2024!" \
-    FileStorage__BasePath="/var/sigac/uploads" \
+    FileStorage__BasePath="/tmp/uploads" \
     Cors__AllowedOrigins__0="https://example.com" \
     Jwt__SecretKey="CHANGE_ME_MIN_32_CHARS_SECRET" \
     Jwt__Issuer="SIGAC.CourConstitutionnelle.RDC" \

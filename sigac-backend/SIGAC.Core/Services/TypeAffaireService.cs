@@ -29,7 +29,7 @@ public class TypeAffaireService : ITypeAffaireService
         entity.CreatedAt = DateTime.UtcNow;
         await _repo.AddAsync(entity);
         await _repo.SaveChangesAsync();
-        await _audit.LogActionAsync(userId, "CREATE", nameof(TypeAffaire), entity.Id.ToString(), null, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom, entity.Description, entity.CreatedAt }));
+        await _audit.LogActionAsync(userId == Guid.Empty ? null : userId, "CREATE", nameof(TypeAffaire), entity.Id.ToString(), null, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom, entity.Description, entity.CreatedAt }));
         return _mapper.Map<TypeAffaireDto>(entity);
     }
 
@@ -41,7 +41,7 @@ public class TypeAffaireService : ITypeAffaireService
         entity.ModifiedAt = DateTime.UtcNow;
         _repo.Update(entity);
         await _repo.SaveChangesAsync();
-        await _audit.LogActionAsync(userId, "UPDATE", nameof(TypeAffaire), entity.Id.ToString(), null, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom, entity.Description, entity.ModifiedAt }));
+        await _audit.LogActionAsync(userId == Guid.Empty ? null : userId, "UPDATE", nameof(TypeAffaire), entity.Id.ToString(), null, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom, entity.Description, entity.ModifiedAt }));
         return _mapper.Map<TypeAffaireDto>(entity);
     }
 
@@ -51,7 +51,7 @@ public class TypeAffaireService : ITypeAffaireService
         if (entity == null) return false;
         _repo.Remove(entity);
         await _repo.SaveChangesAsync();
-        await _audit.LogActionAsync(userId, "DELETE", nameof(TypeAffaire), id.ToString(), System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom }), null);
+        await _audit.LogActionAsync(userId == Guid.Empty ? null : userId, "DELETE", nameof(TypeAffaire), id.ToString(), System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Nom }), null);
         return true;
     }
 }

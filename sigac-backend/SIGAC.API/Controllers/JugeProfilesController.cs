@@ -33,6 +33,22 @@ public class JugeProfilesController : ControllerBase
         return Ok(item);
     }
 
+    [HttpPut("me")]
+    [Authorize(Roles = "JugeConstitutionnel")]
+    public async Task<ActionResult<JugeProfileDto>> UpdateMine([FromBody] UpdateJugeProfileDto dto)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var profile = await _service.GetByUserIdAsync(userId);
+        
+        if (profile == null)
+        {
+            return NotFound(new { message = "Profil non trouvé pour cet utilisateur" });
+        }
+        
+        var updated = await _service.UpdateAsync(profile.Id, dto, userId);
+        return Ok(updated);
+    }
+
     [HttpPost]
     [Authorize(Roles = "Administrateur,President")]
     public async Task<ActionResult<JugeProfileDto>> Create([FromBody] CreateJugeProfileDto dto)

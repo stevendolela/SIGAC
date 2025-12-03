@@ -10,6 +10,10 @@ export const JugeApi = {
     const { data } = await api.get('/JugeProfiles/me')
     return data
   },
+  updateMine: async (dto: CreateJugeProfileDto): Promise<JugeProfileDto> => {
+    const { data } = await api.put('/JugeProfiles/me', dto)
+    return data
+  },
   create: async (dto: CreateJugeProfileDto): Promise<JugeProfileDto> => {
     const { data } = await api.post('/JugeProfiles', dto)
     return data

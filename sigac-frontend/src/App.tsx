@@ -16,6 +16,7 @@ import ApiSwitcher from './components/common/ApiSwitcher'
 import ApiHealth from './components/common/ApiHealth'
 import NotificationsBell from './components/common/NotificationsBell'
 import JugeProfilesPage from './pages/JugeProfilesPage'
+import MonProfilPage from './pages/MonProfilPage'
 import FormationsPage from './pages/FormationsPage'
 import CalendarPage from './pages/CalendarPage'
 import AdminUserEditPage from './pages/AdminUserEditPage'
@@ -30,7 +31,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'upload' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'formations' | 'calendrier' | 'system-config' | 'types-affaires'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'upload' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'formations' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -201,28 +202,27 @@ export default function App() {
             <button className={`tab ${view === 'upload' ? 'active' : ''}`} onClick={() => setView('upload')}>
               📤 Upload
             </button>
-            <button className={`tab ${view === 'system-config' ? 'active' : ''}`} onClick={() => setView('system-config')}>
-              ⚙️ Configuration
-            </button>
+            {user?.role === 'JugeConstitutionnel' && (
+              <button className={`tab ${view === 'mon-profil' ? 'active' : ''}`} onClick={() => setView('mon-profil')}>
+                👤 Mon Profil
+              </button>
+            )}
             <button className={`tab ${view === 'profils' ? 'active' : ''}`} onClick={() => setView('profils')}>
               👤 Profils Juges
             </button>
-            <button className={`tab ${view === 'formations' ? 'active' : ''}`} onClick={() => setView('formations')}>
-              🧩 Formations
-            </button>
-            {/* Lien vers gestion des types d'affaires */}
+            {user?.role === 'Administrateur' && (
+              <button className={`tab ${view === 'formations' ? 'active' : ''}`} onClick={() => setView('formations')}>
+                🧩 Formations
+              </button>
+            )}
             <button className={`tab ${view === 'types-affaires' ? 'active' : ''}`} onClick={() => setView('types-affaires')}>
               🧾 Types d'affaires
             </button>
-            <button className={`tab ${view === 'users' ? 'active' : ''}`} onClick={() => setView('users')}>
-              👥 Utilisateurs
-            </button>
-            <button className={`tab ${view === 'profils' ? 'active' : ''}`} onClick={() => setView('profils')}>
-              👩‍⚖️ Profils Juges
-            </button>
-            <button className={`tab ${view === 'formations' ? 'active' : ''}`} onClick={() => setView('formations')}>
-              🎓 Formations
-            </button>
+            {user?.role === 'Administrateur' && (
+              <button className={`tab ${view === 'users' ? 'active' : ''}`} onClick={() => setView('users')}>
+                👥 Utilisateurs
+              </button>
+            )}
             {user?.role === 'Administrateur' && (
               <button className={`tab ${view === 'salles' ? 'active' : ''}`} onClick={() => setView('salles')}>
                 🏛️ Salles
@@ -233,7 +233,6 @@ export default function App() {
                 ⚙️ Config Système
               </button>
             )}
-            {/* Lien bouton ci-dessus navigue via location.href; la Route est déclarée plus bas dans <Routes> */}
           </div>
           <div className="env-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <ApiHealth intervalMs={30000} />
@@ -256,6 +255,7 @@ export default function App() {
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'calendrier' && <CalendarPage />}
           {view === 'salles' && <SallesPage />}
+          {view === 'mon-profil' && <MonProfilPage />}
           {view === 'profils' && <JugeProfilesPage />}
           {view === 'formations' && <FormationsPage />}
           {view === 'upload' && (
