@@ -158,7 +158,31 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedOrigins", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        var allowedOrigins = Array.Empty<string>();
+        
+        // Essayer de lire comme array d'abord
+        var originsArray = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (originsArray != null && originsArray.Length > 0)
+        {
+            allowedOrigins = originsArray;
+        }
+        else
+        {
+            // Essayer de lire comme string JSON (format Render)
+            var originsString = builder.Configuration["Cors:AllowedOrigins"];
+            if (!string.IsNullOrWhiteSpace(originsString))
+            {
+                try
+                {
+                    allowedOrigins = System.Text.Json.JsonSerializer.Deserialize<string[]>(originsString) ?? Array.Empty<string>();
+                }
+                catch
+                {
+                    // Si parsing échoue, ignorer
+                }
+            }
+        }
+        
         if (allowedOrigins.Length > 0)
         {
             policy.WithOrigins(allowedOrigins)
