@@ -19,12 +19,12 @@ RUN dotnet publish sigac-backend/SIGAC.API/SIGAC.API.csproj -c Release -o /app/p
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Timezone and dependencies (optional)
-ENV ASPNETCORE_URLS=http://+:5000
-EXPOSE 5000
-
 # Create uploads directory in /tmp (ephemeral, no disk needed for Free plan)
 RUN mkdir -p /tmp/uploads
+
+# Copy startup script
+COPY docker/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 COPY --from=build /app/publish .
 
@@ -37,4 +37,5 @@ ENV ConnectionStrings__DefaultConnection="Host=postgres;Port=5432;Database=sigac
     Jwt__Audience="SIGAC.Client" \
     DOTNET_EnableDiagnostics=0
 
-ENTRYPOINT ["dotnet", "SIGAC.API.dll"]
+# Use startup script to handle PORT env var from Render
+CMD ["/app/start.sh"]
