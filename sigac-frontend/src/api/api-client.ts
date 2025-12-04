@@ -2,7 +2,8 @@ import axios from 'axios'
 
 // Détermination de la base URL API avec normalisation du suffixe '/api'
 function normalizeBaseUrl(raw?: string): string {
-  const fallback = 'http://localhost:5210/api'
+  // Fallback: le proxy Vercel est sur /api (relative URL)
+  const fallback = '/api'
   let url = (raw && raw.trim()) ? raw.trim() : fallback
   // Si l'URL se termine déjà par '/api' ou contient '/api/' comme chemin terminal, on garde
   // Sinon on ajoute proprement '/api'
@@ -20,7 +21,7 @@ function normalizeBaseUrl(raw?: string): string {
   return url
 }
 
-const envBaseRaw = import.meta.env.VITE_API_URL || 'http://localhost:5210/api'
+const envBaseRaw = import.meta.env.VITE_API_URL || '/api'
 const storedBaseRaw = typeof window !== 'undefined' ? (localStorage.getItem('apiBaseUrl') || '') : ''
 const baseURL = normalizeBaseUrl(storedBaseRaw || envBaseRaw)
 const timeout = Number(import.meta.env.VITE_API_TIMEOUT ?? 30000)
