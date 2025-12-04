@@ -42,6 +42,11 @@ projects:
       - key: Serilog__MinimumLevel
         value: Information
     
+    - type: cron
+      name: keep-api-alive
+      schedule: "*/10 * * * *"
+      command: curl -s https://sigac-api.onrender.com/api/health > /dev/null
+    
     databases:
     - name: postgresql-sigac
       databaseName: postgresql_sigac_e1f4
