@@ -312,10 +312,16 @@ try
     }
 
     // Seed des données initiales
-    // TEMPORAIREMENT COMMENTÉ POUR DEBUG
-    // await DbInitializer.Initialize(context);
+    try
+    {
+        await SIGAC.Infrastructure.Data.DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "DbInitializer encountered an error, continuing startup");
+    }
 
-    Log.Information("Base de données initialisée avec succès (DbInitializer désactivé temporairement)");
+    Log.Information("Base de données initialisée avec succès");
 }
 catch (Exception ex)
 {
