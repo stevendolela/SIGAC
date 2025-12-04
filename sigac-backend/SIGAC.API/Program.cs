@@ -16,6 +16,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Forcer Kestrel à écouter sur 0.0.0.0:PORT (Render assigne PORT dynamiquement)
+var portEnv = Environment.GetEnvironmentVariable("PORT");
+var port = 10000;
+if (!string.IsNullOrEmpty(portEnv) && int.TryParse(portEnv, out var parsed))
+{
+    port = parsed;
+}
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(port); // HTTP
+});
+
 // Configuration Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
