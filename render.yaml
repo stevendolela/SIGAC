@@ -34,7 +34,7 @@ projects:
       - key: Jwt__RefreshTokenExpirationDays
         value: "7"
       - key: Cors__AllowedOrigins
-        value: '["https://sigac.yourdomain.com","http://localhost:5173","http://localhost:5675","http://localhost:9000"]'
+        value: '["https://sigac.yourdomain.com","http://localhost:5173","http://localhost:5675","http://localhost:8080","http://localhost:9000"]'
       - key: FileStorage__BasePath
         value: /tmp/uploads
       - key: FileStorage__MaxFileSize
