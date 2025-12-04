@@ -5,45 +5,189 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TAJI - Système de gestion des affaires judiciaires</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       #loading-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: #f9fafb;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 9999;
+        transition: opacity 0.5s ease-out;
       }
+
       #loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
         display: none;
       }
+
+      .loading-container {
+        text-align: center;
+        animation: fadeIn 0.6s ease-in;
+      }
+
+      .logo-container {
+        margin-bottom: 40px;
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .logo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        animation: logoFloat 2.5s ease-in-out infinite, logoPulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 15px rgba(59, 130, 246, 0.3));
+      }
+
+      @keyframes logoFloat {
+        0%, 100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      @keyframes logoPulse {
+        0%, 100% {
+          filter: drop-shadow(0 4px 15px rgba(59, 130, 246, 0.3)) brightness(1);
+        }
+        50% {
+          filter: drop-shadow(0 4px 25px rgba(59, 130, 246, 0.6)) brightness(1.05);
+        }
+      }
+
+      .loading-text {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        letter-spacing: 0.5px;
+        animation: fadeInText 0.8s ease-in 0.2s both;
+      }
+
+      .loading-subtext {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-bottom: 40px;
+        animation: fadeInText 0.8s ease-in 0.4s both;
+      }
+
       .spinner {
         width: 50px;
         height: 50px;
-        border: 4px solid #e5e7eb;
+        border: 3px solid rgba(71, 85, 105, 0.3);
         border-top-color: #3b82f6;
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
       }
+
+      .dots {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        animation: dotBounce 1.4s infinite;
+      }
+
+      .dot:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
-      .loading-text {
-        margin-top: 20px;
-        color: #6b7280;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
+
+      @keyframes dotBounce {
+        0%, 100% {
+          transform: translateY(0);
+          opacity: 0.6;
+        }
+        50% {
+          transform: translateY(-10px);
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeInText {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #ffffff;
+      }
+
+      #root {
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
   <body>
     <div id="loading-screen">
-      <div class="spinner"></div>
-      <div class="loading-text">Chargement de TAJI...</div>
+      <div class="loading-container">
+        <div class="logo-container">
+          <img src="/taji-logo.png" alt="TAJI Logo" />
+        </div>
+        <div class="loading-text">TAJI</div>
+        <div class="loading-subtext">Système de gestion des affaires judiciaires</div>
+        <div class="spinner"></div>
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
