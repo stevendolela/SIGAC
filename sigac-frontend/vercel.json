@@ -1,11 +1,5 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://sigac-api.onrender.com/api/:path*"
-    }
-  ]
+  "devCommand": "npm run dev"
 }
