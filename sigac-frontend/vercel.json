@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "env": [
+    "VITE_API_URL"
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://sigac-api.onrender.com/api/:path*"
+    }
+  ]
+}
