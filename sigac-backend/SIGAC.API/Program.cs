@@ -53,12 +53,12 @@ if (dbConnectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnor
     var username = userInfo[0];
     var password = userInfo.Length > 1 ? userInfo[1] : "";
     var host = uri.Host;
-    var port = uri.Port > 0 ? uri.Port : 5432;
+    var dbPort = uri.Port > 0 ? uri.Port : 5432;
     var database = uri.AbsolutePath.TrimStart('/');
     
     // Build EF Core connection string
-    dbConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
-    Log.Information("Converted PostgreSQL URL to EF Core format: Host={Host};Port={Port};Database={Database}", host, port, database);
+    dbConnectionString = $"Host={host};Port={dbPort};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+    Log.Information("Converted PostgreSQL URL to EF Core format: Host={Host};Port={Port};Database={Database}", host, dbPort, database);
 }
 
 // Configuration de la base de données
