@@ -153,46 +153,60 @@ builder.Services.AddScoped<ITypeAffaireRepository, TypeAffaireRepository>();
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// CORS
+// CORS - Configuration flexible pour dev et production
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedOrigins", policy =>
     {
-        var allowedOrigins = Array.Empty<string>();
+        var allowedOrigins = new List<string>();
         
-        // Essayer de lire comme array d'abord
+        // 1. Essayer de lire comme array d'abord (appsettings.json)
         var originsArray = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
         if (originsArray != null && originsArray.Length > 0)
         {
-            allowedOrigins = originsArray;
+            allowedOrigins.AddRange(originsArray);
         }
-        else
+        
+        // 2. Essayer de lire comme string JSON (format Render avec env var)
+        var originsString = builder.Configuration["Cors:AllowedOrigins"];
+        if (!string.IsNullOrWhiteSpace(originsString) && !originsString.StartsWith("["))
         {
-            // Essayer de lire comme string JSON (format Render)
-            var originsString = builder.Configuration["Cors:AllowedOrigins"];
-            if (!string.IsNullOrWhiteSpace(originsString))
+            // Si c'est une string seule (pas JSON), l'ajouter directement
+            allowedOrigins.Add(originsString);
+        }
+        else if (!string.IsNullOrWhiteSpace(originsString) && originsString.StartsWith("["))
+        {
+            try
             {
-                try
-                {
-                    allowedOrigins = System.Text.Json.JsonSerializer.Deserialize<string[]>(originsString) ?? Array.Empty<string>();
-                }
-                catch
-                {
-                    // Si parsing échoue, ignorer
-                }
+                var parsed = System.Text.Json.JsonSerializer.Deserialize<string[]>(originsString);
+                if (parsed != null) allowedOrigins.AddRange(parsed);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to parse Cors:AllowedOrigins as JSON: {Exception}", ex.Message);
             }
         }
         
-        if (allowedOrigins.Length > 0)
+        // Ajouter URL Vercel par défaut
+        if (!allowedOrigins.Contains("https://sigac-frontend-5tba4lw5i-steves-projects-60de588f.vercel.app"))
+            allowedOrigins.Add("https://sigac-frontend-5tba4lw5i-steves-projects-60de588f.vercel.app");
+        
+        // Ajouter localhost pour dev
+        var devOrigins = new[] { "http://localhost:5674", "http://localhost:5673", "http://localhost:5173" };
+        foreach (var origin in devOrigins)
+            if (!allowedOrigins.Contains(origin)) allowedOrigins.Add(origin);
+        
+        if (allowedOrigins.Count > 0)
         {
-            policy.WithOrigins(allowedOrigins)
+            Log.Information("CORS configured for origins: {Origins}", string.Join(", ", allowedOrigins));
+            policy.WithOrigins(allowedOrigins.ToArray())
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
         }
         else
         {
-            // Si aucune origine configurée, autoriser toutes les origines (utile en dev)
+            Log.Warning("No CORS origins configured, allowing all origins");
             policy.AllowAnyOrigin()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
