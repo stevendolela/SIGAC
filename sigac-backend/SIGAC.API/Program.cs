@@ -191,6 +191,12 @@ builder.Services.AddCors(options =>
         if (!allowedOrigins.Contains("https://sigac-frontend-5tba4lw5i-steves-projects-60de588f.vercel.app"))
             allowedOrigins.Add("https://sigac-frontend-5tba4lw5i-steves-projects-60de588f.vercel.app");
         
+        // Ajouter domaine production taajii.fr
+        if (!allowedOrigins.Contains("https://taajii.fr"))
+            allowedOrigins.Add("https://taajii.fr");
+        if (!allowedOrigins.Contains("https://www.taajii.fr"))
+            allowedOrigins.Add("https://www.taajii.fr");
+        
         // Ajouter localhost pour dev
         var devOrigins = new[] { "http://localhost:5674", "http://localhost:5673", "http://localhost:5173" };
         foreach (var origin in devOrigins)
