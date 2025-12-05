@@ -132,6 +132,7 @@ builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<IFormationService, FormationService>();
 builder.Services.AddScoped<IJugeProfileService, JugeProfileService>();
 builder.Services.AddScoped<ISystemConfigService, SIGAC.Infrastructure.Services.SystemConfigService>();
+builder.Services.AddScoped<ISystemInfoService, SIGAC.Infrastructure.Services.SystemInfoServiceImpl>();
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 
 // Enregistrement des repositories

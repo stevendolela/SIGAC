@@ -2,21 +2,20 @@ using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Interfaces;
-using SIGAC.Infrastructure.Data;
 using Serilog;
 
-namespace SIGAC.Core.Services
+namespace SIGAC.Infrastructure.Services
 {
     /// <summary>
     /// Service pour récupérer les informations système et API
     /// </summary>
-    public class SystemInfoService : ISystemInfoService
+    public class SystemInfoServiceImpl : ISystemInfoService
     {
         private readonly ApplicationDbContext _context;
         private static readonly DateTime ApplicationStartTime = DateTime.UtcNow;
         private static long TotalRequestCount = 0;
 
-        public SystemInfoService(ApplicationDbContext context)
+        public SystemInfoServiceImpl(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -44,12 +43,13 @@ namespace SIGAC.Core.Services
                     MemoryUsageMB = Math.Round(process.WorkingSet64 / (1024.0 * 1024.0), 2),
                     TotalRequests = TotalRequestCount,
                     DatabaseHost = ExtractDatabaseHost(),
-                    LastBackupTime = null, // À implémenter selon votre stratégie
+                    LastBackupTime = null,
                     ExternalServices = new Dictionary<string, string>
                     {
                         { "CORS", "Configured" },
                         { "JWT", "Active" },
-                        { "SSL/TLS", "Enabled" }
+                        { "SSL/TLS", "Enabled" },
+                        { "Audit Logging", "Active" }
                     },
                     GeneratedAt = DateTime.UtcNow
                 };
@@ -59,28 +59,7 @@ namespace SIGAC.Core.Services
                 info.TotalDossiers = await _context.Dossiers.CountAsync();
                 info.TotalDocuments = await _context.Documents.CountAsync();
 
-                // Ajouter les logs récents (dernières 5 lignes)
-                try
-                {
-                    var logsPath = "logs";
-                    if (Directory.Exists(logsPath))
-                    {
-                        var logFiles = Directory.GetFiles(logsPath, "*.txt")
-                            .OrderByDescending(f => File.GetLastWriteTime(f))
-                            .FirstOrDefault();
-
-                        if (!string.IsNullOrEmpty(logFiles))
-                        {
-                            var lines = File.ReadAllLines(logFiles).TakeLast(5).ToList();
-                            info.RecentLogs = lines;
-                        }
-                    }
-                }
-                catch
-                {
-                    // Ignorer les erreurs de lecture des logs
-                }
-
+                Log.Information("Informations système récupérées pour Admin");
                 return info;
             }
             catch (Exception ex)
@@ -117,8 +96,6 @@ namespace SIGAC.Core.Services
                 if (string.IsNullOrEmpty(connection))
                     return "Unknown";
 
-                // Extraire le host de la connection string PostgreSQL
-                // Format: "Host=host;Port=5432;Database=db;Username=user;Password=pass"
                 var hostPart = connection.Split(';')
                     .FirstOrDefault(x => x.StartsWith("Host="));
 
@@ -144,7 +121,7 @@ namespace SIGAC.Core.Services
         /// </summary>
         private string GetEnvironment()
         {
-            return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            return System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
         }
 
         /// <summary>
