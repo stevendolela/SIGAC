@@ -184,6 +184,22 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
     }
   }
 
+  async function handleDeleteDocument() {
+    if (!lastUploaded) return
+    
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer "${lastUploaded.nomFichier}"?`)) {
+      return
+    }
+
+    try {
+      await api.delete(`/Documents/${lastUploaded.id}`)
+      notify({ type: 'success', message: `✅ Document supprimé avec succès` })
+      setLastUploaded(null)
+    } catch (error: any) {
+      notify({ type: 'error', message: error?.response?.data?.message || 'Erreur lors de la suppression' })
+    }
+  }
+
   return (
     <div className="panel">
       <div className="panel-title">📝 Créer un Nouveau Dossier</div>
@@ -375,9 +391,37 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
             {/* Dernier fichier uploadé */}
             {lastUploaded && (
-              <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#16a34a' }}>
-                  ✅ Dernier upload: <strong>{lastUploaded.nomFichier}</strong>
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', borderRadius: 8, padding: 16, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: '#16a34a', marginBottom: 4 }}>
+                      ✅ Dernier upload:
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#15803d' }}>
+                      {lastUploaded.nomFichier}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      {lastUploaded.tailleFichier ? `${(lastUploaded.tailleFichier / 1024).toFixed(1)} KB` : ''}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDeleteDocument}
+                    style={{
+                      padding: '8px 12px',
+                      background: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Supprimer ce document"
+                  >
+                    🗑️ Supprimer
+                  </button>
                 </div>
               </div>
             )}
