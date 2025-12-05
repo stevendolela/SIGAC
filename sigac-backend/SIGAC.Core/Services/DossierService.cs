@@ -256,7 +256,7 @@ public class DossierService : IDossierService
         dossier.ModifiedAt = DateTime.UtcNow;
 
         // Mettre à jour le dossier
-        _dossierRepository.Update(dossier);
+        await _dossierRepository.UpdateAsync(dossier);
 
         // Ajouter un historique
         var histoDelete = new Historique
