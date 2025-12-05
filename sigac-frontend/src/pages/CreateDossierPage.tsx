@@ -23,6 +23,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
   const [demandeur, setDemandeur] = useState('')
   const [defendeur, setDefendeur] = useState('')
   const [resume, setResume] = useState('')
+  const [dossierId, setDossierId] = useState<string | null>(null) // ID du dossier créé
   // Champs non supportés par le DTO backend retirés pour éviter 400: observations/dateDepot/dateAudience
 
   async function handleSubmit(e: React.FormEvent) {
@@ -60,6 +61,9 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       
       notify({ type: 'success', message: `✅ Dossier créé avec succès: ${response.data.numeroDossier}` })
       
+      // Sauvegarder l'ID du dossier pour l'upload
+      setDossierId(response.data.id)
+      
       // Réinitialiser le formulaire
   setTitre('')
   setTypeAffaireId(null)
@@ -89,6 +93,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
     setDemandeur('')
     setDefendeur('')
     setResume('')
+    setDossierId(null)
+    setFile(null)
+    setUploadProgress(0)
+    setLastUploaded(null)
   }
 
   // Fonctions d'upload
@@ -135,7 +143,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       return
     }
 
-    if (!titre.trim()) {
+    if (!dossierId) {
       notify({ type: 'error', message: 'Créez d\'abord un dossier avant d\'uploader un document' })
       return
     }
@@ -146,7 +154,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
     formData.append('typeDocument', 'Pièces justificatives')
 
     try {
-      const response = await api.post(`/Documents/${titre}`, formData, {
+      const response = await api.post(`/Documents/upload/${dossierId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
           const percentCompleted = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0
