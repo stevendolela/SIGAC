@@ -9,7 +9,7 @@ public interface IUserService
     Task<UserDto?> GetByIdAsync(Guid id);
     Task<UserDto?> GetByUsernameAsync(string username);
     Task<PaginatedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 10, string? search = null);
-    Task<UserDto> CreateUserAsync(string username, string email, string passwordHash, UserRole role, Guid createdBy);
+    Task<UserDto> CreateUserAsync(string username, string email, string passwordHash, UserRole role, Guid createdBy, string? nomComplet = null, string? matricule = null);
     Task<bool> UpdateUserAsync(Guid userId, string? email, UserRole? role, string? nomComplet, bool? isActive, string? matricule, Guid updatedBy);
     Task<bool> DeleteUserAsync(Guid userId, Guid deletedBy);
     

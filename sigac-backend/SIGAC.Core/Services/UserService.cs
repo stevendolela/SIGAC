@@ -57,7 +57,7 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<UserDto> CreateUserAsync(string username, string email, string passwordHash, UserRole role, Guid createdBy)
+    public async Task<UserDto> CreateUserAsync(string username, string email, string passwordHash, UserRole role, Guid createdBy, string? nomComplet = null, string? matricule = null)
     {
         var user = new User
         {
@@ -66,6 +66,8 @@ public class UserService : IUserService
             Email = email,
             PasswordHash = passwordHash,
             Role = role,
+            NomComplet = nomComplet,
+            Matricule = matricule,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         };

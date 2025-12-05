@@ -188,7 +188,9 @@ public class UsersController : ControllerBase
                 createUserDto.Email,
                 passwordHash,
                 createUserDto.Role,
-                GetCurrentUserId());
+                GetCurrentUserId(),
+                createUserDto.NomComplet,
+                createUserDto.Matricule);
 
             // Envoi email de bienvenue avec le mot de passe temporaire
             var userEntity = await _userRepository.GetByIdAsync(newUser.Id);
