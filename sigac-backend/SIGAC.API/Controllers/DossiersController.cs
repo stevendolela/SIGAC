@@ -92,7 +92,7 @@ public class DossiersController : ControllerBase
     /// Crée un nouveau dossier
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President,Greffier,GreffierAdjoint")]
+    [Authorize(Roles = "Administrateur,President,Greffier,GreffierAdjoint,JugeConstitutionnel")]
     [ProducesResponseType(typeof(DossierDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<DossierDto>> CreateDossier([FromBody] CreateDossierDto createDto)

@@ -50,13 +50,14 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
       const payload = {
         // Le binder ASP.NET Core est case-insensitive; camelCase ok
         titre: titre.trim(),
-        typeAffaireId: typeAffaireId,
-        priorite: Number(priorite),
+        typeAffaireId: typeAffaireId, // string UUID - ASP.NET convertira en Guid
+        priorite: Number(priorite), // 1-4
         demandeur: demandeur.trim(),
         defendeur: defendeur.trim() || null,
         resume: resume.trim() || null
       }
 
+      console.log('📤 Envoi payload:', payload)
       const response = await api.post('/Dossiers', payload)
       
       notify({ type: 'success', message: `✅ Dossier créé avec succès: ${response.data.numeroDossier}` })
@@ -75,11 +76,21 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
       if (onSuccess) onSuccess()
     } catch (error: any) {
+      const status = error?.response?.status
       const serverMsg = error?.response?.data?.message
       const modelErrors: string[] | undefined = error?.response?.data?.errors
+      
+      // Log des erreurs pour debugging
+      console.error(`❌ Erreur API (${status}):`, {
+        status,
+        serverMsg,
+        modelErrors,
+        fullResponse: error?.response?.data
+      })
+      
       notify({ 
         type: 'error', 
-        message: serverMsg || (modelErrors?.length ? modelErrors.join('\n') : 'Erreur lors de la création du dossier') 
+        message: serverMsg || (modelErrors?.length ? modelErrors.join('\n') : `Erreur ${status}: Impossible de créer le dossier`) 
       })
     } finally {
       setLoading(false)
