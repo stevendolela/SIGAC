@@ -16,7 +16,6 @@ import ApiHealth from './components/common/ApiHealth'
 import NotificationsBell from './components/common/NotificationsBell'
 import JugeProfilesPage from './pages/JugeProfilesPage'
 import MonProfilPage from './pages/MonProfilPage'
-import FormationsPage from './pages/FormationsPage'
 import CalendarPage from './pages/CalendarPage'
 import AdminUserEditPage from './pages/AdminUserEditPage'
 import AccountPage from './pages/AccountPage'
@@ -30,7 +29,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'formations' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -206,11 +205,6 @@ export default function App() {
             <button className={`tab ${view === 'profils' ? 'active' : ''}`} onClick={() => setView('profils')}>
               👤 Profils Juges
             </button>
-            {user?.role === 'Administrateur' && (
-              <button className={`tab ${view === 'formations' ? 'active' : ''}`} onClick={() => setView('formations')}>
-                🧩 Formations
-              </button>
-            )}
             <button className={`tab ${view === 'types-affaires' ? 'active' : ''}`} onClick={() => setView('types-affaires')}>
               🧾 Types d'affaires
             </button>
@@ -253,7 +247,6 @@ export default function App() {
           {view === 'salles' && <SallesPage />}
           {view === 'mon-profil' && <MonProfilPage />}
           {view === 'profils' && <JugeProfilesPage />}
-          {view === 'formations' && <FormationsPage />}
           {view === 'users' && (
             <UsersPage />
           )}
