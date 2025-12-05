@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from './StatusBadge'
 import api from '../../api/api-client'
+import { useToast } from '../common/ToastProvider'
 import type { DossierListDto } from '../../types/dossier'
 import type { PaginatedResult, PaginationMetadata } from '../../types/pagination'
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function DossierList({ onSelect }: Props) {
+  const { notify } = useToast()
   const [items, setItems] = useState<DossierListDto[]>([])
   const [pagination, setPagination] = useState<PaginationMetadata | null>(null)
   const [page, setPage] = useState(1)
@@ -19,6 +21,25 @@ export default function DossierList({ onSelect }: Props) {
   const [pendingSearch, setPendingSearch] = useState('')
   const [status, setStatus] = useState<string>('')
   const [priorite, setPriorite] = useState<string>('')
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  // Fonction pour supprimer un dossier
+  const handleDeleteDossier = async (dossierId: string, numeroDossier: string) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le dossier ${numeroDossier}? Cette action est irréversible.`)) {
+      return
+    }
+
+    setDeleting(dossierId)
+    try {
+      await api.delete(`/Dossiers/${dossierId}`)
+      notify({ type: 'success', message: `✅ Dossier ${numeroDossier} supprimé avec succès` })
+      setItems(items.filter(d => d.id !== dossierId))
+    } catch (error: any) {
+      notify({ type: 'error', message: error?.response?.data?.message || 'Erreur lors de la suppression' })
+    } finally {
+      setDeleting(null)
+    }
+  }
 
   // Helper pour formater le type d'affaire avec des espaces
   const formatTypeAffaire = (type?: string | null): string => {
@@ -127,9 +148,22 @@ export default function DossierList({ onSelect }: Props) {
                     }
                   </td>
                   <td>
-                    {onSelect && (
-                      <button className="btn" onClick={() => onSelect(d)}>Sélectionner</button>
-                    )}
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                      {onSelect && (
+                        <button className="btn" onClick={() => onSelect(d)}>Voir</button>
+                      )}
+                      <button 
+                        className="btn" 
+                        onClick={() => handleDeleteDossier(d.id, d.numeroDossier)}
+                        disabled={deleting === d.id}
+                        style={{ 
+                          background: deleting === d.id ? '#999' : '#dc2626',
+                          color: 'white'
+                        }}
+                      >
+                        {deleting === d.id ? '⏳ Suppression...' : '🗑️ Supprimer'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
