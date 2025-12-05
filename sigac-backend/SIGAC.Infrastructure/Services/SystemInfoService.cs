@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Interfaces;
-using Serilog;
+using SIGAC.Infrastructure.Data;
 
 namespace SIGAC.Infrastructure.Services
 {
@@ -59,12 +59,10 @@ namespace SIGAC.Infrastructure.Services
                 info.TotalDossiers = await _context.Dossiers.CountAsync();
                 info.TotalDocuments = await _context.Documents.CountAsync();
 
-                Log.Information("Informations système récupérées pour Admin");
                 return info;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Log.Error(ex, "Erreur lors de la récupération des infos système");
                 throw;
             }
         }
