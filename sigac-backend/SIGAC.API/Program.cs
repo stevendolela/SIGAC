@@ -252,12 +252,12 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "SIGAC API",
+        Title = "Taajii GED API",
         Version = "v1",
-        Description = "Système Intégré de Gestion des Affaires Constitutionnelles - Cour Constitutionnelle RDC",
+        Description = "Taajii GED - Gestion Électronique des Dossiers - Cour Constitutionnelle RDC",
         Contact = new OpenApiContact
         {
-            Name = "Support SIGAC",
+            Name = "Support Taajii GED",
             Email = "support@courconstitutionnelle.cd"
         }
     });

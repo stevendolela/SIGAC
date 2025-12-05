@@ -85,9 +85,9 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Logo size={48} style={{ cursor: 'pointer' }} onClick={() => setView('dashboard')} />
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>TAJI</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>Taajii GED</div>
               <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.8)' }}>
-                Système de gestion des affaires judiciaires
+                Gestion Électronique des Dossiers
               </div>
             </div>
           </div>

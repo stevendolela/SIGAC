@@ -1,6 +1,6 @@
-# TAJI - Système de gestion des affaires judiciaires
+# Taajii GED - Gestion Électronique des Dossiers
 
-Projet TAJI pour la Cour Constitutionnelle RDC
+Projet Taajii GED pour la Cour Constitutionnelle RDC
 
 ## 🎯 Description
 

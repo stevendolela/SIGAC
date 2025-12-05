@@ -31,9 +31,9 @@ export default function LoginPage() {
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Logo size={120} />
-          <h2 style={{ marginBottom: 8 }}>TAJI</h2>
+          <h2 style={{ marginBottom: 8 }}>Taajii GED</h2>
           <p style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>
-            Système de gestion des affaires judiciaires
+            Gestion Électronique des Dossiers
           </p>
         </div>
 
