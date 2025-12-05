@@ -7,6 +7,9 @@ using SIGAC.Core.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using Microsoft.EntityFrameworkCore;
+using SIGAC.Infrastructure.Data;
+using System.Diagnostics;
 
 namespace SIGAC.Infrastructure.Services;
 
@@ -14,19 +17,24 @@ public class SystemConfigService : ISystemConfigService
 {
     private readonly ISmtpConfigurationRepository _smtpConfigRepository;
     private readonly IAuditLogRepository _auditLogRepository;
+    private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IDataProtector _dataProtector;
     private readonly ILogger<SystemConfigService> _logger;
+    private static readonly DateTime ApplicationStartTime = DateTime.UtcNow;
+    private static long TotalRequestCount = 0;
 
     public SystemConfigService(
         ISmtpConfigurationRepository smtpConfigRepository,
         IAuditLogRepository auditLogRepository,
+        ApplicationDbContext context,
         IMapper mapper,
         IDataProtectionProvider dataProtectionProvider,
         ILogger<SystemConfigService> logger)
     {
         _smtpConfigRepository = smtpConfigRepository;
         _auditLogRepository = auditLogRepository;
+        _context = context;
         _mapper = mapper;
         _dataProtector = dataProtectionProvider.CreateProtector("SmtpPasswordProtector");
         _logger = logger;
@@ -222,5 +230,117 @@ public class SystemConfigService : ISystemConfigService
             _logger.LogError(ex, "Erreur lors du déchiffrement du mot de passe SMTP");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Récupère les informations système et de l'API (ADMIN ONLY)
+    /// </summary>
+    public async Task<SystemInfoDto> GetSystemInfoAsync()
+    {
+        try
+        {
+            var process = Process.GetCurrentProcess();
+            var databaseStatus = await GetDatabaseStatusAsync();
+
+            var info = new SystemInfoDto
+            {
+                ApplicationName = "SIGAC - Système de Gestion des Affaires Constitutionnelles",
+                ApiVersion = "1.0.0",
+                RuntimeVersion = $".NET {GetDotNetVersion()}",
+                Environment = GetEnvironment(),
+                DatabaseStatus = databaseStatus,
+                DatabaseType = "PostgreSQL 15",
+                ApplicationStartTime = ApplicationStartTime,
+                UptimeSeconds = (long)(DateTime.UtcNow - ApplicationStartTime).TotalSeconds,
+                MemoryUsageMB = Math.Round(process.WorkingSet64 / (1024.0 * 1024.0), 2),
+                TotalRequests = TotalRequestCount,
+                DatabaseHost = ExtractDatabaseHost(),
+                LastBackupTime = null,
+                ExternalServices = new Dictionary<string, string>
+                {
+                    { "CORS", "Configured" },
+                    { "JWT", "Active" },
+                    { "SSL/TLS", "Enabled" },
+                    { "Audit Logging", "Active" }
+                },
+                GeneratedAt = DateTime.UtcNow
+            };
+
+            // Compter les entités
+            info.ActiveUsers = await _context.Users.CountAsync();
+            info.TotalDossiers = await _context.Dossiers.CountAsync();
+            info.TotalDocuments = await _context.Documents.CountAsync();
+
+            _logger.LogInformation("Informations système récupérées pour Admin");
+            return info;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des infos système");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Vérifie le statut de la base de données (ADMIN ONLY)
+    /// </summary>
+    public async Task<string> GetDatabaseStatusAsync()
+    {
+        try
+        {
+            await _context.Database.ExecuteSqlRawAsync("SELECT 1");
+            return "Connected";
+        }
+        catch
+        {
+            return "Disconnected";
+        }
+    }
+
+    /// <summary>
+    /// Extrait le host de la connexion PostgreSQL
+    /// </summary>
+    private string ExtractDatabaseHost()
+    {
+        try
+        {
+            var connection = _context.Database.GetConnectionString();
+            if (string.IsNullOrEmpty(connection))
+                return "Unknown";
+
+            var hostPart = connection.Split(';')
+                .FirstOrDefault(x => x.StartsWith("Host="));
+
+            return hostPart?.Replace("Host=", "") ?? "Unknown";
+        }
+        catch
+        {
+            return "Unknown";
+        }
+    }
+
+    /// <summary>
+    /// Récupère la version de .NET
+    /// </summary>
+    private string GetDotNetVersion()
+    {
+        return System.Runtime.InteropServices.RuntimeInformation
+            .FrameworkDescription ?? "Unknown";
+    }
+
+    /// <summary>
+    /// Récupère l'environnement actuel
+    /// </summary>
+    private string GetEnvironment()
+    {
+        return System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+    }
+
+    /// <summary>
+    /// Incrémente le compteur de requêtes
+    /// </summary>
+    public static void IncrementRequestCount()
+    {
+        Interlocked.Increment(ref TotalRequestCount);
     }
 }

@@ -107,4 +107,50 @@ public class SystemConfigController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Récupère les informations système et de l'API
+    /// Endpoint ADMIN ONLY
+    /// </summary>
+    [HttpGet("info")]
+    [ProducesResponseType(typeof(SystemInfoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetSystemInfo()
+    {
+        try
+        {
+            var info = await _systemConfigService.GetSystemInfoAsync();
+            
+            _logger.LogInformation("Admin a accédé aux informations système");
+            
+            return Ok(info);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des infos système");
+            return StatusCode(500, new { message = "Erreur lors de la récupération des informations système" });
+        }
+    }
+
+    /// <summary>
+    /// Vérifie le statut de la base de données
+    /// Endpoint ADMIN ONLY
+    /// </summary>
+    [HttpGet("database-status")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetDatabaseStatus()
+    {
+        try
+        {
+            var status = await _systemConfigService.GetDatabaseStatusAsync();
+            return Ok(new { status });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la vérification du statut de la BD");
+            return StatusCode(500, new { message = "Erreur lors de la vérification du statut" });
+        }
+    }
 }

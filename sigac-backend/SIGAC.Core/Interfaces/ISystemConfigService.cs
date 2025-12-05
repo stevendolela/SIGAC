@@ -23,4 +23,14 @@ public interface ISystemConfigService
     /// Récupère le mot de passe SMTP déchiffré (pour usage interne uniquement)
     /// </summary>
     Task<string?> GetDecryptedSmtpPasswordAsync();
+
+    /// <summary>
+    /// Récupère les informations système et de l'API (ADMIN ONLY)
+    /// </summary>
+    Task<SystemInfoDto> GetSystemInfoAsync();
+
+    /// <summary>
+    /// Vérifie le statut de la base de données (ADMIN ONLY)
+    /// </summary>
+    Task<string> GetDatabaseStatusAsync();
 }
