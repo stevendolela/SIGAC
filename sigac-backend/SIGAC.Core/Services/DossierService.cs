@@ -152,16 +152,21 @@ public class DossierService : IDossierService
             userId, "CREATE", "Dossier", dossier.Id.ToString(),
             null, System.Text.Json.JsonSerializer.Serialize(dossier));
 
+        // Recharger le dossier complet avec les relations pour le mapper
+        var createdDossier = await _dossierRepository.GetByIdAsync(dossier.Id);
+        if (createdDossier == null)
+            throw new InvalidOperationException($"Impossible de recharger le dossier créé {dossier.Id}");
+
         // Envoi de notification email si un rapporteur est assigné
-        if (dossier.RapporteurId.HasValue)
+        if (createdDossier.RapporteurId.HasValue)
         {
-            var rapporteur = await _userRepository.GetByIdAsync(dossier.RapporteurId.Value);
+            var rapporteur = await _userRepository.GetByIdAsync(createdDossier.RapporteurId.Value);
             var createdByUser = await _userRepository.GetByIdAsync(userId);
             
             if (rapporteur != null && createdByUser != null)
             {
                 // Mapper vers DTOs pour éviter les références circulaires
-                var dossierDto = _mapper.Map<DossierDto>(dossier);
+                var dossierDto = _mapper.Map<DossierDto>(createdDossier);
                 var rapporteurDto = _mapper.Map<UserDto>(rapporteur);
                 var createdByDto = _mapper.Map<UserDto>(createdByUser);
                 
@@ -169,7 +174,7 @@ public class DossierService : IDossierService
             }
         }
 
-        return _mapper.Map<DossierDto>(dossier);
+        return _mapper.Map<DossierDto>(createdDossier);
     }
 
     public async Task<DossierDto?> UpdateDossierAsync(Guid id, UpdateDossierDto updateDto, Guid userId)

@@ -21,6 +21,7 @@ public class DossierRepository : IDossierRepository
         PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId)
     {
         var query = _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Include(d => d.Rapporteur)
             .Include(d => d.Documents)
             .AsQueryable();
@@ -82,6 +83,7 @@ public class DossierRepository : IDossierRepository
     public async Task<Dossier?> GetByIdAsync(Guid id)
     {
         return await _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Include(d => d.Rapporteur)
             .Include(d => d.Documents)
             .Include(d => d.Historiques)
@@ -93,6 +95,7 @@ public class DossierRepository : IDossierRepository
     {
         // Charge le dossier SANS les historiques pour éviter les problèmes de concurrence
         return await _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Include(d => d.Rapporteur)
             .FirstOrDefaultAsync(d => d.Id == id);
     }
@@ -100,6 +103,7 @@ public class DossierRepository : IDossierRepository
     public async Task<Dossier?> GetByNumeroDossierAsync(string numeroDossier)
     {
         return await _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Include(d => d.Rapporteur)
             .Include(d => d.Documents)
             .Include(d => d.Historiques)
