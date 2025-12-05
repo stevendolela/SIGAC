@@ -11,6 +11,9 @@ interface Props {
 
 export default function DossierList({ onSelect }: Props) {
   const { notify } = useToast()
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const isAdmin = user?.role === 'Admin'
   const [items, setItems] = useState<DossierListDto[]>([])
   const [pagination, setPagination] = useState<PaginationMetadata | null>(null)
   const [page, setPage] = useState(1)
@@ -120,17 +123,17 @@ export default function DossierList({ onSelect }: Props) {
       {loading && <div className="info">Chargement…</div>}
       {error && <div className="error">{error}</div>}
       {!loading && !error && (
-        <div className="table-wrapper">
-          <table className="table">
+        <div className="table-wrapper" style={{ fontSize: '13px' }}>
+          <table className="table" style={{ fontSize: '13px' }}>
             <thead>
               <tr>
-                <th>Numéro</th>
-                <th>Titre</th>
-                <th>Type</th>
-                <th>Statut</th>
-                <th>Priorité</th>
-                <th>Date début</th>
-                <th></th>
+                <th style={{ fontSize: '13px' }}>Numéro</th>
+                <th style={{ fontSize: '13px' }}>Titre</th>
+                <th style={{ fontSize: '13px' }}>Type</th>
+                <th style={{ fontSize: '13px' }}>Statut</th>
+                <th style={{ fontSize: '13px' }}>Priorité</th>
+                <th style={{ fontSize: '13px' }}>Date début</th>
+                <th style={{ fontSize: '13px' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -148,21 +151,25 @@ export default function DossierList({ onSelect }: Props) {
                     }
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
                       {onSelect && (
-                        <button className="btn" onClick={() => onSelect(d)}>Voir</button>
+                        <button className="btn" onClick={() => onSelect(d)} style={{ fontSize: '12px', padding: '4px 8px' }}>👁️ Voir</button>
                       )}
-                      <button 
-                        className="btn" 
-                        onClick={() => handleDeleteDossier(d.id, d.numeroDossier)}
-                        disabled={deleting === d.id}
-                        style={{ 
-                          background: deleting === d.id ? '#999' : '#dc2626',
-                          color: 'white'
-                        }}
-                      >
-                        {deleting === d.id ? '⏳ Suppression...' : '🗑️ Supprimer'}
-                      </button>
+                      {isAdmin && (
+                        <button 
+                          className="btn" 
+                          onClick={() => handleDeleteDossier(d.id, d.numeroDossier)}
+                          disabled={deleting === d.id}
+                          style={{ 
+                            background: deleting === d.id ? '#999' : '#dc2626',
+                            color: 'white',
+                            fontSize: '12px',
+                            padding: '4px 8px'
+                          }}
+                        >
+                          {deleting === d.id ? '⏳' : '🗑️'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

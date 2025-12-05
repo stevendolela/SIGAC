@@ -164,13 +164,15 @@ export default function App() {
                 window.open(href, '_blank')
               }
             }} />
-            <button
-              className="btn"
-              onClick={() => setShowApiSwitcher(true)}
-              style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
-            >
-              🔌 API
-            </button>
+            {user?.role === 'Admin' && (
+              <button
+                className="btn"
+                onClick={() => setShowApiSwitcher(true)}
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
+              >
+                🔌 API
+              </button>
+            )}
           </div>
         </header>
       )}
@@ -225,8 +227,12 @@ export default function App() {
             )}
           </div>
           <div className="env-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <ApiHealth intervalMs={30000} />
-            <span>🔌 API: {apiUrl}</span>
+            {user?.role === 'Admin' && (
+              <>
+                <ApiHealth intervalMs={30000} />
+                <span>🔌 API: {apiUrl}</span>
+              </>
+            )}
           </div>
           {view === 'dashboard' && <DashboardPage />}
           {view === 'dossiers' && (
