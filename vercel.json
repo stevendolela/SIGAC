@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd sigac-frontend && npm run build",
+  "outputDirectory": "sigac-frontend/dist",
+  "devCommand": "cd sigac-frontend && npm run dev",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
