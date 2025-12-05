@@ -2,10 +2,19 @@ import { useState } from 'react'
 import api from '../api/api-client'
 import { useToast } from '../components/common/ToastProvider'
 import { TypeAffaireSelect } from '../components/dossiers/TypeAffaireSelect'
+import type { AxiosProgressEvent } from 'axios'
+import type { DocumentDto } from '../types/document'
 
 export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => void }) {
   const { notify } = useToast()
   const [loading, setLoading] = useState(false)
+
+  // States pour l'upload
+  const [file, setFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<number>(0)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [lastUploaded, setLastUploaded] = useState<DocumentDto | null>(null)
+  const [uploadLoading, setUploadLoading] = useState(false)
 
   // Champs du formulaire
   const [titre, setTitre] = useState('')
@@ -80,7 +89,80 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
     setDemandeur('')
     setDefendeur('')
     setResume('')
-    
+  }
+
+  // Fonctions d'upload
+  const MAX_FILE_SIZE = 50 * 1024 * 1024
+  const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg']
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragOver(false)
+    const droppedFile = e.dataTransfer.files?.[0]
+    if (droppedFile) {
+      if (!allowedTypes.includes(droppedFile.type)) {
+        notify({ type: 'error', message: 'Type de fichier non autorisé (PDF/JPG/PNG uniquement)' })
+        return
+      }
+      if (droppedFile.size > MAX_FILE_SIZE) {
+        notify({ type: 'error', message: 'Fichier trop volumineux (max 50MB)' })
+        return
+      }
+      setFile(droppedFile)
+      notify({ type: 'success', message: `Fichier "${droppedFile.name}" sélectionné` })
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      if (!allowedTypes.includes(selectedFile.type)) {
+        notify({ type: 'error', message: 'Type de fichier non autorisé (PDF/JPG/PNG uniquement)' })
+        return
+      }
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        notify({ type: 'error', message: 'Fichier trop volumineux (max 50MB)' })
+        return
+      }
+      setFile(selectedFile)
+      notify({ type: 'success', message: `Fichier "${selectedFile.name}" sélectionné` })
+    }
+  }
+
+  async function handleUpload() {
+    if (!file) {
+      notify({ type: 'error', message: 'Veuillez sélectionner un fichier' })
+      return
+    }
+
+    if (!titre.trim()) {
+      notify({ type: 'error', message: 'Créez d\'abord un dossier avant d\'uploader un document' })
+      return
+    }
+
+    setUploadLoading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('typeDocument', 'Pièces justificatives')
+
+    try {
+      const response = await api.post(`/Documents/${titre}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          const percentCompleted = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0
+          setUploadProgress(percentCompleted)
+        }
+      })
+      
+      setLastUploaded(response.data)
+      notify({ type: 'success', message: `✅ Document uploadé avec succès` })
+      setFile(null)
+      setUploadProgress(0)
+    } catch (error: any) {
+      notify({ type: 'error', message: error?.response?.data?.message || 'Erreur lors de l\'upload' })
+    } finally {
+      setUploadLoading(false)
+    }
   }
 
   return (
@@ -217,6 +299,91 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
             </button>
           </div>
         </div>
+
+        {/* Section Upload de documents */}
+        {titre && (
+          <div className="card" style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)' }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>📤</span> Upload de Documents
+            </div>
+
+            {/* Drag & drop zone */}
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+              onDragLeave={() => setIsDragOver(false)}
+              style={{
+                border: `2px dashed ${isDragOver ? '#3b82f6' : '#cbd5e1'}`,
+                borderRadius: 12,
+                padding: 24,
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: isDragOver ? 'rgba(59, 130, 246, 0.05)' : 'rgba(203, 213, 225, 0.05)',
+                transition: 'all 0.3s',
+                marginBottom: 16
+              }}
+            >
+              <input
+                type="file"
+                id="file-input"
+                onChange={handleFileSelect}
+                accept=".pdf,.png,.jpg,.jpeg"
+                style={{ display: 'none' }}
+                disabled={uploadLoading}
+              />
+              <label htmlFor="file-input" style={{ cursor: 'pointer' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
+                <div style={{ fontSize: 14, color: '#475569', marginBottom: 4 }}>
+                  {file ? `✅ ${file.name}` : 'Glissez-déposez un fichier ou cliquez pour sélectionner'}
+                </div>
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                  Formats: PDF, PNG, JPG (Max 50MB)
+                </div>
+              </label>
+            </div>
+
+            {/* Upload progress */}
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, marginBottom: 4, color: '#475569' }}>
+                  Progression: {uploadProgress}%
+                </div>
+                <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #06b6d4)', transition: 'width 0.3s' }} />
+                </div>
+              </div>
+            )}
+
+            {/* Dernier fichier uploadé */}
+            {lastUploaded && (
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: '#16a34a' }}>
+                  ✅ Dernier upload: <strong>{lastUploaded.nomFichier}</strong>
+                </div>
+              </div>
+            )}
+
+            {/* Bouton Upload */}
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={!file || uploadLoading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: file ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : '#ccc',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                fontWeight: 600,
+                cursor: file ? 'pointer' : 'not-allowed',
+                opacity: uploadLoading ? 0.7 : 1
+              }}
+            >
+              {uploadLoading ? '⏳ Upload en cours...' : '📤 Uploader le Document'}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Logo from './components/common/Logo'
-import UploadPage from './pages/UploadPage'
 import LoginPage from './pages/LoginPage'
 import AuthHeader from './components/AuthHeader'
 import DossierList from './components/dossiers/DossierList'
@@ -31,7 +30,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'upload' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'formations' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'formations' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -199,9 +198,6 @@ export default function App() {
             <button className={`tab ${view === 'calendrier' ? 'active' : ''}`} onClick={() => setView('calendrier')}>
               🗓️ Calendrier
             </button>
-            <button className={`tab ${view === 'upload' ? 'active' : ''}`} onClick={() => setView('upload')}>
-              📤 Upload
-            </button>
             {user?.role === 'JugeConstitutionnel' && (
               <button className={`tab ${view === 'mon-profil' ? 'active' : ''}`} onClick={() => setView('mon-profil')}>
                 👤 Mon Profil
@@ -258,9 +254,6 @@ export default function App() {
           {view === 'mon-profil' && <MonProfilPage />}
           {view === 'profils' && <JugeProfilesPage />}
           {view === 'formations' && <FormationsPage />}
-          {view === 'upload' && (
-            <UploadPage selectedDossierId={selectedDossierId} />
-          )}
           {view === 'users' && (
             <UsersPage />
           )}
