@@ -255,6 +255,10 @@ public class DossierService : IDossierService
         dossier.ModifiedBy = userId;
         dossier.ModifiedAt = DateTime.UtcNow;
 
+        // Mettre à jour le dossier
+        _dossierRepository.Update(dossier);
+
+        // Ajouter un historique
         var histoDelete = new Historique
         {
             Id = Guid.NewGuid(),
@@ -264,9 +268,9 @@ public class DossierService : IDossierService
             Details = "Suppression logique du dossier",
             UserId = userId
         };
-        dossier.Historiques.Add(histoDelete);
         await _dossierRepository.AddHistoriqueAsync(histoDelete);
 
+        // Sauvegarder tous les changements
         await _dossierRepository.SaveChangesAsync();
 
         // Audit log
