@@ -88,25 +88,32 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
 
         // Sérialiser uniquement les champs primitifs pour éviter les cycles (nav props)
-        var createdValues = System.Text.Json.JsonSerializer.Serialize(new
+        try
         {
-            user.Id,
-            user.Username,
-            user.Email,
-            user.NomComplet,
-            Role = user.Role.ToString(),
-            user.IsActive,
-            user.Matricule,
-            user.AvatarUrl,
-            user.PhoneNumber,
-            user.CreatedAt,
-            user.ModifiedAt,
-            user.LastLogin,
-            user.LastPasswordChange
-        });
-        await _auditLogRepository.LogActionAsync(
-            createdBy, "CREATE", "User", user.Id.ToString(),
-            null, createdValues);
+            var createdValues = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                user.Id,
+                user.Username,
+                user.Email,
+                user.NomComplet,
+                Role = user.Role.ToString(),
+                user.IsActive,
+                user.Matricule,
+                user.AvatarUrl,
+                user.PhoneNumber,
+                user.CreatedAt,
+                user.ModifiedAt,
+                user.LastLogin,
+                user.LastPasswordChange
+            });
+            await _auditLogRepository.LogActionAsync(
+                createdBy, "CREATE", "User", user.Id.ToString(),
+                null, createdValues);
+        }
+        catch
+        {
+            // Silently fail audit logging to prevent user creation from failing
+        }
 
         return _mapper.Map<UserDto>(user);
     }
