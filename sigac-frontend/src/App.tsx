@@ -22,6 +22,7 @@ import AccountPage from './pages/AccountPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
 import AccountModal from './components/common/AccountModal'
 import SystemConfigPage from './pages/SystemConfigPage'
+import LogoManagementPage from './pages/LogoManagementPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 
@@ -29,7 +30,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -225,6 +226,11 @@ export default function App() {
                 ⚙️ Config Système
               </button>
             )}
+            {user?.role === 'Administrateur' && (
+              <button className={`tab ${view === 'logo-management' ? 'active' : ''}`} onClick={() => setView('logo-management')}>
+                🎨 Logo
+              </button>
+            )}
           </div>
           <div className="env-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {user?.role === 'Admin' && (
@@ -257,6 +263,7 @@ export default function App() {
             <UsersPage />
           )}
           {view === 'system-config' && <SystemConfigPage />}
+          {view === 'logo-management' && <LogoManagementPage />}
           {view === 'types-affaires' && <TypesAffairesPage />}
           <ApiSwitcher
             isOpen={showApiSwitcher}
