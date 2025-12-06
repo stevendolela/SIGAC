@@ -362,8 +362,49 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Supprime un document
+    /// Assigne un document à un dossier différent
     /// </summary>
+    [HttpPut("{id}/assign")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<DocumentDto>> AssignDocumentToDossier(Guid id, [FromBody] AssignDocumentDto dto)
+    {
+        try
+        {
+            if (dto == null || dto.DossierId == Guid.Empty)
+                return BadRequest(new { message = "DossierId est requis" });
+
+            var document = await _documentService.GetByIdAsync(id);
+            if (document == null)
+                return NotFound(new { message = "Document non trouvé" });
+
+            // Vérifier que le dossier existe
+            var dossier = await _dossierRepository.GetByIdAsync(dto.DossierId);
+            if (dossier == null)
+                return NotFound(new { message = "Dossier cible non trouvé" });
+
+            var userId = GetCurrentUserId();
+
+            // Assigner le document au nouveau dossier
+            var assignedDocument = await _documentService.AssignToDossierAsync(id, dto.DossierId, userId);
+
+            if (assignedDocument == null)
+                return NotFound(new { message = "Document non trouvé" });
+
+            _logger.LogInformation(
+                "Utilisateur {UserId} a assigné le document {DocumentId} au dossier {DossierId}",
+                userId, id, dto.DossierId);
+
+            return Ok(assignedDocument);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'assignation du document {DocumentId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

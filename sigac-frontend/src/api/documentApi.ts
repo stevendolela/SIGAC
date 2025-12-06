@@ -47,5 +47,11 @@ export const documentApi = {
   async remove(id: string) {
     const resp = await api.delete(`/Documents/${id}`)
     return resp.status === 204
+  },
+  async assignToDossier(id: string, dossierId: string) {
+    const resp = await api.put<DocumentDto>(`/Documents/${id}/assign`, {
+      dossierId
+    })
+    return resp.data
   }
 }

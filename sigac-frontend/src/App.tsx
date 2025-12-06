@@ -10,6 +10,7 @@ import AudiencesPage from './pages/AudiencesPage'
 import SallesPage from './pages/SallesPage'
 import RechercheAvanceePage from './pages/RechercheAvanceePage'
 import CreateDossierPage from './pages/CreateDossierPage'
+import DocumentsPage from './pages/DocumentsPage'
 import { getApiBaseUrl, setApiBaseUrl } from './api/api-client'
 import ApiSwitcher from './components/common/ApiSwitcher'
 import ApiHealth from './components/common/ApiHealth'
@@ -30,7 +31,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -200,6 +201,9 @@ export default function App() {
             <button className={`tab ${view === 'calendrier' ? 'active' : ''}`} onClick={() => setView('calendrier')}>
               🗓️ Calendrier
             </button>
+            <button className={`tab ${view === 'documents' ? 'active' : ''}`} onClick={() => setView('documents')}>
+              📄 Documents
+            </button>
             {user?.role === 'JugeConstitutionnel' && (
               <button className={`tab ${view === 'mon-profil' ? 'active' : ''}`} onClick={() => setView('mon-profil')}>
                 👤 Mon Profil
@@ -256,6 +260,7 @@ export default function App() {
           {view === 'recherche' && <RechercheAvanceePage />}
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'calendrier' && <CalendarPage />}
+          {view === 'documents' && <DocumentsPage />}
           {view === 'salles' && <SallesPage />}
           {view === 'mon-profil' && <MonProfilPage />}
           {view === 'profils' && <JugeProfilesPage />}

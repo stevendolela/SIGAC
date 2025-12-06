@@ -15,3 +15,15 @@ public class DocumentDto
     public Guid UploadedBy { get; set; }
     public DateTime UploadedAt { get; set; }
 }
+
+/// <summary>
+/// DTO pour assigner un document à un dossier différent
+/// </summary>
+public class AssignDocumentDto
+{
+    /// <summary>
+    /// ID du dossier cible
+    /// </summary>
+    public Guid DossierId { get; set; }
+}
+

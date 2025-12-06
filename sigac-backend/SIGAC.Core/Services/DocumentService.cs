@@ -87,4 +87,26 @@ public class DocumentService : IDocumentService
 
         return true;
     }
+
+    public async Task<DocumentDto?> AssignToDossierAsync(Guid documentId, Guid newDossierId, Guid userId)
+    {
+        var document = await _documentRepository.GetByIdAsync(documentId);
+        if (document == null)
+            return null;
+
+        var oldDossierId = document.DossierId;
+        var oldValues = System.Text.Json.JsonSerializer.Serialize(new { document.DossierId, document.NomFichier });
+
+        // Mettre à jour le DossierId
+        document.DossierId = newDossierId;
+        _documentRepository.Update(document);
+        await _documentRepository.SaveChangesAsync();
+
+        var newValues = System.Text.Json.JsonSerializer.Serialize(new { document.DossierId, document.NomFichier });
+        await _auditLogRepository.LogActionAsync(
+            userId, "UPDATE", "Document", documentId.ToString(),
+            oldValues, newValues);
+
+        return _mapper.Map<DocumentDto>(document);
+    }
 }
