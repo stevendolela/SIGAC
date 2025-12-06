@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import api from '../api/api-client'
-import Logo from '../components/common/Logo'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('admin')
@@ -30,7 +29,6 @@ export default function LoginPage() {
     <div className="login-container">
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Logo size={120} />
           <h2 style={{ marginBottom: 8 }}>Taajii GED</h2>
           <p style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>
             Gestion Électronique des Dossiers
