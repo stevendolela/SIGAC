@@ -239,13 +239,18 @@ public class UsersController : ControllerBase
 
             _logger.LogInformation("[CreateUser] Hash password généré, appel service...");
 
+            // Workaround: Si NomComplet est vide, le passer comme null pour éviter les contraintes DB
+            var nomCompletValue = string.IsNullOrWhiteSpace(createUserDto.NomComplet) 
+                ? null 
+                : createUserDto.NomComplet;
+
             var newUser = await _userService.CreateUserAsync(
                 createUserDto.Username,
                 createUserDto.Email,
                 passwordHash,
                 createUserDto.Role,
                 GetCurrentUserId(),
-                createUserDto.NomComplet,
+                nomCompletValue,
                 createUserDto.Matricule);
 
             _logger.LogInformation("[CreateUser] Utilisateur créé: {UserId} ({Username})", newUser.Id, newUser.Username);
