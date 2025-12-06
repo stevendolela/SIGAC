@@ -77,6 +77,23 @@ export default function UsersPage() {
     }
   }
 
+  async function handleDeleteUser(u: UserDto) {
+    // Confirmation
+    if (!window.confirm(`❌ Êtes-vous sûr de vouloir supprimer l'utilisateur "${u.username}"? Cette action enregistrera une trace d'audit.`)) {
+      return
+    }
+
+    try {
+      await userApi.delete(u.id)
+      setItems(prev => prev.filter(x => x.id !== u.id))
+      notify({ type: 'success', message: `✅ Utilisateur supprimé: ${u.username}` })
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Erreur lors de la suppression de l\'utilisateur'
+      setError(msg)
+      notify({ type: 'error', message: msg })
+    }
+  }
+
   function openEdit(u: UserDto) {
     setEditingUser(u)
     setEditForm({
@@ -475,6 +492,12 @@ export default function UsersPage() {
                           style={{ marginLeft: 8, background: 'linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%)' }}
                           onClick={() => { window.location.href = `/admin/users/${u.id}` }}
                         >🔗 Page avancée</button>
+                        <button
+                          className="btn"
+                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}
+                          onClick={() => handleDeleteUser(u)}
+                          title="Supprimer cet utilisateur (soft delete avec audit)"
+                        >🗑️ Supprimer</button>
                       </td>
                     </tr>
                   )

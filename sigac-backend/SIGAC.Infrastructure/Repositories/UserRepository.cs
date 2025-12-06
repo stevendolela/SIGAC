@@ -102,4 +102,36 @@ public class UserRepository : IUserRepository
             .OrderBy(u => u.NomComplet)
             .ToListAsync();
     }
+
+    public async Task<(List<User> Items, PaginationMetadata Pagination)> GetDeletedUsersAsync(
+        int page = 1, int pageSize = 10, string? search = null)
+    {
+        var query = _context.Users
+            .Where(u => !u.IsActive)  // Filtrer les utilisateurs désactivés
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search));
+        }
+
+        var totalItems = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var users = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .OrderByDescending(u => u.ModifiedAt)  // Récemment modifiés d'abord
+            .ToListAsync();
+
+        var pagination = new PaginationMetadata
+        {
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages
+        };
+
+        return (users, pagination);
+    }
 }

@@ -79,6 +79,44 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Récupère la liste paginée des utilisateurs supprimés/désactivés.
+    /// Réservé aux administrateurs (pour l'audit).
+    /// </summary>
+    /// <param name="page">Numéro de page</param>
+    /// <param name="pageSize">Taille de page</param>
+    /// <param name="search">Recherche par username ou email</param>
+    /// <returns>Liste paginée des utilisateurs inactifs</returns>
+    [HttpGet("deleted")]
+    [Authorize(Roles = "Administrateur,Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<PaginatedResult<UserDto>>> GetDeletedUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null)
+    {
+        try
+        {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
+            var result = await _userService.GetDeletedUsersAsync(page, pageSize, search);
+            
+            _logger.LogInformation(
+                "Utilisateur {UserId} a consulté la liste des utilisateurs supprimés (page {Page}, pageSize {PageSize})",
+                GetCurrentUserId(), page, pageSize);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la liste des utilisateurs supprimés");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
     /// Récupère les détails d'un utilisateur spécifique.
     /// </summary>
     /// <param name="id">ID de l'utilisateur</param>
@@ -156,7 +194,7 @@ public class UsersController : ControllerBase
     /// <response code="401">Non authentifié</response>
     /// <response code="403">Permission insuffisante (admin requis)</response>
     [HttpPost]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Administrateur,Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -165,23 +203,41 @@ public class UsersController : ControllerBase
     {
         try
         {
+            _logger.LogInformation(
+                "[CreateUser] Tentative de création - Username: {Username}, Email: {Email}, Role: {Role}",
+                createUserDto.Username, createUserDto.Email, createUserDto.Role);
+
             // Validation basique
             if (string.IsNullOrWhiteSpace(createUserDto.Username))
+            {
+                _logger.LogWarning("[CreateUser] Validation échouée: Username vide");
                 return BadRequest(new { message = "Username requis" });
+            }
 
             if (string.IsNullOrWhiteSpace(createUserDto.Email))
+            {
+                _logger.LogWarning("[CreateUser] Validation échouée: Email vide");
                 return BadRequest(new { message = "Email requis" });
+            }
 
             if (string.IsNullOrWhiteSpace(createUserDto.Password))
+            {
+                _logger.LogWarning("[CreateUser] Validation échouée: Password vide");
                 return BadRequest(new { message = "Password requis" });
+            }
 
             // Vérifier que l'username n'existe pas
             var existingUser = await _userService.GetByUsernameAsync(createUserDto.Username);
             if (existingUser != null)
+            {
+                _logger.LogWarning("[CreateUser] Username déjà utilisé: {Username}", createUserDto.Username);
                 return BadRequest(new { message = "Cet username est déjà utilisé" });
+            }
 
             // Hash du password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
+
+            _logger.LogInformation("[CreateUser] Hash password généré, appel service...");
 
             var newUser = await _userService.CreateUserAsync(
                 createUserDto.Username,
@@ -192,10 +248,13 @@ public class UsersController : ControllerBase
                 createUserDto.NomComplet,
                 createUserDto.Matricule);
 
+            _logger.LogInformation("[CreateUser] Utilisateur créé: {UserId} ({Username})", newUser.Id, newUser.Username);
+
             // Envoi email de bienvenue avec le mot de passe temporaire
             var userEntity = await _userRepository.GetByIdAsync(newUser.Id);
             if (userEntity != null)
             {
+                _logger.LogInformation("[CreateUser] Envoi email de bienvenue pour {Username}", newUser.Username);
                 await _emailNotificationService.SendWelcomeEmailAsync(userEntity, createUserDto.Password);
             }
 
@@ -207,8 +266,9 @@ public class UsersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la création d'utilisateur");
-            return StatusCode(500, new { message = "Erreur interne du serveur" });
+            _logger.LogError(ex, "[CreateUser] ERREUR lors de la création d'utilisateur - Username: {Username}", 
+                createUserDto?.Username ?? "unknown");
+            return StatusCode(500, new { message = "Erreur interne du serveur", error = ex.Message });
         }
     }
 
@@ -314,7 +374,7 @@ public class UsersController : ControllerBase
     /// <response code="403">Permission insuffisante (admin requis)</response>
     /// <response code="404">Utilisateur non trouvé</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Administrateur,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

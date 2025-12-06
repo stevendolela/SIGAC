@@ -38,6 +38,10 @@ export const userApi = {
     const resp = await api.post<UserDto>(`/Users/${id}/deactivate`, {})
     return resp.data
   },
+  async delete(id: string) {
+    await api.delete(`/Users/${id}`)
+    return true
+  },
   async statsAdmin() {
     const resp = await api.get(`/Users/admin/stats`)
     return resp.data as any

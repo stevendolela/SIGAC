@@ -57,6 +57,18 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<PaginatedResult<UserDto>> GetDeletedUsersAsync(int page = 1, int pageSize = 10, string? search = null)
+    {
+        var result = await _userRepository.GetDeletedUsersAsync(page, pageSize, search);
+        var userDtos = _mapper.Map<List<UserDto>>(result.Items);
+        
+        return new PaginatedResult<UserDto>
+        {
+            Data = userDtos,
+            Pagination = result.Pagination
+        };
+    }
+
     public async Task<UserDto> CreateUserAsync(string username, string email, string passwordHash, UserRole role, Guid createdBy, string? nomComplet = null, string? matricule = null)
     {
         var user = new User
@@ -171,6 +183,7 @@ public class UserService : IUserService
         if (user == null)
             return false;
 
+        // Sérialiser les données avant suppression pour audit complet
         var oldValues = System.Text.Json.JsonSerializer.Serialize(new
         {
             user.Id,
@@ -185,15 +198,28 @@ public class UserService : IUserService
             user.CreatedAt,
             user.ModifiedAt,
             user.LastLogin,
-            user.LastPasswordChange
+            user.LastPasswordChange,
+            DeletedAt = DateTime.UtcNow
         });
 
-        _userRepository.Delete(user);
+        // Soft delete: marquer comme inactif au lieu de supprimer physiquement
+        user.IsActive = false;
+        user.ModifiedAt = DateTime.UtcNow;
+
+        _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
 
+        // Log l'action de suppression avec trace complète pour audit
         await _auditLogRepository.LogActionAsync(
-            deletedBy, "DELETE", "User", userId.ToString(),
-            oldValues, null);
+            deletedBy, "SOFT_DELETE", "User", userId.ToString(),
+            oldValues, System.Text.Json.JsonSerializer.Serialize(new
+            {
+                user.Id,
+                user.Username,
+                user.IsActive,
+                ModifiedAt = user.ModifiedAt,
+                DeletedReason = "User disabled via soft delete"
+            }));
 
         return true;
     }
