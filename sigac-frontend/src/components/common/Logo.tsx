@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import svgFallback from '../../assets/taji-logo.svg'
+import React from 'react'
 
 type Props = {
   size?: number
@@ -8,16 +7,10 @@ type Props = {
   onClick?: () => void
 }
 
-/**
- * Logo qui tente d'utiliser le PNG officiel dans /public/taji-logo.png,
- * et bascule automatiquement sur le SVG fallback si le PNG est introuvable.
- */
 export default function Logo({ size = 48, alt = 'Taji Logo', style, onClick }: Props) {
-  const [src, setSrc] = useState<string>('/taji-logo.png')
-
   return (
     <img
-      src={src}
+      src="/taji-logo.png"
       alt={alt}
       width={size}
       height={size}
@@ -28,7 +21,6 @@ export default function Logo({ size = 48, alt = 'Taji Logo', style, onClick }: P
         ...style 
       }}
       onClick={onClick}
-      onError={() => setSrc(svgFallback)}
     />
   )
 }
