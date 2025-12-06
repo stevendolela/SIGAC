@@ -39,7 +39,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.NomComplet).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.NomComplet).HasMaxLength(200);
         });
 
         // Configuration Dossier

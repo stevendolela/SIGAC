@@ -465,39 +465,94 @@ export default function UsersPage() {
                           {u.isActive ? '✅ Actif' : '⛔ Inactif'}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
                         <button 
-                          className="btn" 
+                          title={u.isActive ? 'Désactiver' : 'Activer'}
                           onClick={() => toggleActive(u)}
                           style={{
-                            background: u.isActive ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            background: u.isActive ? '#ef4444' : '#10b981',
                             color: 'white',
-                            border: 'none'
+                            border: 'none',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
-                          {u.isActive ? '⛔ Désactiver' : '✅ Activer'}
+                          {u.isActive ? '⛔' : '✅'}
                         </button>
                         <button
-                          className="btn"
-                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
+                          title="Éditer"
+                          style={{ 
+                            background: '#6366f1', 
+                            color: 'white',
+                            border: 'none',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
                           onClick={() => openEdit(u)}
-                        >✏️ Éditer</button>
+                        >✏️</button>
                         <button
-                          className="btn"
-                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}
+                          title="Réinitialiser MDP"
+                          style={{ 
+                            background: '#f59e0b', 
+                            color: 'white',
+                            border: 'none',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
                           onClick={() => setResetPasswordUser(u)}
-                        >🔐 Réinitialiser MDP</button>
+                        >🔐</button>
                         <button
-                          className="btn"
-                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%)' }}
+                          title="Page avancée"
+                          style={{ 
+                            background: '#0ea5e9', 
+                            color: 'white',
+                            border: 'none',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
                           onClick={() => { window.location.href = `/admin/users/${u.id}` }}
-                        >🔗 Page avancée</button>
+                        >🔗</button>
                         <button
-                          className="btn"
-                          style={{ marginLeft: 8, background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}
+                          title="Supprimer"
+                          style={{ 
+                            background: '#7c3aed', 
+                            color: 'white',
+                            border: 'none',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
                           onClick={() => handleDeleteUser(u)}
-                          title="Supprimer cet utilisateur (soft delete avec audit)"
-                        >🗑️ Supprimer</button>
+                        >🗑️</button>
                       </td>
                     </tr>
                   )
