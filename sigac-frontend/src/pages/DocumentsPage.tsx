@@ -25,6 +25,7 @@ export default function DocumentsPage() {
   const [networkScanners, setNetworkScanners] = useState<any[]>([])
   const [scanningNetwork, setScanningNetwork] = useState(false)
   const [selectedNetworkScanner, setSelectedNetworkScanner] = useState<any>(null)
+  const [scannerModalTab, setScannerModalTab] = useState<'local' | 'network'>('local')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -446,236 +447,472 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Modal Scanner */}
+      {/* Modal Scanner - Ergonomique avec Onglets */}
       {showScannerModal && (
         <div className="modal-overlay" onClick={() => { setShowScannerModal(false); stopScanner() }}>
-          <div className="card" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0, marginBottom: 20 }}>📸 Scanner un Document</h3>
+          <div className="card" style={{ maxWidth: 700, maxHeight: '90vh', overflow: 'auto', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* En-tête avec titre */}
+            <div style={{ padding: '20px 20px 0 20px', borderBottom: '2px solid #e5e7eb' }}>
+              <h2 style={{ marginTop: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, fontSize: 24 }}>
+                📸 Scanner un Document
+              </h2>
 
-            {!scannerActive && !cameraPreview && (
-              <div>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-                    🎥 Sélectionner un appareil :
-                  </label>
-                  <select
-                    value={selectedDeviceId}
-                    onChange={(e) => setSelectedDeviceId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      borderRadius: 4,
-                      border: '1px solid #cbd5e1',
-                      fontSize: 14
-                    }}
-                  >
-                    <option value="">-- Auto-détection --</option>
-                    {availableDevices.map(device => (
-                      <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `Caméra ${device.deviceId.substring(0, 8)}`}
-                      </option>
-                    ))}
-                  </select>
-                  <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-                    💡 Connectez un scanner USB avant de démarrer pour le détecter
-                  </p>
-                </div>
-                
-                <div style={{ textAlign: 'center', padding: 20, background: '#f3f4f6', borderRadius: 8, marginBottom: 16 }}>
-                  <p style={{ fontSize: 48, marginBottom: 12 }}>📷</p>
-                  <p style={{ marginBottom: 16, color: '#6b7280' }}>
-                    Cliquez sur "Démarrer Scanner" pour activer votre caméra ou scanner
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  <button
-                    className="btn"
-                    onClick={startScanner}
-                    style={{
-                      flex: 1,
-                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16,
-                      borderRadius: 4,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    📸 Démarrer Scanner
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={enumerateVideoDevices}
-                    style={{
-                      background: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 16px',
-                      fontSize: 14,
-                      borderRadius: 4,
-                      cursor: 'pointer'
-                    }}
-                    title="Rafraîchir la liste des appareils"
-                  >
-                    🔄 Rafraîchir
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => setShowNetworkScannerSearch(true)}
-                    style={{
-                      background: '#f59e0b',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 16px',
-                      fontSize: 14,
-                      borderRadius: 4,
-                      cursor: 'pointer'
-                    }}
-                    title="Chercher des scanners sur le réseau"
-                  >
-                    🔍 Réseau
-                  </button>
-                </div>
-
+              {/* Onglets */}
+              <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
                 <button
-                  className="btn"
-                  onClick={() => setShowScannerModal(false)}
+                  onClick={() => { setScannerModalTab('local'); stopScanner(); setCameraPreview(null) }}
                   style={{
-                    width: '100%',
-                    background: '#6b7280',
-                    color: 'white',
+                    flex: 1,
+                    padding: '12px 16px',
                     border: 'none',
-                    padding: '12px 24px',
+                    borderBottom: scannerModalTab === 'local' ? '4px solid #8b5cf6' : '2px solid #e5e7eb',
+                    background: scannerModalTab === 'local' ? '#f9fafb' : '#ffffff',
+                    color: scannerModalTab === 'local' ? '#8b5cf6' : '#6b7280',
+                    fontWeight: scannerModalTab === 'local' ? 700 : 500,
                     fontSize: 14,
-                    borderRadius: 4,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    borderRadius: '8px 8px 0 0'
                   }}
                 >
-                  ❌ Fermer
+                  🎥 Appareil Local
+                </button>
+                <button
+                  onClick={() => { setScannerModalTab('network'); stopScanner(); setCameraPreview(null) }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    border: 'none',
+                    borderBottom: scannerModalTab === 'network' ? '4px solid #f59e0b' : '2px solid #e5e7eb',
+                    background: scannerModalTab === 'network' ? '#f9fafb' : '#ffffff',
+                    color: scannerModalTab === 'network' ? '#f59e0b' : '#6b7280',
+                    fontWeight: scannerModalTab === 'network' ? 700 : 500,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    borderRadius: '8px 8px 0 0'
+                  }}
+                >
+                  🌐 Réseau
                 </button>
               </div>
-            )}
+            </div>
 
-            {scannerActive && !cameraPreview && (
-              <div style={{ position: 'relative' }}>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: 400,
-                    borderRadius: 8,
-                    background: '#000',
-                    marginBottom: 16
-                  }}
-                />
-                <canvas
-                  ref={canvasRef}
-                  style={{ display: 'none' }}
-                />
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
-                  <button
-                    className="btn"
-                    onClick={captureSnapshot}
-                    style={{
-                      flex: 1,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16
-                    }}
-                  >
-                    ✅ Capturer
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => { stopScanner(); setCameraPreview(null) }}
-                    style={{
-                      flex: 1,
-                      background: '#6b7280',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16
-                    }}
-                  >
-                    ❌ Annuler
-                  </button>
+            {/* Contenu des onglets */}
+            <div style={{ padding: 20 }}>
+
+              {/* ONGLET 1: Appareil Local */}
+              {scannerModalTab === 'local' && (
+                <div>
+                  {!scannerActive && !cameraPreview && (
+                    <div>
+                      {/* Sélection d'appareil */}
+                      <div style={{ marginBottom: 20, background: '#f0f9ff', padding: 16, borderRadius: 8, border: '1px solid #bfdbfe' }}>
+                        <label style={{ display: 'block', marginBottom: 10, fontWeight: 700, fontSize: 15, color: '#1e40af' }}>
+                          🎥 Sélectionner un appareil :
+                        </label>
+                        <select
+                          value={selectedDeviceId}
+                          onChange={(e) => setSelectedDeviceId(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: 6,
+                            border: '2px solid #3b82f6',
+                            fontSize: 14,
+                            fontWeight: 500,
+                            background: '#ffffff',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="">-- Auto-détection --</option>
+                          {availableDevices.map(device => (
+                            <option key={device.deviceId} value={device.deviceId}>
+                              {device.label || `Caméra ${device.deviceId.substring(0, 8)}`}
+                            </option>
+                          ))}
+                        </select>
+                        <div style={{ fontSize: 12, color: '#1e40af', marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>💡</span>
+                          <span>Connectez un scanner USB avant de démarrer pour le détecter</span>
+                        </div>
+                      </div>
+
+                      {/* Zone d'instructions */}
+                      <div style={{ textAlign: 'center', padding: 32, background: '#f9fafb', borderRadius: 8, marginBottom: 20, border: '2px dashed #cbd5e1' }}>
+                        <div style={{ fontSize: 56, marginBottom: 16 }}>📷</div>
+                        <p style={{ marginBottom: 12, color: '#1f2937', fontWeight: 600, fontSize: 16 }}>
+                          Prêt à scanner
+                        </p>
+                        <p style={{ color: '#6b7280', fontSize: 13, lineHeight: '1.6' }}>
+                          Cliquez sur "Démarrer Scanner" pour activer<br/>votre caméra ou scanner USB
+                        </p>
+                      </div>
+
+                      {/* Boutons d'action */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button
+                          className="btn"
+                          onClick={startScanner}
+                          style={{
+                            width: '100%',
+                            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '14px 20px',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                          }}
+                        >
+                          📸 Démarrer Scanner
+                        </button>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button
+                            className="btn"
+                            onClick={enumerateVideoDevices}
+                            style={{
+                              flex: 1,
+                              background: '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 16px',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              borderRadius: 6,
+                              cursor: 'pointer'
+                            }}
+                            title="Rafraîchir la liste des appareils"
+                          >
+                            🔄 Rafraîchir
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={() => { setShowScannerModal(false); stopScanner() }}
+                            style={{
+                              flex: 1,
+                              background: '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 16px',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              borderRadius: 6,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ❌ Fermer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Capture en cours */}
+                  {scannerActive && !cameraPreview && (
+                    <div>
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          maxHeight: 400,
+                          borderRadius: 8,
+                          background: '#000',
+                          marginBottom: 16,
+                          border: '3px solid #8b5cf6'
+                        }}
+                      />
+                      <canvas ref={canvasRef} style={{ display: 'none' }} />
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button
+                          className="btn"
+                          onClick={captureSnapshot}
+                          style={{
+                            flex: 1,
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '12px 20px',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            borderRadius: 6,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ✅ Capturer
+                        </button>
+                        <button
+                          className="btn"
+                          onClick={() => { stopScanner(); setCameraPreview(null) }}
+                          style={{
+                            flex: 1,
+                            background: '#6b7280',
+                            color: 'white',
+                            border: 'none',
+                            padding: '12px 20px',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            borderRadius: 6,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ❌ Annuler
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Aperçu capture */}
+                  {cameraPreview && (
+                    <div>
+                      <div style={{ background: '#eff6ff', padding: 12, borderRadius: 8, marginBottom: 12, border: '2px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 20 }}>✅</span>
+                        <span style={{ color: '#1e40af', fontWeight: 600 }}>Document capturé</span>
+                      </div>
+                      <img
+                        src={cameraPreview}
+                        alt="Scanned Document"
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          maxHeight: 350,
+                          borderRadius: 8,
+                          marginBottom: 16,
+                          border: '3px solid #10b981'
+                        }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button
+                          className="btn"
+                          onClick={uploadScannedDocument}
+                          disabled={uploading}
+                          style={{
+                            width: '100%',
+                            background: uploading ? '#d1d5db' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '12px 20px',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            borderRadius: 6,
+                            cursor: uploading ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {uploading ? '⏳ Chargement...' : '📤 Uploader le Document'}
+                        </button>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button
+                            className="btn"
+                            onClick={() => { setCameraPreview(null); startScanner() }}
+                            disabled={uploading}
+                            style={{
+                              flex: 1,
+                              background: uploading ? '#d1d5db' : '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 16px',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              borderRadius: 6,
+                              cursor: uploading ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            📸 Nouvelle Capture
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={() => { setShowScannerModal(false); stopScanner() }}
+                            disabled={uploading}
+                            style={{
+                              flex: 1,
+                              background: '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              padding: '10px 16px',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              borderRadius: 6,
+                              cursor: uploading ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            ❌ Fermer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {cameraPreview && (
-              <div style={{ position: 'relative' }}>
-                <img
-                  src={cameraPreview}
-                  alt="Scanned Document"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: 400,
-                    borderRadius: 8,
-                    marginBottom: 16,
-                    border: '2px solid #10b981'
-                  }}
-                />
-                <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 16 }}>
-                  📄 Document capturé - cliquez sur "Upload" pour le charger ou "Nouvelle Capture" pour rescanner
-                </p>
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
+              {/* ONGLET 2: Réseau */}
+              {scannerModalTab === 'network' && (
+                <div>
+                  {networkScanners.length === 0 && !scanningNetwork && (
+                    <div style={{ textAlign: 'center', padding: 40 }}>
+                      <div style={{ fontSize: 56, marginBottom: 16 }}>🌐</div>
+                      <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Chercher les Scanners Réseau</p>
+                      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 24, lineHeight: '1.6' }}>
+                        Scannez votre réseau local pour découvrir<br/>les scanners disponibles
+                      </p>
+                      <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20 }}>
+                        ⏱️ La recherche peut prendre 10-15 secondes...
+                      </p>
+                      <button
+                        className="btn"
+                        onClick={searchNetworkScanners}
+                        style={{
+                          width: '100%',
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '14px 20px',
+                          fontSize: 16,
+                          fontWeight: 700,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        🔍 Chercher des Scanners
+                      </button>
+                    </div>
+                  )}
+
+                  {scanningNetwork && (
+                    <div style={{ textAlign: 'center', padding: 40 }}>
+                      <div style={{ fontSize: 48, marginBottom: 16, animation: 'spin 1s linear infinite' }}>🔄</div>
+                      <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Recherche en cours...</p>
+                      <p style={{ fontSize: 12, color: '#6b7280' }}>
+                        Scanning votre réseau local pour détecter les scanners
+                      </p>
+                    </div>
+                  )}
+
+                  {!scanningNetwork && networkScanners.length > 0 && (
+                    <div>
+                      <div style={{ 
+                        background: '#ecfdf5', 
+                        padding: 12, 
+                        borderRadius: 6, 
+                        marginBottom: 16,
+                        border: '2px solid #d1fae5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10
+                      }}>
+                        <span style={{ fontSize: 20 }}>✅</span>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#065f46' }}>
+                          {networkScanners.length} scanner(s) trouvé(s)
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, maxHeight: 350, overflow: 'auto' }}>
+                        {networkScanners.map((scanner, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              border: selectedNetworkScanner?.ip === scanner.ip ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                              borderRadius: 8,
+                              padding: 12,
+                              background: selectedNetworkScanner?.ip === scanner.ip ? '#eff6ff' : '#fff',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              boxShadow: selectedNetworkScanner?.ip === scanner.ip ? '0 2px 8px rgba(59, 130, 246, 0.2)' : 'none'
+                            }}
+                            onClick={() => setSelectedNetworkScanner(scanner)}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: 14, color: '#1f2937' }}>
+                                  🖨️ {scanner.name || `Scanner (${scanner.ip})`}
+                                </div>
+                                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, fontFamily: 'monospace' }}>
+                                  {scanner.ip}:{scanner.port}
+                                </div>
+                              </div>
+                              <div style={{
+                                background: scanner.status === 'online' ? '#dcfce7' : '#fee2e2',
+                                color: scanner.status === 'online' ? '#166534' : '#991b1b',
+                                padding: '4px 10px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700
+                              }}>
+                                {scanner.status === 'online' ? '🟢 Online' : '� Offline'}
+                              </div>
+                            </div>
+                            <button
+                              className="btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                testScannerConnection(scanner)
+                              }}
+                              style={{
+                                width: '100%',
+                                background: '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 12px',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                borderRadius: 4,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              � Tester la Connexion
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        className="btn"
+                        onClick={searchNetworkScanners}
+                        style={{
+                          width: '100%',
+                          background: '#f59e0b',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 16px',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          marginBottom: 10
+                        }}
+                      >
+                        🔄 Chercher à nouveau
+                      </button>
+                    </div>
+                  )}
+
                   <button
                     className="btn"
-                    onClick={uploadScannedDocument}
-                    disabled={uploading}
+                    onClick={() => setShowScannerModal(false)}
                     style={{
-                      flex: 1,
-                      background: uploading ? '#ccc' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16
-                    }}
-                  >
-                    {uploading ? '⏳ Chargement...' : '📤 Upload'}
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => { setCameraPreview(null); startScanner() }}
-                    disabled={uploading}
-                    style={{
-                      flex: 1,
-                      background: uploading ? '#ccc' : '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16
-                    }}
-                  >
-                    📸 Nouvelle Capture
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => { setShowScannerModal(false); stopScanner() }}
-                    disabled={uploading}
-                    style={{
-                      flex: 1,
+                      width: '100%',
                       background: '#6b7280',
                       color: 'white',
                       border: 'none',
-                      padding: '12px 24px',
-                      fontSize: 16
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      borderRadius: 6,
+                      cursor: 'pointer'
                     }}
                   >
                     ❌ Fermer
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -781,163 +1018,6 @@ export default function DocumentsPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Modal Recherche Scanners Réseau */}
-      {showNetworkScannerSearch && (
-        <div className="modal-overlay" onClick={() => setShowNetworkScannerSearch(false)}>
-          <div className="card" style={{ maxWidth: 600, maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0, marginBottom: 20 }}>🔍 Chercher les Scanners Réseau</h3>
-
-            {!scanningNetwork && networkScanners.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 20 }}>
-                <p style={{ fontSize: 48, marginBottom: 16 }}>🌐</p>
-                <p style={{ marginBottom: 16, color: '#6b7280' }}>
-                  Cliquez sur "Chercher" pour scanner votre réseau local à la recherche de scanners disponibles.
-                </p>
-                <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20 }}>
-                  ⏱️ La recherche peut prendre 10-15 secondes...
-                </p>
-                <button
-                  className="btn"
-                  onClick={searchNetworkScanners}
-                  disabled={scanningNetwork}
-                  style={{
-                    background: scanningNetwork ? '#ccc' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    fontSize: 16,
-                    borderRadius: 4,
-                    cursor: scanningNetwork ? 'not-allowed' : 'pointer',
-                    width: '100%'
-                  }}
-                >
-                  {scanningNetwork ? '🔄 Recherche en cours...' : '🔍 Chercher des Scanners'}
-                </button>
-              </div>
-            )}
-
-            {scanningNetwork && (
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <div style={{ fontSize: 32, marginBottom: 16 }}>🔄</div>
-                <p style={{ marginBottom: 8, fontWeight: 600 }}>Recherche en cours...</p>
-                <p style={{ fontSize: 12, color: '#6b7280' }}>
-                  Scanning votre réseau local pour détecter les scanners
-                </p>
-              </div>
-            )}
-
-            {!scanningNetwork && networkScanners.length > 0 && (
-              <div>
-                <div style={{ 
-                  background: '#ecfdf5', 
-                  padding: 12, 
-                  borderRadius: 6, 
-                  marginBottom: 16,
-                  border: '1px solid #d1fae5'
-                }}>
-                  <p style={{ margin: 0, fontSize: 14 }}>
-                    ✅ <strong>{networkScanners.length} scanner(s) trouvé(s)</strong>
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-                  {networkScanners.map((scanner, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: 6,
-                        padding: 12,
-                        background: selectedNetworkScanner?.ip === scanner.ip ? '#eff6ff' : '#fff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onClick={() => setSelectedNetworkScanner(scanner)}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>
-                            🖨️ {scanner.name || `Scanner (${scanner.ip})`}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                            {scanner.ip}:{scanner.port}
-                          </div>
-                        </div>
-                        <div style={{
-                          background: scanner.status === 'online' ? '#dbeafe' : '#fee2e2',
-                          color: scanner.status === 'online' ? '#0369a1' : '#991b1b',
-                          padding: '4px 8px',
-                          borderRadius: 3,
-                          fontSize: 11,
-                          fontWeight: 600
-                        }}>
-                          {scanner.status.toUpperCase()}
-                        </div>
-                      </div>
-                      <button
-                        className="btn"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          testScannerConnection(scanner)
-                        }}
-                        style={{
-                          width: '100%',
-                          background: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 12px',
-                          fontSize: 12,
-                          borderRadius: 4,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔗 Tester la connexion
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  className="btn"
-                  onClick={searchNetworkScanners}
-                  disabled={scanningNetwork}
-                  style={{
-                    width: '100%',
-                    background: '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 16px',
-                    fontSize: 14,
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    marginBottom: 8
-                  }}
-                >
-                  🔄 Chercher à nouveau
-                </button>
-              </div>
-            )}
-
-            <button
-              className="btn"
-              onClick={() => setShowNetworkScannerSearch(false)}
-              style={{
-                width: '100%',
-                background: '#6b7280',
-                color: 'white',
-                border: 'none',
-                padding: '10px 16px',
-                fontSize: 14,
-                borderRadius: 4,
-                cursor: 'pointer'
-              }}
-            >
-              Fermer
-            </button>
-          </div>
         </div>
       )}
     </div>
