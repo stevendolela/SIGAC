@@ -12,7 +12,7 @@ using SIGAC.Infrastructure.Data;
 namespace SIGAC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251202222338_AddJugeProfilesTable")]
+    [Migration("20251207210657_AddJugeProfilesTable")]
     partial class AddJugeProfilesTable
     {
         /// <inheritdoc />
@@ -718,7 +718,6 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NomComplet")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
