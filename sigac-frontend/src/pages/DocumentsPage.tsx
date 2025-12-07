@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { documentApi } from '../api/documentApi'
 import type { DocumentDto } from '../types/document'
 import type { DossierListDto } from '../types/dossier'
@@ -16,6 +16,12 @@ export default function DocumentsPage() {
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState<DocumentDto | null>(null)
   const [dragActive, setDragActive] = useState(false)
+  const [showScannerModal, setShowScannerModal] = useState(false)
+  const [scannerActive, setScannerActive] = useState(false)
+  const [cameraPreview, setCameraPreview] = useState<string | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const { notify } = useToast()
 
   // Vérification du rôle
@@ -135,6 +141,83 @@ export default function DocumentsPage() {
     }
   }
 
+  async function startScanner() {
+    try {
+      setScannerActive(true)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+      notify({ type: 'success', message: '✅ Caméra/Scanner activé' })
+    } catch (error) {
+      notify({ type: 'error', message: '❌ Impossible d\'accéder à la caméra/scanner' })
+      setScannerActive(false)
+    }
+  }
+
+  async function stopScanner() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setScannerActive(false)
+    setCameraPreview(null)
+  }
+
+  function captureSnapshot() {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d')
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth
+        canvasRef.current.height = videoRef.current.videoHeight
+        context.drawImage(videoRef.current, 0, 0)
+        const imageData = canvasRef.current.toDataURL('image/png')
+        setCameraPreview(imageData)
+      }
+    }
+  }
+
+  async function uploadScannedDocument() {
+    if (!cameraPreview || !selectedDossierId) {
+      notify({ type: 'error', message: 'Veuillez capturer une image' })
+      return
+    }
+
+    try {
+      setUploading(true)
+      // Convertir dataURL en Blob
+      const response = await fetch(cameraPreview)
+      const blob = await response.blob()
+      const file = new File([blob], `scan_${Date.now()}.png`, { type: 'image/png' })
+      
+      // Upload du fichier
+      await documentApi.upload(selectedDossierId, file, 'Scan')
+      notify({ type: 'success', message: '✅ Document scanné et uploadé' })
+      
+      // Fermer le scanner et réinitialiser
+      await stopScanner()
+      setShowScannerModal(false)
+      setCameraPreview(null)
+      await fetchDocuments()
+    } catch (e: any) {
+      notify({ type: 'error', message: e?.response?.data?.message || 'Erreur upload du scan' })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Cleanup du stream vidéo quand le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
+
   return (
     <div className="panel">
       <div className="panel-title">📄 Gestion des Documents</div>
@@ -177,6 +260,19 @@ export default function DocumentsPage() {
           }}
         >
           📤 Scanner/Uploader
+        </button>
+        <button
+          className="btn"
+          onClick={() => { setShowScannerModal(true); setShowUploadModal(false) }}
+          disabled={!selectedDossierId}
+          style={{
+            background: selectedDossierId ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#ccc',
+            color: 'white',
+            border: 'none'
+          }}
+          title="Scanner un document avec votre caméra/scanner"
+        >
+          📸 Scanner
         </button>
       </div>
 
@@ -275,6 +371,156 @@ export default function DocumentsPage() {
                 Annuler
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Scanner */}
+      {showScannerModal && (
+        <div className="modal-overlay" onClick={() => { setShowScannerModal(false); stopScanner() }}>
+          <div className="card" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0, marginBottom: 20 }}>📸 Scanner un Document</h3>
+
+            {!scannerActive && !cameraPreview && (
+              <div style={{ textAlign: 'center', padding: 40 }}>
+                <p style={{ fontSize: 48, marginBottom: 16 }}>📷</p>
+                <p style={{ marginBottom: 16, color: '#6b7280' }}>
+                  Cliquez sur "Démarrer Scanner" pour activer votre caméra ou scanner
+                </p>
+                <button
+                  className="btn"
+                  onClick={startScanner}
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    fontSize: 16
+                  }}
+                >
+                  📸 Démarrer Scanner
+                </button>
+              </div>
+            )}
+
+            {scannerActive && !cameraPreview && (
+              <div style={{ position: 'relative' }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 400,
+                    borderRadius: 8,
+                    background: '#000',
+                    marginBottom: 16
+                  }}
+                />
+                <canvas
+                  ref={canvasRef}
+                  style={{ display: 'none' }}
+                />
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
+                  <button
+                    className="btn"
+                    onClick={captureSnapshot}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16
+                    }}
+                  >
+                    ✅ Capturer
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => { stopScanner(); setCameraPreview(null) }}
+                    style={{
+                      flex: 1,
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16
+                    }}
+                  >
+                    ❌ Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {cameraPreview && (
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={cameraPreview}
+                  alt="Scanned Document"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 400,
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    border: '2px solid #10b981'
+                  }}
+                />
+                <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 16 }}>
+                  📄 Document capturé - cliquez sur "Upload" pour le charger ou "Nouvelle Capture" pour rescanner
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
+                  <button
+                    className="btn"
+                    onClick={uploadScannedDocument}
+                    disabled={uploading}
+                    style={{
+                      flex: 1,
+                      background: uploading ? '#ccc' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16
+                    }}
+                  >
+                    {uploading ? '⏳ Chargement...' : '📤 Upload'}
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => { setCameraPreview(null); startScanner() }}
+                    disabled={uploading}
+                    style={{
+                      flex: 1,
+                      background: uploading ? '#ccc' : '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16
+                    }}
+                  >
+                    📸 Nouvelle Capture
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => { setShowScannerModal(false); stopScanner() }}
+                    disabled={uploading}
+                    style={{
+                      flex: 1,
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16
+                    }}
+                  >
+                    ❌ Fermer
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
