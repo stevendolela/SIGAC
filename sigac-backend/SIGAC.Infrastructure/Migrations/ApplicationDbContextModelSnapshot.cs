@@ -68,7 +68,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("DossierId");
 
-                    b.ToTable("Audiences", (string)null);
+                    b.ToTable("Audiences");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.AuditLog", b =>
@@ -113,7 +113,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.CalendarEvent", b =>
@@ -168,7 +168,35 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("SalleId");
 
-                    b.ToTable("CalendarEvents", (string)null);
+                    b.ToTable("CalendarEvents");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("User1Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("User2Id")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("User2Id");
+
+                    b.HasIndex("User1Id", "User2Id")
+                        .IsUnique();
+
+                    b.ToTable("ChatConversations");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
@@ -221,7 +249,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("DossierId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.DocumentVisualisationLog", b =>
@@ -258,7 +286,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DocumentVisualisationLogs", (string)null);
+                    b.ToTable("DocumentVisualisationLogs");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Dossier", b =>
@@ -333,7 +361,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("TypeAffaireId");
 
-                    b.ToTable("Dossiers", (string)null);
+                    b.ToTable("Dossiers");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Formation", b =>
@@ -372,7 +400,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Formations", (string)null);
+                    b.ToTable("Formations");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.FormationParticipation", b =>
@@ -405,7 +433,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FormationParticipations", (string)null);
+                    b.ToTable("FormationParticipations");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Historique", b =>
@@ -437,7 +465,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Historiques", (string)null);
+                    b.ToTable("Historiques");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.JugeProfile", b =>
@@ -478,7 +506,44 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("JugeProfiles", (string)null);
+                    b.ToTable("JugeProfiles");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("SentAt");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Notification", b =>
@@ -514,7 +579,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.PasswordChangeRequest", b =>
@@ -555,7 +620,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PasswordChangeRequests", (string)null);
+                    b.ToTable("PasswordChangeRequests");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Salle", b =>
@@ -595,7 +660,7 @@ namespace SIGAC.Infrastructure.Migrations
                     b.HasIndex("Nom")
                         .IsUnique();
 
-                    b.ToTable("Salles", (string)null);
+                    b.ToTable("Salles");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.SmtpConfiguration", b =>
@@ -653,7 +718,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SmtpConfigurations", (string)null);
+                    b.ToTable("SmtpConfigurations");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.TypeAffaire", b =>
@@ -679,7 +744,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TypeAffaires", (string)null);
+                    b.ToTable("TypeAffaires");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.User", b =>
@@ -715,7 +780,6 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NomComplet")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
@@ -754,7 +818,7 @@ namespace SIGAC.Infrastructure.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Audience", b =>
@@ -807,6 +871,25 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("Dossier");
 
                     b.Navigation("Salle");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatConversation", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.User", "User1")
+                        .WithMany()
+                        .HasForeignKey("User1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.User", "User2")
+                        .WithMany()
+                        .HasForeignKey("User2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User1");
+
+                    b.Navigation("User2");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
@@ -905,6 +988,25 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.Message", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.ChatConversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Notification", b =>
                 {
                     b.HasOne("SIGAC.Core.Entities.User", "User")
@@ -934,6 +1036,11 @@ namespace SIGAC.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatConversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Dossier", b =>

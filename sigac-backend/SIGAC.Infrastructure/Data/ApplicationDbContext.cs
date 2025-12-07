@@ -169,6 +169,20 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // Configuration JugeProfile
+        modelBuilder.Entity<JugeProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.Property(e => e.Grade).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Specialisations).HasMaxLength(500);
+
+            entity.HasOne(jp => jp.User)
+                .WithMany()
+                .HasForeignKey(jp => jp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Configuration PasswordChangeRequest
         modelBuilder.Entity<PasswordChangeRequest>(entity =>
         {
