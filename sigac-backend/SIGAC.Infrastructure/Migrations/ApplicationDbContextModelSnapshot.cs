@@ -68,7 +68,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("DossierId");
 
-                    b.ToTable("Audiences");
+                    b.ToTable("Audiences", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.AuditLog", b =>
@@ -113,7 +113,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.CalendarEvent", b =>
@@ -168,7 +168,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("SalleId");
 
-                    b.ToTable("CalendarEvents");
+                    b.ToTable("CalendarEvents", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
@@ -221,7 +221,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("DossierId");
 
-                    b.ToTable("Documents");
+                    b.ToTable("Documents", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.DocumentVisualisationLog", b =>
@@ -258,7 +258,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DocumentVisualisationLogs");
+                    b.ToTable("DocumentVisualisationLogs", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Dossier", b =>
@@ -333,7 +333,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("TypeAffaireId");
 
-                    b.ToTable("Dossiers");
+                    b.ToTable("Dossiers", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Formation", b =>
@@ -372,7 +372,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Formations");
+                    b.ToTable("Formations", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.FormationParticipation", b =>
@@ -405,7 +405,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FormationParticipations");
+                    b.ToTable("FormationParticipations", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Historique", b =>
@@ -437,7 +437,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Historiques");
+                    b.ToTable("Historiques", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.JugeProfile", b =>
@@ -478,7 +478,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("JugeProfiles");
+                    b.ToTable("JugeProfiles", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Notification", b =>
@@ -514,7 +514,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.PasswordChangeRequest", b =>
@@ -555,7 +555,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PasswordChangeRequests");
+                    b.ToTable("PasswordChangeRequests", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Salle", b =>
@@ -595,7 +595,7 @@ namespace SIGAC.Infrastructure.Migrations
                     b.HasIndex("Nom")
                         .IsUnique();
 
-                    b.ToTable("Salles");
+                    b.ToTable("Salles", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.SmtpConfiguration", b =>
@@ -653,7 +653,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SmtpConfigurations");
+                    b.ToTable("SmtpConfigurations", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.TypeAffaire", b =>
@@ -679,7 +679,7 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TypeAffaires");
+                    b.ToTable("TypeAffaires", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.User", b =>
@@ -715,6 +715,7 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NomComplet")
+                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
@@ -753,7 +754,7 @@ namespace SIGAC.Infrastructure.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Audience", b =>
