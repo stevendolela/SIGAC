@@ -48,6 +48,15 @@ export const documentApi = {
     const resp = await api.delete(`/Documents/${id}`)
     return resp.status === 204
   },
+  async searchNetworkScanners(subnet?: string) {
+    const params = subnet ? { subnet } : {}
+    const resp = await api.get<any>('/Documents/scanners/network-search', { params })
+    return resp.data
+  },
+  async testScannerConnection(ip: string, port?: number) {
+    const resp = await api.post<any>('/Documents/scanners/test-connection', { ip, port })
+    return resp.data
+  },
   async assignToDossier(id: string, dossierId: string) {
     const resp = await api.put<DocumentDto>(`/Documents/${id}/assign`, {
       dossierId

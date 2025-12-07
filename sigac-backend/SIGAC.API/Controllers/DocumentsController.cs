@@ -555,5 +555,237 @@ public class DocumentsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Recherche les scanners disponibles sur le réseau local
+    /// </summary>
+    [HttpGet("scanners/network-search")]
+    public async Task<IActionResult> SearchNetworkScanners([FromQuery] string? subnet = null)
+    {
+        try
+        {
+            _logger.LogInformation("Recherche des scanners réseau - Subnet: {subnet}", subnet ?? "auto");
+            var scanners = await ScanForNetworkScanners(subnet);
+            return Ok(new
+            {
+                success = true,
+                scannersFound = scanners.Count,
+                scanners = scanners,
+                message = $"{scanners.Count} scanner(s) trouvé(s) sur le réseau"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la recherche de scanners réseau");
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Teste la connexion à un scanner spécifique
+    /// </summary>
+    [HttpPost("scanners/test-connection")]
+    public async Task<IActionResult> TestScannerConnection([FromBody] TestScannerRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Ip))
+                return BadRequest(new { success = false, message = "IP requise" });
+
+            _logger.LogInformation("Test connexion scanner - IP: {ip}, Port: {port}", request.Ip, request.Port ?? 9100);
+            
+            var result = await TestScannerConnectionAsync(request.Ip, request.Port ?? 9100);
+            return Ok(new
+            {
+                success = result,
+                ip = request.Ip,
+                port = request.Port ?? 9100,
+                message = result ? "✅ Scanner accessible" : "❌ Scanner non accessible"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors du test de connexion au scanner");
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    #region Scanner Network Helpers
+
+    private async Task<List<ScannerInfo>> ScanForNetworkScanners(string? subnet = null)
+    {
+        var scanners = new List<ScannerInfo>();
+        
+        try
+        {
+            // Déterminer le subnet local si non fourni
+            if (string.IsNullOrWhiteSpace(subnet))
+            {
+                subnet = GetLocalSubnet();
+            }
+
+            if (string.IsNullOrWhiteSpace(subnet))
+                return scanners; // Aucun subnet trouvé, retourner liste vide
+
+            _logger.LogInformation("Scanning subnet: {subnet}", subnet);
+
+            // Scanner les ports courants des scanners
+            var commonPorts = new[] { 9100, 8008, 8080, 80, 161 }; // Port 161 pour SNMP
+            var baseIp = subnet.Substring(0, subnet.LastIndexOf('.') + 1);
+
+            // Scanner les 50 dernières adresses du subnet
+            var tasks = new List<Task>();
+            for (int i = 2; i <= 50; i++)
+            {
+                var testIp = baseIp + i;
+                foreach (var port in commonPorts)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            if (await TestScannerConnectionAsync(testIp, port))
+                            {
+                                var info = new ScannerInfo
+                                {
+                                    Ip = testIp,
+                                    Port = port,
+                                    Status = "online",
+                                    Timestamp = DateTime.UtcNow
+                                };
+
+                                // Essayer de récupérer le nom du scanner
+                                try
+                                {
+                                    var name = await GetScannerNameAsync(testIp, port);
+                                    info.Name = name;
+                                }
+                                catch { /* Ignore si on ne peut pas récupérer le nom */ }
+
+                                lock (scanners)
+                                {
+                                    if (!scanners.Any(s => s.Ip == testIp && s.Port == port))
+                                        scanners.Add(info);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug(ex, "Erreur test {ip}:{port}", testIp, port);
+                        }
+                    }));
+                }
+            }
+
+            // Attendre avec timeout
+            var completedTask = await Task.WhenAny(
+                Task.WhenAll(tasks),
+                Task.Delay(TimeSpan.FromSeconds(15)) // Timeout de 15 secondes
+            );
+
+            _logger.LogInformation("Recherche scanners terminée. Trouvés: {count}", scanners.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Erreur lors du scanning réseau");
+        }
+
+        return scanners.OrderBy(s => s.Ip).ToList();
+    }
+
+    private async Task<bool> TestScannerConnectionAsync(string ip, int port)
+    {
+        try
+        {
+            using var client = new System.Net.Sockets.TcpClient();
+            client.ReceiveTimeout = 2000;
+            client.SendTimeout = 2000;
+
+            var connectTask = client.ConnectAsync(ip, port);
+            var completed = await Task.WhenAny(connectTask, Task.Delay(2000));
+
+            if (completed == connectTask && client.Connected)
+            {
+                client.Close();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Connexion échouée {ip}:{port}", ip, port);
+        }
+
+        return false;
+    }
+
+    private async Task<string> GetScannerNameAsync(string ip, int port)
+    {
+        try
+        {
+            // Essayer via HTTP
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            var url = $"http://{ip}:{port}/";
+            
+            var response = await httpClient.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                // Extraire le nom depuis le HTML (simple)
+                if (content.Contains("<title>"))
+                {
+                    var startIdx = content.IndexOf("<title>") + 7;
+                    var endIdx = content.IndexOf("</title>");
+                    if (startIdx > 6 && endIdx > startIdx)
+                    {
+                        return content.Substring(startIdx, endIdx - startIdx).Trim();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Impossible de récupérer le nom du scanner {ip}:{port}", ip, port);
+        }
+
+        return $"Scanner ({ip}:{port})";
+    }
+
+    private string GetLocalSubnet()
+    {
+        try
+        {
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Erreur lors de la détermination du subnet local");
+        }
+
+        return null!;
+    }
+
     #endregion
+
+    #endregion
+}
+
+public class TestScannerRequest
+{
+    public string? Ip { get; set; }
+    public int? Port { get; set; }
+}
+
+public class ScannerInfo
+{
+    public string Ip { get; set; } = string.Empty;
+    public int Port { get; set; }
+    public string Status { get; set; } = "unknown";
+    public string Name { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
 }
