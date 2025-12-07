@@ -5,6 +5,7 @@ import type { JugeProfileDto, CreateJugeProfileDto } from '../types/juge'
 import type { UserDto } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
 import { SkeletonTableRows } from '../components/common/LoadingSkeleton'
+import { formatDateToISO } from '../utils/dateUtils'
 
 export default function JugeProfilesPage() {
   const [items, setItems] = useState<JugeProfileDto[]>([])
@@ -128,7 +129,7 @@ export default function JugeProfilesPage() {
     setGrade(profile.grade || '')
     setSpecialisations(profile.specialisations || '')
     setBiographie(profile.biographie || '')
-    setDateNomination(profile.dateNomination ? profile.dateNomination.split('T')[0] : '')
+    setDateNomination(profile.dateNomination ? formatDateToISO(new Date(profile.dateNomination)) : '')
     setTelephone(profile.telephone || '')
     setAdresse(profile.adresse || '')
     setShowEditModal(true)
