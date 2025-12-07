@@ -2,13 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarApi } from '../api/calendarApi'
 import type { CalendarEventDto, CreateCalendarEventDto } from '../types/calendar'
 import { useToast } from '../components/common/ToastProvider'
+import { formatDateToISO } from '../utils/dateUtils'
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEventDto[]>([])
   const [loading, setLoading] = useState(false)
-  const [rangeStart, setRangeStart] = useState(new Date(new Date().setDate(new Date().getDate() - 7)).toISOString())
-  const [rangeEnd, setRangeEnd] = useState(new Date(new Date().setDate(new Date().getDate() + 30)).toISOString())
-  const [form, setForm] = useState<CreateCalendarEventDto>({ type: 'General', titre: '', debut: new Date().toISOString(), fin: new Date().toISOString(), touteLaJournee: false })
+  // Utiliser la date locale sans décalage timezone
+  const today = new Date()
+  const startDate = new Date(today)
+  startDate.setDate(startDate.getDate() - 7)
+  const endDate = new Date(today)
+  endDate.setDate(endDate.getDate() + 30)
+  const [rangeStart, setRangeStart] = useState(startDate.toISOString())
+  const [rangeEnd, setRangeEnd] = useState(endDate.toISOString())
+  const [form, setForm] = useState<CreateCalendarEventDto>({ type: 'General', titre: '', debut: today.toISOString(), fin: today.toISOString(), touteLaJournee: false })
   const { notify } = useToast()
 
   const userStr = localStorage.getItem('user')
@@ -35,7 +42,8 @@ export default function CalendarPage() {
       const created = await CalendarApi.create(form)
       notify({ type: 'success', message: 'Événement créé' })
       setEvents([created, ...events])
-      setForm({ type: 'General', titre: '', debut: new Date().toISOString(), fin: new Date().toISOString(), touteLaJournee: false })
+      const todayISO = new Date().toISOString()
+      setForm({ type: 'General', titre: '', debut: todayISO, fin: todayISO, touteLaJournee: false })
     } catch (e: any) {
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur création' })
     }

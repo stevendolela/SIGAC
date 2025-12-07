@@ -8,6 +8,7 @@ import { dossierApi } from '../api/dossierApi'
 import type { AudienceListDto } from '../types/audience'
 import { TypeAudience, StatutAudience, typeAudienceLabels, statutAudienceLabels } from '../types/audience'
 import type { DossierListDto } from '../types/dossier'
+import { parseDateString, formatDateToISO, isSameDate, getDaysInMonthEU, getDayOfWeekEU } from '../utils/dateUtils'
 
 interface AudiencesPageProps {
   onViewDossier?: (dossierId: string) => void
@@ -83,26 +84,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
   }
 
   const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
-    
-    const days: (Date | null)[] = []
-    
-    // Ajouter les jours vides du début
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
-    }
-    
-    // Ajouter tous les jours du mois
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day))
-    }
-    
-    return days
+    return getDaysInMonthEU(date)
   }
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -137,8 +119,12 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
   }
 
   const getAudiencesForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
-    return audiences.filter(a => a.dateAudience.startsWith(dateStr))
+    // Utiliser la fonction utilitaire pour éviter le décalage timezone
+    const targetDateStr = formatDateToISO(date)
+    return audiences.filter(a => {
+      const audienceDateStr = a.dateAudience.split('T')[0]
+      return audienceDateStr === targetDateStr
+    })
   }
 
   // Helper pour extraire l'heure d'une date ISO
@@ -178,9 +164,9 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   const monthDays = getDaysInMonth(currentDate)
   const weekDays = getCurrentWeek()
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = formatDateToISO(new Date())
   const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-  const dayNamesShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+  const dayNamesShort = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] // Calendrier européen
 
   const handleNewAudience = () => {
     setSelectedAudienceId(undefined)
@@ -333,7 +319,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
                   textAlign: 'center',
                   fontWeight: 700,
                   fontSize: 13,
-                  color: idx === 0 ? '#dc2626' : '#64748b',
+                  color: idx === 5 || idx === 6 ? '#dc2626' : '#64748b', // Samedi (5) et Dimanche (6) en rouge
                   padding: '8px 0',
                   borderBottom: '2px solid rgba(0, 0, 0, 0.05)'
                 }}
@@ -350,11 +336,12 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
                 return <div key={`empty-${idx}`} style={{ minHeight: 120 }} />
               }
 
-              const dateStr = date.toISOString().split('T')[0]
+              const dateStr = formatDateToISO(date)
               const dayAudiences = getAudiencesForDate(date)
               const isToday = dateStr === todayStr
               const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-              const isSunday = date.getDay() === 0
+              const dayOfWeekEU = getDayOfWeekEU(date)
+              const isWeekend = dayOfWeekEU >= 6 // 6 = samedi, 7 = dimanche
               
               return (
                 <div 
@@ -378,7 +365,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
                     <div style={{ 
                       fontSize: 18, 
                       fontWeight: isToday ? 700 : 600, 
-                      color: isSunday ? '#dc2626' : isToday ? '#667eea' : '#1e293b' 
+                      color: isWeekend ? '#dc2626' : isToday ? '#667eea' : '#1e293b' 
                     }}>
                       {date.getDate()}
                     </div>
