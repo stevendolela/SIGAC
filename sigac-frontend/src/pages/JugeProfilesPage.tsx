@@ -72,7 +72,7 @@ export default function JugeProfilesPage() {
         grade: grade.trim(),
         specialisations: specialisations.trim() || undefined,
         biographie: biographie.trim() || undefined,
-        dateNomination: dateNomination || undefined,
+        dateNomination: dateNomination ? new Date(dateNomination).toISOString() : undefined,
         telephone: telephone.trim() || undefined,
         adresse: adresse.trim() || undefined
       }
@@ -104,7 +104,7 @@ export default function JugeProfilesPage() {
         grade: grade.trim(),
         specialisations: specialisations.trim() || undefined,
         biographie: biographie.trim() || undefined,
-        dateNomination: dateNomination || undefined,
+        dateNomination: dateNomination ? new Date(dateNomination).toISOString() : undefined,
         telephone: telephone.trim() || undefined,
         adresse: adresse.trim() || undefined
       }
