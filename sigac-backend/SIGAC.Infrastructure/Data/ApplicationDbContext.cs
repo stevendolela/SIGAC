@@ -26,6 +26,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<PasswordChangeRequest> PasswordChangeRequests { get; set; }
     public DbSet<SmtpConfiguration> SmtpConfigurations { get; set; }
     public DbSet<TypeAffaire> TypeAffaires { get; set; }
+    public DbSet<ChatConversation> ChatConversations { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -208,6 +210,48 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Username).HasMaxLength(255);
             entity.Property(e => e.EncryptedPassword).HasMaxLength(1000);
             entity.Property(e => e.LastTestError).HasMaxLength(2000);
+        });
+
+        // Configuration ChatConversation
+        modelBuilder.Entity<ChatConversation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.User1Id, e.User2Id }).IsUnique();
+            
+            entity.HasOne(c => c.User1)
+                .WithMany()
+                .HasForeignKey(c => c.User1Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.User2)
+                .WithMany()
+                .HasForeignKey(c => c.User2Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(c => c.Messages)
+                .WithOne(m => m.Conversation)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration Message
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ConversationId);
+            entity.HasIndex(e => e.SenderId);
+            entity.HasIndex(e => e.SentAt);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(5000);
+
+            entity.HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

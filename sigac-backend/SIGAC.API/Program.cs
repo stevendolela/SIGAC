@@ -134,6 +134,7 @@ builder.Services.AddScoped<IJugeProfileService, JugeProfileService>();
 builder.Services.AddScoped<ISystemConfigService, SIGAC.Infrastructure.Services.SystemConfigService>();
 builder.Services.AddScoped<ISystemInfoService, SIGAC.Infrastructure.Services.SystemInfoServiceImpl>();
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
@@ -143,6 +144,7 @@ builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
 builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
 builder.Services.AddScoped<ISalleRepository, SalleRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IAudienceRepository, AudienceRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();

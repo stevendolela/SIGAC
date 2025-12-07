@@ -1,21 +1,36 @@
-using System;
-using System.Collections.Generic;
-
 namespace SIGAC.Core.Entities;
 
 /// <summary>
-/// Represents a 1-to-1 chat conversation between two users
+/// Représente une conversation 1-to-1 entre deux utilisateurs
 /// </summary>
 public class ChatConversation
 {
     public Guid Id { get; set; }
+    
+    /// <summary>
+    /// Premier utilisateur de la conversation
+    /// </summary>
     public Guid User1Id { get; set; }
+    public User? User1 { get; set; }
+    
+    /// <summary>
+    /// Deuxième utilisateur de la conversation
+    /// </summary>
     public Guid User2Id { get; set; }
+    public User? User2 { get; set; }
+    
+    /// <summary>
+    /// Date de création de la conversation
+    /// </summary>
     public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Date du dernier message de la conversation
+    /// </summary>
     public DateTime? LastMessageAt { get; set; }
-
-    // Navigation properties
-    public virtual User? User1 { get; set; }
-    public virtual User? User2 { get; set; }
-    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+    
+    /// <summary>
+    /// Collection des messages de cette conversation
+    /// </summary>
+    public ICollection<Message> Messages { get; set; } = new List<Message>();
 }
