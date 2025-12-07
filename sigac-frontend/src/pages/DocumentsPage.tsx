@@ -19,6 +19,8 @@ export default function DocumentsPage() {
   const [showScannerModal, setShowScannerModal] = useState(false)
   const [scannerActive, setScannerActive] = useState(false)
   const [cameraPreview, setCameraPreview] = useState<string | null>(null)
+  const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([])
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -63,6 +65,22 @@ export default function DocumentsPage() {
     }
     fetchDossiers()
   }, [])
+
+  // Énumérer les appareils vidéo disponibles
+  async function enumerateVideoDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(device => device.kind === 'videoinput')
+      setAvailableDevices(videoDevices)
+      
+      if (videoDevices.length > 0) {
+        // Sélectionner le premier appareil par défaut
+        setSelectedDeviceId(videoDevices[0].deviceId)
+      }
+    } catch (e: any) {
+      console.error('Erreur énumération appareils', e)
+    }
+  }
 
   useEffect(() => {
     if (selectedDossierId) {
@@ -144,16 +162,32 @@ export default function DocumentsPage() {
   async function startScanner() {
     try {
       setScannerActive(true)
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      })
+      
+      // Énumérer les appareils au démarrage
+      await enumerateVideoDevices()
+      
+      // Utiliser l'appareil sélectionné ou le premier disponible
+      const deviceId = selectedDeviceId || availableDevices[0]?.deviceId
+      
+      const constraints: MediaStreamConstraints = {
+        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment' }
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
       }
-      notify({ type: 'success', message: '✅ Caméra/Scanner activé' })
-    } catch (error) {
-      notify({ type: 'error', message: '❌ Impossible d\'accéder à la caméra/scanner' })
+      
+      const deviceName = availableDevices.find(d => d.deviceId === deviceId)?.label || 'Caméra'
+      notify({ type: 'success', message: `✅ ${deviceName} activé(e)` })
+    } catch (error: any) {
+      console.error('Erreur caméra/scanner:', error)
+      if (error.name === 'NotFoundError' || error.name === 'NotAllowedError') {
+        notify({ type: 'error', message: '❌ Appareil non trouvé ou permission refusée' })
+      } else {
+        notify({ type: 'error', message: '❌ Impossible d\'accéder à la caméra/scanner' })
+      }
       setScannerActive(false)
     }
   }
@@ -382,23 +416,91 @@ export default function DocumentsPage() {
             <h3 style={{ marginTop: 0, marginBottom: 20 }}>📸 Scanner un Document</h3>
 
             {!scannerActive && !cameraPreview && (
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <p style={{ fontSize: 48, marginBottom: 16 }}>📷</p>
-                <p style={{ marginBottom: 16, color: '#6b7280' }}>
-                  Cliquez sur "Démarrer Scanner" pour activer votre caméra ou scanner
-                </p>
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
+                    🎥 Sélectionner un appareil :
+                  </label>
+                  <select
+                    value={selectedDeviceId}
+                    onChange={(e) => setSelectedDeviceId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: 10,
+                      borderRadius: 4,
+                      border: '1px solid #cbd5e1',
+                      fontSize: 14
+                    }}
+                  >
+                    <option value="">-- Auto-détection --</option>
+                    {availableDevices.map(device => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Caméra ${device.deviceId.substring(0, 8)}`}
+                      </option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
+                    💡 Connectez un scanner USB avant de démarrer pour le détecter
+                  </p>
+                </div>
+                
+                <div style={{ textAlign: 'center', padding: 20, background: '#f3f4f6', borderRadius: 8, marginBottom: 16 }}>
+                  <p style={{ fontSize: 48, marginBottom: 12 }}>📷</p>
+                  <p style={{ marginBottom: 16, color: '#6b7280' }}>
+                    Cliquez sur "Démarrer Scanner" pour activer votre caméra ou scanner
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <button
+                    className="btn"
+                    onClick={startScanner}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      fontSize: 16,
+                      borderRadius: 4,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📸 Démarrer Scanner
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={enumerateVideoDevices}
+                    style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 16px',
+                      fontSize: 14,
+                      borderRadius: 4,
+                      cursor: 'pointer'
+                    }}
+                    title="Rafraîchir la liste des appareils"
+                  >
+                    🔄 Rafraîchir
+                  </button>
+                </div>
+
                 <button
                   className="btn"
-                  onClick={startScanner}
+                  onClick={() => setShowScannerModal(false)}
                   style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    width: '100%',
+                    background: '#6b7280',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
-                    fontSize: 16
+                    fontSize: 14,
+                    borderRadius: 4,
+                    cursor: 'pointer'
                   }}
                 >
-                  📸 Démarrer Scanner
+                  ❌ Fermer
                 </button>
               </div>
             )}
