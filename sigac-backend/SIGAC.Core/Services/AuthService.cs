@@ -239,7 +239,7 @@ public class AuthService : IAuthService
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("NomComplet", user.NomComplet),
+                new Claim("NomComplet", user.NomComplet ?? string.Empty),
                 new Claim("Matricule", user.Matricule ?? string.Empty)
             }),
             Expires = DateTime.UtcNow.AddMinutes(expirationMinutes),

@@ -312,7 +312,14 @@ app.UseCors("AllowedOrigins");
 
 // Servir les fichiers statiques (uploads)
 // Utiliser le chemin configuré dans FileStorage:BasePath
-var uploadsPath = builder.Configuration["FileStorage:BasePath"] ?? "/tmp/uploads";
+var uploadsPath = builder.Configuration["FileStorage:BasePath"] ?? "./uploads";
+
+// Convertir en chemin absolu si nécessaire
+if (!Path.IsPathRooted(uploadsPath))
+{
+    uploadsPath = Path.Combine(AppContext.BaseDirectory, uploadsPath);
+}
+
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
