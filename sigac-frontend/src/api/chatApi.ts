@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { MessageDto, ChatConversationDto, ChatConversationDetailDto, CreateMessageDto, CreateChatConversationDto } from '../types/chat';
 
 export class ChatApi {
-  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  private baseUrl = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api';
   private axiosInstance: AxiosInstance;
 
   constructor() {
