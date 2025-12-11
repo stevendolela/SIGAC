@@ -72,3 +72,100 @@ public class CreateChatConversationDto
     /// </summary>
     public Guid RecipientId { get; set; }
 }
+
+/// <summary>
+/// DTO pour un message de groupe
+/// </summary>
+public class GroupMessageDto
+{
+    public Guid Id { get; set; }
+    public Guid ChatGroupId { get; set; }
+    public Guid SenderId { get; set; }
+    public string? SenderUsername { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public DateTime SentAt { get; set; }
+}
+
+/// <summary>
+/// DTO pour un membre de groupe
+/// </summary>
+public class ChatGroupMemberDto
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public DateTime JoinedAt { get; set; }
+    public bool IsAdmin { get; set; }
+}
+
+/// <summary>
+/// DTO pour afficher un groupe de chat (vue résumée)
+/// </summary>
+public class ChatGroupDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public Guid CreatedById { get; set; }
+    public string? CreatedByUsername { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastMessageAt { get; set; }
+    public int MemberCount { get; set; }
+    public int MessageCount { get; set; }
+}
+
+/// <summary>
+/// DTO pour afficher un groupe de chat avec tous ses messages et membres
+/// </summary>
+public class ChatGroupDetailDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public Guid CreatedById { get; set; }
+    public string? CreatedByUsername { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastMessageAt { get; set; }
+    public IEnumerable<ChatGroupMemberDto> Members { get; set; } = new List<ChatGroupMemberDto>();
+    public IEnumerable<GroupMessageDto> Messages { get; set; } = new List<GroupMessageDto>();
+}
+
+/// <summary>
+/// DTO pour créer un nouveau groupe de chat
+/// </summary>
+public class CreateChatGroupDto
+{
+    /// <summary>
+    /// Nom du groupe
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Description optionnelle
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// IDs des utilisateurs à ajouter au groupe (sans l'utilisateur créateur)
+    /// </summary>
+    public IEnumerable<Guid> MemberIds { get; set; } = new List<Guid>();
+}
+
+/// <summary>
+/// DTO pour ajouter un message de groupe
+/// </summary>
+public class CreateGroupMessageDto
+{
+    public Guid ChatGroupId { get; set; }
+    public string Content { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO pour ajouter un membre à un groupe
+/// </summary>
+public class AddGroupMemberDto
+{
+    public Guid UserId { get; set; }
+}
+

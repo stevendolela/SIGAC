@@ -199,6 +199,62 @@ namespace SIGAC.Infrastructure.Migrations
                     b.ToTable("ChatConversations");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("ChatGroups");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatGroupMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChatGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatGroupMembers");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -436,6 +492,34 @@ namespace SIGAC.Infrastructure.Migrations
                     b.ToTable("FormationParticipations");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.GroupMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChatGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatGroupId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("GroupMessages");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Historique", b =>
                 {
                     b.Property<Guid>("Id")
@@ -488,13 +572,15 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.Property<string>("Grade")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Specialisations")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Telephone")
                         .HasColumnType("text");
@@ -504,7 +590,8 @@ namespace SIGAC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("JugeProfiles");
                 });
@@ -892,6 +979,36 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("User2");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatGroup", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatGroupMember", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.ChatGroup", "ChatGroup")
+                        .WithMany("Members")
+                        .HasForeignKey("ChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChatGroup");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
                 {
                     b.HasOne("SIGAC.Core.Entities.Dossier", "Dossier")
@@ -956,6 +1073,25 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("Formation");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.GroupMessage", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.ChatGroup", "ChatGroup")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChatGroup");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Historique", b =>
@@ -1040,6 +1176,13 @@ namespace SIGAC.Infrastructure.Migrations
 
             modelBuilder.Entity("SIGAC.Core.Entities.ChatConversation", b =>
                 {
+                    b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.ChatGroup", b =>
+                {
+                    b.Navigation("Members");
+
                     b.Navigation("Messages");
                 });
 

@@ -28,6 +28,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<TypeAffaire> TypeAffaires { get; set; }
     public DbSet<ChatConversation> ChatConversations { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<ChatGroup> ChatGroups { get; set; }
+    public DbSet<ChatGroupMember> ChatGroupMembers { get; set; }
+    public DbSet<GroupMessage> GroupMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

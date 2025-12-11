@@ -135,6 +135,7 @@ builder.Services.AddScoped<ISystemConfigService, SIGAC.Infrastructure.Services.S
 builder.Services.AddScoped<ISystemInfoService, SIGAC.Infrastructure.Services.SystemInfoServiceImpl>();
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
@@ -142,7 +143,7 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
-builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
+builder.Services.AddScoped<IChatGroupRepository, ChatGroupRepository>();
 builder.Services.AddScoped<ISalleRepository, SalleRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IAudienceRepository, AudienceRepository>();
