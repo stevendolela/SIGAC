@@ -11,15 +11,42 @@ export const ChatPanel: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
   const { conversations, loading: convLoading, refetch: refetchConversations } = useChatConversations();
   const { conversation, loading: detailLoading, refetch: refetchConversation } = useChatConversation(selectedConversation);
   const { unreadCount } = useUnreadCount();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const isUserScrolledRef = useRef(false);
 
-  // Auto-scroll vers le dernier message
+  // Détecter si l'utilisateur scrolle manuellement
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages]);
+    const messagesContainer = messagesContainerRef.current;
+    if (!messagesContainer) return;
+
+    const handleScroll = () => {
+      const isAtBottom = 
+        messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 10;
+      isUserScrolledRef.current = !isAtBottom;
+    };
+
+    messagesContainer.addEventListener('scroll', handleScroll);
+    return () => messagesContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto-scroll vers le dernier message (seulement si l'utilisateur n'a pas scrollé)
+  useEffect(() => {
+    const currentMessageCount = conversation?.messages.length || 0;
+    
+    // Seulement scroll si de nouveaux messages arrivent
+    if (currentMessageCount > lastMessageCount && !isUserScrolledRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 0);
+    }
+    
+    setLastMessageCount(currentMessageCount);
+  }, [conversation?.messages, lastMessageCount]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedConversation) return;
@@ -136,7 +163,7 @@ export const ChatPanel: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="messages-container">
+                <div className="messages-container" ref={messagesContainerRef}>
                   {detailLoading ? (
                     <div className="loading">Chargement des messages...</div>
                   ) : (

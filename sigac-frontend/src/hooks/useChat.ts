@@ -25,6 +25,9 @@ export function useChatConversations() {
 
   useEffect(() => {
     fetchConversations();
+    // Rafraîchir les conversations toutes les 3 secondes en temps réel
+    const interval = setInterval(fetchConversations, 3000);
+    return () => clearInterval(interval);
   }, [fetchConversations]);
 
   return { conversations, loading, error, refetch: fetchConversations };
@@ -51,7 +54,12 @@ export function useChatConversation(conversationId: string | null) {
   }, [conversationId]);
 
   useEffect(() => {
+    // Charger la conversation immédiatement
     fetchConversation();
+    
+    // Rafraîchir les messages toutes les 2 secondes en temps réel
+    const interval = setInterval(fetchConversation, 2000);
+    return () => clearInterval(interval);
   }, [fetchConversation]);
 
   return { conversation, loading, error, refetch: fetchConversation };
@@ -71,8 +79,8 @@ export function useUnreadCount() {
 
   useEffect(() => {
     fetchUnreadCount();
-    // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // Rafraîchir le nombre de messages non lus toutes les 5 secondes
+    const interval = setInterval(fetchUnreadCount, 5000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
