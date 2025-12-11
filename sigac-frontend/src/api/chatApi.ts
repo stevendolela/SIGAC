@@ -1,5 +1,17 @@
 import axios, { AxiosInstance } from 'axios';
-import { MessageDto, ChatConversationDto, ChatConversationDetailDto, CreateMessageDto, CreateChatConversationDto } from '../types/chat';
+import { 
+  MessageDto, 
+  ChatConversationDto, 
+  ChatConversationDetailDto, 
+  CreateMessageDto, 
+  CreateChatConversationDto,
+  ChatGroupDto,
+  ChatGroupDetailDto,
+  CreateChatGroupDto,
+  GroupMessageDto,
+  CreateGroupMessageDto,
+  AddGroupMemberDto
+} from '../types/chat';
 
 export class ChatApi {
   private baseUrl = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api';
@@ -89,6 +101,59 @@ export class ChatApi {
    */
   async deleteConversation(conversationId: string): Promise<void> {
     await this.axiosInstance.delete(`/chat/conversations/${conversationId}`);
+  }
+
+  /**
+   * Crée un nouveau groupe de chat
+   */
+  async createGroup(dto: CreateChatGroupDto): Promise<ChatGroupDto> {
+    const response = await this.axiosInstance.post('/chatgroups/create', dto);
+    return response.data.data;
+  }
+
+  /**
+   * Obtient tous les groupes de l'utilisateur connecté
+   */
+  async getGroups(): Promise<ChatGroupDto[]> {
+    const response = await this.axiosInstance.get('/chatgroups/my-groups');
+    return response.data.data || [];
+  }
+
+  /**
+   * Obtient les détails d'un groupe avec tous ses messages et membres
+   */
+  async getGroupDetail(groupId: string): Promise<ChatGroupDetailDto> {
+    const response = await this.axiosInstance.get(`/chatgroups/${groupId}`);
+    return response.data.data;
+  }
+
+  /**
+   * Envoie un message à un groupe
+   */
+  async sendGroupMessage(dto: CreateGroupMessageDto): Promise<GroupMessageDto> {
+    const response = await this.axiosInstance.post('/chatgroups/messages', dto);
+    return response.data.data;
+  }
+
+  /**
+   * Ajoute un membre à un groupe
+   */
+  async addGroupMember(groupId: string, dto: AddGroupMemberDto): Promise<void> {
+    await this.axiosInstance.post(`/chatgroups/${groupId}/members`, dto);
+  }
+
+  /**
+   * Supprime un membre d'un groupe
+   */
+  async removeGroupMember(groupId: string, memberId: string): Promise<void> {
+    await this.axiosInstance.delete(`/chatgroups/${groupId}/members/${memberId}`);
+  }
+
+  /**
+   * Supprime un groupe
+   */
+  async deleteGroup(groupId: string): Promise<void> {
+    await this.axiosInstance.delete(`/chatgroups/${groupId}`);
   }
 }
 

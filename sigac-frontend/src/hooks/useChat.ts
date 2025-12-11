@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChatConversationDto, ChatConversationDetailDto, MessageDto } from '../types/chat';
+import { ChatConversationDto, ChatConversationDetailDto, MessageDto, ChatGroupDto, ChatGroupDetailDto } from '../types/chat';
 import { chatApi } from '../api/chatApi';
 
 export function useChatConversations() {
@@ -101,4 +101,80 @@ export function useUnreadCount() {
   }, [fetchUnreadCount]);
 
   return { unreadCount, refetch: fetchUnreadCount };
+}
+
+export function useChatGroups() {
+  const [groups, setGroups] = useState<ChatGroupDto[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      if (isInitialLoad) {
+        setLoading(true);
+      }
+      const data = await chatApi.getGroups();
+      setGroups(data);
+      setError(null);
+      setIsInitialLoad(false);
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des groupes');
+      if (err.response?.status === 401) {
+        window.location.href = '/login';
+      }
+      setLoading(false);
+    } finally {
+      if (isInitialLoad) {
+        setLoading(false);
+      }
+    }
+  }, [isInitialLoad]);
+
+  useEffect(() => {
+    fetchGroups();
+    // Rafraîchir les groupes toutes les 3 secondes
+    const interval = setInterval(fetchGroups, 3000);
+    return () => clearInterval(interval);
+  }, [fetchGroups]);
+
+  return { groups, loading, error, refetch: fetchGroups };
+}
+
+export function useChatGroup(groupId: string | null) {
+  const [group, setGroup] = useState<ChatGroupDetailDto | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const fetchGroup = useCallback(async () => {
+    if (!groupId) return;
+
+    try {
+      if (isInitialLoad) {
+        setLoading(true);
+      }
+      const data = await chatApi.getGroupDetail(groupId);
+      setGroup(data);
+      setError(null);
+      setIsInitialLoad(false);
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement du groupe');
+      setLoading(false);
+    } finally {
+      if (isInitialLoad) {
+        setLoading(false);
+      }
+    }
+  }, [groupId, isInitialLoad]);
+
+  useEffect(() => {
+    fetchGroup();
+    
+    // Rafraîchir les messages du groupe toutes les 2 secondes
+    const interval = setInterval(fetchGroup, 2000);
+    return () => clearInterval(interval);
+  }, [fetchGroup]);
+
+  return { group, loading, error, refetch: fetchGroup };
 }

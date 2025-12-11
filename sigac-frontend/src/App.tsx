@@ -27,6 +27,7 @@ import LogoManagementPage from './pages/LogoManagementPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { ChatPanel } from './components/ChatPanel'
+import { GroupChatPanel } from './components/GroupChatPanel'
 
 export default function App() {
   const token = localStorage.getItem('token')
@@ -285,8 +286,9 @@ export default function App() {
             <Route path="/types-affaires" element={<TypesAffairesPage />} />
           </Routes>
           
-          {/* Chat Panel - affiché pour tous les utilisateurs authentifiés */}
+          {/* Chat Panels - affichés pour tous les utilisateurs authentifiés */}
           <ChatPanel />
+          <GroupChatPanel />
         </>
       )}
     </div>
