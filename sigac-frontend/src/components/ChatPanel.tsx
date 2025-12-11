@@ -34,6 +34,18 @@ export const ChatPanel: React.FC = () => {
     return () => messagesContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Réinitialiser le scroll quand on change de conversation
+  useEffect(() => {
+    if (selectedConversation && conversation) {
+      setLastMessageCount(conversation.messages.length);
+      isUserScrolledRef.current = false;
+      // Scroll vers le bas après le rendu
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 100);
+    }
+  }, [selectedConversation]);
+
   // Auto-scroll vers le dernier message (seulement si l'utilisateur n'a pas scrollé)
   useEffect(() => {
     const currentMessageCount = conversation?.messages.length || 0;

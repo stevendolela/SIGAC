@@ -240,7 +240,7 @@ export default function App() {
           <div className="env-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {user?.role === 'Admin' && (
               <>
-                <ApiHealth intervalMs={30000} />
+                <ApiHealth intervalMs={120000} />
                 <span>🔌 API: {apiUrl}</span>
               </>
             )}

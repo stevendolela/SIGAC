@@ -19,7 +19,8 @@ export default function NotificationsBell({ onOpenLink }: { onOpenLink?: (href: 
 
   useEffect(() => {
     load()
-    const id = setInterval(load, 60000)
+    // Refresh notifications toutes les 2 minutes
+    const id = setInterval(load, 120000)
     return () => clearInterval(id)
   }, [])
 
