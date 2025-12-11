@@ -6,22 +6,30 @@ export function useChatConversations() {
   const [conversations, setConversations] = useState<ChatConversationDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchConversations = useCallback(async () => {
     try {
-      setLoading(true);
+      // Afficher le loading seulement au chargement initial
+      if (isInitialLoad) {
+        setLoading(true);
+      }
       const data = await chatApi.getConversations();
       setConversations(data);
       setError(null);
+      setIsInitialLoad(false);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des conversations');
       if (err.response?.status === 401) {
         window.location.href = '/login';
       }
-    } finally {
       setLoading(false);
+    } finally {
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [isInitialLoad]);
 
   useEffect(() => {
     fetchConversations();
@@ -37,21 +45,29 @@ export function useChatConversation(conversationId: string | null) {
   const [conversation, setConversation] = useState<ChatConversationDetailDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchConversation = useCallback(async () => {
     if (!conversationId) return;
 
     try {
-      setLoading(true);
+      // Afficher le loading seulement au chargement initial
+      if (isInitialLoad) {
+        setLoading(true);
+      }
       const data = await chatApi.getConversation(conversationId);
       setConversation(data);
       setError(null);
+      setIsInitialLoad(false);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement de la conversation');
-    } finally {
       setLoading(false);
+    } finally {
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
-  }, [conversationId]);
+  }, [conversationId, isInitialLoad]);
 
   useEffect(() => {
     // Charger la conversation immédiatement

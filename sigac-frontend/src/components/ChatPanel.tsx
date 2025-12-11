@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatConversations, useChatConversation, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
 import { ChatConversationDto, ChatConversationDetailDto } from '../types/chat';
@@ -12,12 +12,24 @@ export const ChatPanel: React.FC = () => {
   const [messageInput, setMessageInput] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [prevConversationsRef, setPrevConversationsRef] = useState<string | null>(null);
+  const [prevMessagesRef, setPrevMessagesRef] = useState<string | null>(null);
   const { conversations, loading: convLoading, refetch: refetchConversations } = useChatConversations();
   const { conversation, loading: detailLoading, refetch: refetchConversation } = useChatConversation(selectedConversation);
   const { unreadCount } = useUnreadCount();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isUserScrolledRef = useRef(false);
+
+  // Créer un checksum pour détecter les changements réels dans les conversations
+  const conversationsChecksum = useMemo(() => {
+    return JSON.stringify(conversations);
+  }, [conversations]);
+
+  // Créer un checksum pour détecter les changements réels dans les messages
+  const messagesChecksum = useMemo(() => {
+    return conversation?.messages ? JSON.stringify(conversation.messages) : null;
+  }, [conversation?.messages]);
 
   // Détecter si l'utilisateur scrolle manuellement
   useEffect(() => {
@@ -47,7 +59,10 @@ export const ChatPanel: React.FC = () => {
   }, [selectedConversation]);
 
   // Auto-scroll vers le dernier message (seulement si l'utilisateur n'a pas scrollé)
+  // N'utiliser que le checksum pour éviter les re-triggers inutiles
   useEffect(() => {
+    if (!messagesChecksum) return;
+
     const currentMessageCount = conversation?.messages.length || 0;
     
     // Seulement scroll si de nouveaux messages arrivent
@@ -55,10 +70,9 @@ export const ChatPanel: React.FC = () => {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 0);
+      setLastMessageCount(currentMessageCount);
     }
-    
-    setLastMessageCount(currentMessageCount);
-  }, [conversation?.messages, lastMessageCount]);
+  }, [messagesChecksum, lastMessageCount, conversation?.messages.length]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedConversation) return;
