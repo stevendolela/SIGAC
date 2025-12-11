@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useChatConversations, useChatConversation, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
 import { ChatConversationDto, ChatConversationDetailDto } from '../types/chat';
+import { CreateChatModal } from './CreateChatModal';
 import '../styles/chat.css';
+import '../styles/create-chat-modal.css';
 
 export const ChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { conversations, loading: convLoading, refetch: refetchConversations } = useChatConversations();
   const { conversation, loading: detailLoading, refetch: refetchConversation } = useChatConversation(selectedConversation);
   const { unreadCount } = useUnreadCount();
@@ -49,6 +52,11 @@ export const ChatPanel: React.FC = () => {
     }
   };
 
+  const handleConversationCreated = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+    refetchConversations();
+  };
+
   const getOtherUserName = (conv: ChatConversationDto): string => {
     // À adapter selon l'ID de l'utilisateur connecté
     // Pour l'instant, on affiche les deux noms
@@ -72,7 +80,16 @@ export const ChatPanel: React.FC = () => {
         <div className="chat-container">
           <div className="chat-header">
             <h3>Conversations</h3>
-            <button className="close-btn" onClick={() => setIsOpen(false)}>✕</button>
+            <div className="header-actions">
+              <button
+                className="new-chat-btn"
+                onClick={() => setIsCreateModalOpen(true)}
+                title="Nouvelle conversation"
+              >
+                ➕
+              </button>
+              <button className="close-btn" onClick={() => setIsOpen(false)}>✕</button>
+            </div>
           </div>
 
           <div className="chat-content">
@@ -164,6 +181,13 @@ export const ChatPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal pour créer une nouvelle conversation */}
+      <CreateChatModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onConversationCreated={handleConversationCreated}
+      />
     </div>
   );
 };
