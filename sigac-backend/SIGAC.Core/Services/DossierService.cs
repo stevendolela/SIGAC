@@ -37,7 +37,7 @@ public class DossierService : IDossierService
     public async Task<PaginatedResult<DossierListDto>> GetDossiersAsync(
         int page, int pageSize, string? search, Guid? typeAffaireId, StatusDossier? status,
         PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax,
-        Guid? rapporteurId, Guid userId, UserRole userRole)
+        Guid? rapporteurId, Guid? workspaceId, Guid userId, UserRole userRole)
     {
         // Validation
         if (page < 1) page = 1;
@@ -52,7 +52,7 @@ public class DossierService : IDossierService
 
         var (dossiers, totalCount) = await _dossierRepository.GetDossiersAsync(
             page, pageSize, search, typeAffaireId, status, priorite,
-            dateDebutMin, dateDebutMax, filtreRapporteur);
+            dateDebutMin, dateDebutMax, filtreRapporteur, workspaceId);
 
         // Manual projection to avoid AutoMapper runtime mapping issues in current runtime
         var dossierDtos = dossiers.Select(d => new DossierListDto

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SIGAC.API.Middleware;
+using SIGAC.API.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -13,6 +14,9 @@ using SIGAC.Infrastructure.Repositories;
 using SIGAC.Infrastructure.Services;
 using Serilog;
 using System.Text;
+using AspNetCoreRateLimit;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,14 +86,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     )
 );
 
-// Configuration JWT
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secret = jwtSettings["SecretKey"];
-if (string.IsNullOrWhiteSpace(secret))
+// Configuration JWT - Sécurisée avec variables d'environnement
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+    ?? builder.Configuration["Jwt:SecretKey"];
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
+    ?? builder.Configuration["Jwt:Issuer"];
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
+    ?? builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrWhiteSpace(jwtSecret))
 {
-    throw new InvalidOperationException("Configuration manquante: Jwt:SecretKey");
+    throw new InvalidOperationException("Configuration manquante: JWT_SECRET_KEY (variable d'environnement) ou Jwt:SecretKey");
 }
-var secretKey = Encoding.UTF8.GetBytes(secret);
+
+if (jwtSecret.Length < 32)
+{
+    throw new InvalidOperationException("Le JWT_SECRET_KEY doit faire au moins 32 caractères pour une sécurité optimale");
+}
+
+var secretKey = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -106,8 +121,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(secretKey),
         ClockSkew = TimeSpan.Zero
     };
@@ -136,6 +151,7 @@ builder.Services.AddScoped<ISystemInfoService, SIGAC.Infrastructure.Services.Sys
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
+builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
@@ -153,6 +169,15 @@ builder.Services.AddScoped<IFormationRepository, FormationRepository>();
 builder.Services.AddScoped<IJugeProfileRepository, JugeProfileRepository>();
 builder.Services.AddScoped<ISmtpConfigurationRepository, SmtpConfigurationRepository>();
 builder.Services.AddScoped<ITypeAffaireRepository, TypeAffaireRepository>();
+builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+
+// Configuration Rate Limiting (Protection contre brute-force et DDoS)
+builder.Services.AddRateLimiting(builder.Configuration);
+
+// Configuration FluentValidation (Validation stricte des inputs)
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -307,7 +332,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// HTTPS obligatoire en production
+if (app.Environment.IsProduction())
+{
+    // HTTP Strict Transport Security (HSTS)
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
+
+// Rate Limiting AVANT l'authentification et l'autorisation
+app.UseIpRateLimiting();
 
 app.UseCors("AllowedOrigins");
 

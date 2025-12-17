@@ -30,8 +30,8 @@ export default function LogoManagementPage() {
         setPreview(base64)
         notify({ type: 'success', message: '✅ Logo mis à jour avec succès' })
         
-        // Reload app pour appliquer le logo
-        setTimeout(() => window.location.reload(), 500)
+        // Déclencher un événement pour mettre à jour tous les composants Logo
+        window.dispatchEvent(new Event('logoUpdated'))
       }
       reader.readAsDataURL(file)
     } catch (error: any) {
@@ -46,7 +46,9 @@ export default function LogoManagementPage() {
       localStorage.removeItem('customLogo')
       setPreview(null)
       notify({ type: 'success', message: '✅ Logo réinitialisé' })
-      setTimeout(() => window.location.reload(), 500)
+      
+      // Déclencher un événement pour mettre à jour tous les composants Logo
+      window.dispatchEvent(new Event('logoUpdated'))
     }
   }
 

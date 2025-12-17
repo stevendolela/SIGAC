@@ -9,7 +9,7 @@ public interface IDossierRepository
     Task<(List<Dossier> dossiers, int totalCount)> GetDossiersAsync(
         int page, int pageSize, string? search, Guid? typeAffaireId,
         StatusDossier? status, PrioriteDossier? priorite,
-        DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId);
+        DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId, Guid? workspaceId);
     
     Task<Dossier?> GetByIdAsync(Guid id);
     Task<Dossier?> GetByIdWithoutHistoriquesAsync(Guid id);

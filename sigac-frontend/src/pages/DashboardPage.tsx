@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { dossierApi } from '../api/dossierApi'
 import { userApi } from '../api/userApi'
 import type { DossierStatisticsDto } from '../types/dossierStatistics'
+import './Dashboard.css'
 
 export default function DashboardPage() {
   const [dossierStats, setDossierStats] = useState<DossierStatisticsDto | null>(null)
@@ -75,19 +76,18 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
+    <div className="dashboard-container">
       <div className="panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div className="panel-title">📊 Tableau de Bord - Vue d'Ensemble</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 12, color: '#64748b' }}>
+        <div className="dashboard-header">
+          <div className="dashboard-title">📊 Tableau de Bord - Vue d'Ensemble</div>
+          <div className="dashboard-actions">
+            <span className="last-update">
               Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
             </span>
             <button 
               className="btn" 
               onClick={() => setRefreshKey(k => k + 1)}
               disabled={loading}
-              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
             >
               🔄 {loading ? 'Chargement...' : 'Actualiser'}
             </button>
@@ -96,50 +96,50 @@ export default function DashboardPage() {
         {error && <div className="error">{error}</div>}
         
         {loading ? (
-          <div className="info">⏳ Chargement des statistiques...</div>
+          <div className="dashboard-loading">⏳ Chargement des statistiques...</div>
         ) : (
           <>
             {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 24 }}>
-              <div className="card" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)', borderLeft: '4px solid #3b82f6' }}>
-                <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>Total des Dossiers</div>
-                <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
+            <div className="kpi-grid">
+              <div className="kpi-card" style={{ '--accent-color': '#3b82f6' } as React.CSSProperties}>
+                <div className="kpi-label">Total des Dossiers</div>
+                <div className="kpi-value">
                   {dossierStats?.totalDossiers ?? 0}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>📁 Affaires constitutionnelles</div>
+                <div className="kpi-description">📁 Affaires constitutionnelles</div>
               </div>
 
-              <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)', borderLeft: '4px solid #10b981' }}>
-                <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>Dossiers Jugés</div>
-                <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
+              <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
+                <div className="kpi-label">Dossiers Jugés</div>
+                <div className="kpi-value">
                   {dossierStats?.juges ?? 0}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>✅ Affaires traitées</div>
+                <div className="kpi-description">✅ Affaires traitées</div>
               </div>
 
-              <div className="card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)', borderLeft: '4px solid #f59e0b' }}>
-                <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>En Instruction</div>
-                <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
+              <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
+                <div className="kpi-label">En Instruction</div>
+                <div className="kpi-value">
                   {dossierStats?.enInstruction ?? 0}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>📝 En cours de traitement</div>
+                <div className="kpi-description">📝 En cours de traitement</div>
               </div>
 
-              <div className="card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.05) 100%)', borderLeft: '4px solid #6366f1' }}>
-                <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500, marginBottom: 8 }}>Utilisateurs Actifs</div>
-                <div style={{ fontSize: 36, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
+              <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
+                <div className="kpi-label">Utilisateurs Actifs</div>
+                <div className="kpi-value">
                   {userStats?.activeUsers ?? '-'}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>👥 Personnel connecté</div>
+                <div className="kpi-description">👥 Personnel connecté</div>
               </div>
             </div>
 
             {/* Répartition par Statut */}
-            <div className="card" style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1e293b' }}>
+            <div className="chart-section">
+              <div className="chart-title">
                 📈 Répartition des Dossiers par Statut
               </div>
-              <div style={{ display: 'grid', gap: 12 }}>
+              <div>
                 {dossierStats && [
                   { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
                   { key: 'En Instruction', value: dossierStats.enInstruction },
@@ -150,24 +150,17 @@ export default function DashboardPage() {
                   const total = dossierStats.totalDossiers || 1
                   const percentage = Math.round((value / total) * 100)
                   return (
-                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ minWidth: 140, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 20 }}>{statusIcons[key] || '📋'}</span>
-                        <span style={{ fontWeight: 500, color: '#475569' }}>{key}</span>
+                    <div key={key} className="status-item">
+                      <div className="status-label">
+                        <span className="status-icon">{statusIcons[key] || '📋'}</span>
+                        <span className="status-name">{key}</span>
                       </div>
-                      <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 8, height: 32, position: 'relative', overflow: 'hidden' }}>
+                      <div className="status-bar-container">
                         <div 
+                          className="status-bar"
                           style={{ 
                             width: `${percentage}%`, 
-                            height: '100%', 
                             background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`,
-                            transition: 'width 0.5s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            paddingLeft: 12,
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: 14
                           }}
                         >
                           {value} ({percentage}%)
@@ -180,41 +173,57 @@ export default function DashboardPage() {
             </div>
 
             {/* Indicateurs de Performance */}
-            <div className="card">
-              <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1e293b' }}>
+            <div className="chart-section">
+              <div className="chart-title">
                 🎯 Indicateurs de Performance
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-                <div style={{ padding: 16, background: 'rgba(102, 126, 234, 0.05)', borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Taux de Traitement</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: '#667eea' }}>
+              <div className="performance-grid">
+                <div className="performance-card" style={{ 
+                  '--bg-color': 'rgba(102, 126, 234, 0.05)',
+                  '--border-color': 'rgba(102, 126, 234, 0.1)',
+                  '--value-color': '#667eea'
+                } as React.CSSProperties}>
+                  <div className="performance-label">Taux de Traitement</div>
+                  <div className="performance-value">
                     {dossierStats ? Math.round(((dossierStats.juges ?? 0) / (dossierStats.totalDossiers || 1)) * 100) : 0}%
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Affaires jugées / Total</div>
+                  <div className="performance-description">Affaires jugées / Total</div>
                 </div>
 
-                <div style={{ padding: 16, background: 'rgba(245, 158, 11, 0.05)', borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Dossiers en Cours</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: '#f59e0b' }}>
+                <div className="performance-card" style={{ 
+                  '--bg-color': 'rgba(245, 158, 11, 0.05)',
+                  '--border-color': 'rgba(245, 158, 11, 0.1)',
+                  '--value-color': '#f59e0b'
+                } as React.CSSProperties}>
+                  <div className="performance-label">Dossiers en Cours</div>
+                  <div className="performance-value">
                     {(dossierStats?.enInstruction ?? 0) + (dossierStats?.enDelibere ?? 0)}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Instruction + Délibéré</div>
+                  <div className="performance-description">Instruction + Délibéré</div>
                 </div>
 
-                <div style={{ padding: 16, background: 'rgba(59, 130, 246, 0.05)', borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Nouveaux Dossiers</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: '#3b82f6' }}>
+                <div className="performance-card" style={{ 
+                  '--bg-color': 'rgba(59, 130, 246, 0.05)',
+                  '--border-color': 'rgba(59, 130, 246, 0.1)',
+                  '--value-color': '#3b82f6'
+                } as React.CSSProperties}>
+                  <div className="performance-label">Nouveaux Dossiers</div>
+                  <div className="performance-value">
                     {dossierStats?.nouveauxDossiers ?? 0}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>En attente d'attribution</div>
+                  <div className="performance-description">En attente d'attribution</div>
                 </div>
 
-                <div style={{ padding: 16, background: 'rgba(107, 114, 128, 0.05)', borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Dossiers Classés</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: '#6b7280' }}>
+                <div className="performance-card" style={{ 
+                  '--bg-color': 'rgba(107, 114, 128, 0.05)',
+                  '--border-color': 'rgba(107, 114, 128, 0.1)',
+                  '--value-color': '#6b7280'
+                } as React.CSSProperties}>
+                  <div className="performance-label">Dossiers Classés</div>
+                  <div className="performance-value">
                     {dossierStats?.classes ?? 0}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Archivés</div>
+                  <div className="performance-description">Archivés</div>
                 </div>
               </div>
             </div>

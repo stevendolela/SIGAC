@@ -30,4 +30,8 @@ public class User
     // Relations
     public ICollection<Dossier> DossiersRapporteur { get; set; } = new List<Dossier>();
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    
+    // Workspace relations (nouveau - modèle GED)
+    public ICollection<WorkspaceUser> WorkspaceMemberships { get; set; } = new List<WorkspaceUser>();
+    public ICollection<Workspace> OwnedWorkspaces { get; set; } = new List<Workspace>();
 }

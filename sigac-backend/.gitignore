@@ -1,0 +1,50 @@
+# Environment variables - NE PAS COMMITTER CE FICHIER
+.env
+.env.local
+.env.production
+
+# Secrets
+appsettings.Production.json
+secrets.json
+
+# Logs
+logs/
+*.log
+
+# User-specific files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Uploads
+uploads/
+temp_uploads/

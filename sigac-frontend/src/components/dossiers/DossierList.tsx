@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { StatusBadge } from './StatusBadge'
 import api from '../../api/api-client'
 import { useToast } from '../common/ToastProvider'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import type { DossierListDto } from '../../types/dossier'
 import type { PaginatedResult, PaginationMetadata } from '../../types/pagination'
 
@@ -11,6 +12,7 @@ interface Props {
 
 export default function DossierList({ onSelect }: Props) {
   const { notify } = useToast()
+  const { currentWorkspace } = useWorkspaceStore()
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
   const isAdmin = user?.role === 'Admin'
@@ -59,6 +61,8 @@ export default function DossierList({ onSelect }: Props) {
       if (q?.trim()) qs.set('search', q.trim())
       if (st) qs.set('status', st)
       if (pr) qs.set('priorite', pr)
+      // 🆕 FILTRAGE PAR WORKSPACE
+      if (currentWorkspace?.id) qs.set('workspaceId', currentWorkspace.id)
       const resp = await api.get<PaginatedResult<DossierListDto>>(`/Dossiers?${qs.toString()}`)
       setItems(resp.data.data)
       setPagination(resp.data.pagination)
@@ -67,7 +71,7 @@ export default function DossierList({ onSelect }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [pageSize])
+  }, [pageSize, currentWorkspace?.id])
 
   useEffect(() => {
     fetchDossiers(page, search, status, priorite)

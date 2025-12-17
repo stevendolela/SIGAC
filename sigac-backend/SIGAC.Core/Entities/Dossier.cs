@@ -20,6 +20,14 @@ public class Dossier
     public string? Resume { get; set; }
     public string? Observations { get; set; }
     
+    // Workspace (nouveau - pour modèle GED)
+    /// <summary>
+    /// Workspace auquel appartient ce projet
+    /// Nullable pour compatibilité avec données existantes (sera requis après migration)
+    /// </summary>
+    public Guid? WorkspaceId { get; set; }
+    public Workspace? Workspace { get; set; }
+    
     // Attribution
     public Guid? RapporteurId { get; set; }
     public User? Rapporteur { get; set; }

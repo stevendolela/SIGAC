@@ -31,6 +31,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<ChatGroup> ChatGroups { get; set; }
     public DbSet<ChatGroupMember> ChatGroupMembers { get; set; }
     public DbSet<GroupMessage> GroupMessages { get; set; }
+    
+    // Entities GED (transformation)
+    public DbSet<Workspace> Workspaces { get; set; }
+    public DbSet<WorkspaceUser> WorkspaceUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,6 +64,13 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.DossiersRapporteur)
                 .HasForeignKey(d => d.RapporteurId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Relation Workspace (nullable - transformation GED)
+            entity.HasOne(d => d.Workspace)
+                .WithMany(w => w.Projects)
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
 
             entity.HasMany(d => d.Documents)
                 .WithOne(doc => doc.Dossier)
@@ -156,6 +167,38 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(a => a.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration Workspace (nouveau - modèle GED)
+        modelBuilder.Entity<Workspace>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Slug).IsUnique();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+            
+            entity.HasOne(w => w.Owner)
+                .WithMany(u => u.OwnedWorkspaces)
+                .HasForeignKey(w => w.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration WorkspaceUser (junction table - modèle GED)
+        modelBuilder.Entity<WorkspaceUser>(entity =>
+        {
+            entity.HasKey(e => new { e.WorkspaceId, e.UserId });
+            
+            entity.HasOne(wu => wu.Workspace)
+                .WithMany(w => w.Members)
+                .HasForeignKey(wu => wu.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(wu => wu.User)
+                .WithMany(u => u.WorkspaceMemberships)
+                .HasForeignKey(wu => wu.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configuration Salle (corrige la clé étrangère CreatedBy pour éviter la colonne fantôme CreatedByUserId)

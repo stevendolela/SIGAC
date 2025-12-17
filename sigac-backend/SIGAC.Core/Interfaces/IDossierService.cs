@@ -9,7 +9,7 @@ public interface IDossierService
         int page, int pageSize, string? search, Guid? typeAffaireId,
         StatusDossier? status, PrioriteDossier? priorite,
         DateTime? dateDebutMin, DateTime? dateDebutMax,
-        Guid? rapporteurId, Guid userId, UserRole userRole);
+        Guid? rapporteurId, Guid? workspaceId, Guid userId, UserRole userRole);
     
     Task<DossierDetailDto?> GetDossierByIdAsync(Guid id, Guid userId, UserRole userRole);
     Task<DossierDto> CreateDossierAsync(CreateDossierDto createDto, Guid userId);

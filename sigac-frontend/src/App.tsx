@@ -27,17 +27,22 @@ import LogoManagementPage from './pages/LogoManagementPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
+import WorkspaceSelector from './components/workspace/WorkspaceSelector'
+import CreateWorkspaceModal from './components/workspace/CreateWorkspaceModal'
+import WorkspaceSettings from './pages/WorkspaceSettings'
+import Sidebar from './components/common/Sidebar'
 
 export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
+  const [showCreateWorkspaceModal, setShowCreateWorkspaceModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(localStorage.getItem('userAvatar'))
 
@@ -83,17 +88,9 @@ export default function App() {
   return (
     <div className="app">
       {token && (
-        <header className="app-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo size={48} style={{ cursor: 'pointer' }} onClick={() => setView('dashboard')} />
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>Taajii GED</div>
-              <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.8)' }}>
-                Gestion Électronique des Dossiers
-              </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <>
+          {/* Barre d'actions utilisateur (en haut à droite) */}
+          <div className="top-actions-bar">
             {user && (
               <div ref={userMenuRef} style={{ position: 'relative' }}>
                 {/* Bouton utilisateur (avatar + nom court) */}
@@ -169,84 +166,31 @@ export default function App() {
             }} />
             {user?.role === 'Admin' && (
               <button
-                className="btn"
+                className="header-api-button"
                 onClick={() => setShowApiSwitcher(true)}
-                style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
               >
                 🔌 API
               </button>
             )}
           </div>
-        </header>
+        </>
       )}
       
       {!token && <LoginPage />}
       {token && (
         <>
-          <div className="tabs">
-            <button className={`tab ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
-              📊 Dashboard
-            </button>
-            <button className={`tab ${view === 'dossiers' ? 'active' : ''}`} onClick={() => setView('dossiers')}>
-              📁 Dossiers
-            </button>
-            <button className={`tab ${view === 'create-dossier' ? 'active' : ''}`} onClick={() => setView('create-dossier')}>
-              ➕ Nouveau Dossier
-            </button>
-            <button className={`tab ${view === 'recherche' ? 'active' : ''}`} onClick={() => setView('recherche')}>
-              🔍 Recherche
-            </button>
-            <button className={`tab ${view === 'audiences' ? 'active' : ''}`} onClick={() => setView('audiences')}>
-              📅 Audiences
-            </button>
-            <button className={`tab ${view === 'calendrier' ? 'active' : ''}`} onClick={() => setView('calendrier')}>
-              🗓️ Calendrier
-            </button>
-            <button className={`tab ${view === 'documents' ? 'active' : ''}`} onClick={() => setView('documents')}>
-              📄 Documents
-            </button>
-            {user?.role === 'JugeConstitutionnel' && (
-              <button className={`tab ${view === 'mon-profil' ? 'active' : ''}`} onClick={() => setView('mon-profil')}>
-                👤 Mon Profil
-              </button>
-            )}
-            <button className={`tab ${view === 'profils' ? 'active' : ''}`} onClick={() => setView('profils')}>
-              👤 Profils Juges
-            </button>
-            <button className={`tab ${view === 'types-affaires' ? 'active' : ''}`} onClick={() => setView('types-affaires')}>
-              🧾 Types d'affaires
-            </button>
-            {user?.role === 'Administrateur' && (
-              <button className={`tab ${view === 'users' ? 'active' : ''}`} onClick={() => setView('users')}>
-                👥 Utilisateurs
-              </button>
-            )}
-            {user?.role === 'Administrateur' && (
-              <button className={`tab ${view === 'salles' ? 'active' : ''}`} onClick={() => setView('salles')}>
-                🏛️ Salles
-              </button>
-            )}
-            {user?.role === 'Administrateur' && (
-              <button className={`tab ${view === 'system-config' ? 'active' : ''}`} onClick={() => setView('system-config')}>
-                ⚙️ Config Système
-              </button>
-            )}
-            {user?.role === 'Administrateur' && (
-              <button className={`tab ${view === 'logo-management' ? 'active' : ''}`} onClick={() => setView('logo-management')}>
-                🎨 Logo
-              </button>
-            )}
-          </div>
-          <div className="env-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {user?.role === 'Admin' && (
-              <>
-                <ApiHealth intervalMs={120000} />
-                <span>🔌 API: {apiUrl}</span>
-              </>
-            )}
-          </div>
-          {view === 'dashboard' && <DashboardPage />}
-          {view === 'dossiers' && (
+          {/* Sidebar à gauche */}
+          <Sidebar 
+            currentView={view}
+            onViewChange={setView}
+            userRole={user?.role}
+            onCreateWorkspaceClick={() => setShowCreateWorkspaceModal(true)}
+          />
+          
+          {/* Contenu principal avec marge à gauche pour le sidebar */}
+          <div className="main-content-wrapper">
+            {view === 'dashboard' && <DashboardPage />}
+            {view === 'dossiers' && (
             <>
               <DossierList onSelect={(d) => { setSelectedDossierId(d.id) }} />
               {selectedDossierId && (
@@ -271,13 +215,8 @@ export default function App() {
           {view === 'system-config' && <SystemConfigPage />}
           {view === 'logo-management' && <LogoManagementPage />}
           {view === 'types-affaires' && <TypesAffairesPage />}
-          <ApiSwitcher
-            isOpen={showApiSwitcher}
-            onClose={() => setShowApiSwitcher(false)}
-            onChanged={(url) => { setApiUrl(url); setApiBaseUrl(url) }}
-          />
-          {/* Modal de gestion de compte */}
-          {showAccountModal && <AccountModal onClose={() => setShowAccountModal(false)} />}
+          {view === 'workspace-settings' && <WorkspaceSettings />}
+          
           {/* Routes additionnelles (édition avancée utilisateur) */}
           <Routes>
             <Route path="/admin/users/:id" element={<AdminUserEditPage />} />
@@ -287,6 +226,22 @@ export default function App() {
           
           {/* Unified Chat Panel - affichés pour tous les utilisateurs authentifiés */}
           <UnifiedChatPanel />
+          </div>
+          
+          {/* Modals */}
+          <ApiSwitcher
+            isOpen={showApiSwitcher}
+            onClose={() => setShowApiSwitcher(false)}
+            onChanged={(url) => { setApiUrl(url); setApiBaseUrl(url) }}
+          />
+          {/* Modal de gestion de compte */}
+          {showAccountModal && <AccountModal onClose={() => setShowAccountModal(false)} />}
+          
+          {/* Modal de création de workspace */}
+          <CreateWorkspaceModal 
+            isOpen={showCreateWorkspaceModal}
+            onClose={() => setShowCreateWorkspaceModal(false)}
+          />
         </>
       )}
     </div>

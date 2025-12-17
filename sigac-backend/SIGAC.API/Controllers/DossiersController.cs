@@ -35,7 +35,8 @@ public class DossiersController : ControllerBase
     [FromQuery] PrioriteDossier? priorite = null,
     [FromQuery] DateTime? dateDebutMin = null,
     [FromQuery] DateTime? dateDebutMax = null,
-    [FromQuery] Guid? rapporteurId = null)
+    [FromQuery] Guid? rapporteurId = null,
+    [FromQuery] Guid? workspaceId = null)
     {
         try
         {
@@ -44,7 +45,7 @@ public class DossiersController : ControllerBase
 
             var result = await _dossierService.GetDossiersAsync(
                 page, pageSize, search, typeAffaireId, status, priorite,
-                dateDebutMin, dateDebutMax, rapporteurId, userId, userRole);
+                dateDebutMin, dateDebutMax, rapporteurId, workspaceId, userId, userRole);
 
             return Ok(result);
         }

@@ -18,7 +18,7 @@ public class DossierRepository : IDossierRepository
 
     public async Task<(List<Dossier> dossiers, int totalCount)> GetDossiersAsync(
         int page, int pageSize, string? search, Guid? typeAffaireId, StatusDossier? status,
-        PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId)
+        PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId, Guid? workspaceId)
     {
         var query = _context.Dossiers
             .Include(d => d.TypeAffaire)
@@ -63,6 +63,12 @@ public class DossierRepository : IDossierRepository
         if (rapporteurId.HasValue)
         {
             query = query.Where(d => d.RapporteurId == rapporteurId.Value);
+        }
+
+        // 🆕 FILTRAGE PAR WORKSPACE
+        if (workspaceId.HasValue)
+        {
+            query = query.Where(d => d.WorkspaceId == workspaceId.Value);
         }
 
         // Exclure les dossiers classés (suppression logique)

@@ -15,11 +15,13 @@ export function useChatConversations() {
         setLoading(true);
       }
       const data = await chatApi.getConversations();
-      setConversations(data);
+      // S'assurer que data est un tableau
+      setConversations(Array.isArray(data) ? data : []);
       setError(null);
       setIsInitialLoad(false);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des conversations');
+      setConversations([]); // Tableau vide en cas d'erreur
       if (err.response?.status === 401) {
         window.location.href = '/login';
       }
@@ -115,11 +117,13 @@ export function useChatGroups() {
         setLoading(true);
       }
       const data = await chatApi.getGroups();
-      setGroups(data);
+      // S'assurer que data est un tableau
+      setGroups(Array.isArray(data) ? data : []);
       setError(null);
       setIsInitialLoad(false);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des groupes');
+      setGroups([]); // Tableau vide en cas d'erreur
       if (err.response?.status === 401) {
         window.location.href = '/login';
       }

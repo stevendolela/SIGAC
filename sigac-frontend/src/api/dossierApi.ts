@@ -15,6 +15,7 @@ export const dossierApi = {
     dateDebutMin?: string
     dateDebutMax?: string
     rapporteurId?: string
+    workspaceId?: string
   } = {}) {
     const qs = new URLSearchParams()
     if (params.page) qs.set('page', String(params.page))
@@ -26,6 +27,7 @@ export const dossierApi = {
     if (params.dateDebutMin) qs.set('dateDebutMin', params.dateDebutMin)
     if (params.dateDebutMax) qs.set('dateDebutMax', params.dateDebutMax)
     if (params.rapporteurId) qs.set('rapporteurId', params.rapporteurId)
+    if (params.workspaceId) qs.set('workspaceId', params.workspaceId)
     const resp = await api.get<PaginatedResult<DossierListDto>>(`/Dossiers?${qs.toString()}`)
     return resp.data
   },

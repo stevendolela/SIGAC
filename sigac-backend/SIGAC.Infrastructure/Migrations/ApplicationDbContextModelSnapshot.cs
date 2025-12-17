@@ -408,6 +408,9 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Property<Guid?>("TypeAffaireId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NumeroDossier")
@@ -416,6 +419,8 @@ namespace SIGAC.Infrastructure.Migrations
                     b.HasIndex("RapporteurId");
 
                     b.HasIndex("TypeAffaireId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Dossiers");
                 });
@@ -454,7 +459,12 @@ namespace SIGAC.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Formations");
                 });
@@ -908,6 +918,88 @@ namespace SIGAC.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.Workspace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowGuestAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("MaxStorageGB")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxUsers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Workspaces");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.WorkspaceUser", b =>
+                {
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InvitedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.HasKey("WorkspaceId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WorkspaceUsers");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Audience", b =>
                 {
                     b.HasOne("SIGAC.Core.Entities.User", "CreatedByUser")
@@ -1051,9 +1143,23 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasForeignKey("TypeAffaireId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("SIGAC.Core.Entities.Workspace", "Workspace")
+                        .WithMany("Projects")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Rapporteur");
 
                     b.Navigation("TypeAffaire");
+
+                    b.Navigation("Workspace");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.Formation", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.Workspace", null)
+                        .WithMany("Teams")
+                        .HasForeignKey("WorkspaceId");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.FormationParticipation", b =>
@@ -1174,6 +1280,36 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.Workspace", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.User", "Owner")
+                        .WithMany("OwnedWorkspaces")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.WorkspaceUser", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.User", "User")
+                        .WithMany("WorkspaceMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.Workspace", "Workspace")
+                        .WithMany("Members")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workspace");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.ChatConversation", b =>
                 {
                     b.Navigation("Messages");
@@ -1203,6 +1339,19 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("AuditLogs");
 
                     b.Navigation("DossiersRapporteur");
+
+                    b.Navigation("OwnedWorkspaces");
+
+                    b.Navigation("WorkspaceMemberships");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.Workspace", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Projects");
+
+                    b.Navigation("Teams");
                 });
 #pragma warning restore 612, 618
         }

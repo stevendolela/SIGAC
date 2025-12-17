@@ -142,18 +142,154 @@ body {
   padding: 0;
 }
 
-/* Header moderne */
+/* Barre d'actions utilisateur (en haut à droite) */
+.top-actions-bar {
+  position: fixed;
+  top: 24px;
+  right: 110px;
+  z-index: 9999; /* Priorité maximale pour rester au-dessus du contenu */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 24px; /* Pills design */
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  backdrop-filter: blur(8px); /* Effet de flou sur le contenu en dessous */
+}
+
+.top-actions-bar .btn {
+  background: transparent;
+  color: #374151;
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.top-actions-bar .btn:hover {
+  background: #f3f4f6;
+}
+
+.top-actions-bar .header-api-button {
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #dbeafe;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.top-actions-bar .header-api-button:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+/* Header moderne avec sidebar à gauche */
 .app-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%);
-  padding: 20px 40px;
+  padding: 12px 32px 12px 312px; /* Padding gauche pour ne pas chevaucher le sidebar */
   margin: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 101; /* Au-dessus du sidebar (z-index: 100) */
+  height: 64px;
+}
+
+.header-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-main-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.4px;
+}
+
+.header-logo-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.header-logo-subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-workspace-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.header-actions-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-api-button {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.header-api-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Contenu principal avec sidebar */
+.main-content-wrapper {
+  margin-left: 280px;
+  padding: 100px 48px 32px 48px;
+  min-height: 100vh;
+  background: #f9fafb;
+  max-width: calc(100vw - 280px);
+  box-sizing: border-box;
 }
 
 .app-header h1 {
@@ -551,6 +687,65 @@ label {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablette (1024px et moins) */
+@media (max-width: 1024px) {
+  .top-actions-bar {
+    top: 20px;
+    right: 24px;
+    padding: 8px 14px;
+    gap: 10px;
+  }
+  
+  .main-content-wrapper {
+    margin-left: 240px;
+    padding: 90px 32px 24px 32px;
+  }
+}
+
+/* Mobile (768px et moins) */
+@media (max-width: 768px) {
+  .top-actions-bar {
+    top: 16px;
+    right: 16px;
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: 20px;
+  }
+  
+  .main-content-wrapper {
+    margin-left: 0;
+    padding: 80px 20px 20px 20px;
+  }
+    padding: 60px 16px 16px 16px;
+  }
+  
+  .header-api-button {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  
+  .top-actions-bar .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+} }
+}
+
+/* Petit mobile (480px et moins) */
+@media (max-width: 480px) {
+  .top-actions-bar {
+    padding: 4px 6px;
+    gap: 4px;
+    border-radius: 18px;
+  }
+  
+  .top-actions-bar .btn {
+    padding: 4px 6px;
+  }
 }
 
 /* Focus ring utilitaire pour accessibilité */
