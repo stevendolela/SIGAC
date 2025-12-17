@@ -20,10 +20,17 @@ export function useChatConversations() {
       setError(null);
       setIsInitialLoad(false);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des conversations');
-      setConversations([]); // Tableau vide en cas d'erreur
-      if (err.response?.status === 401) {
-        window.location.href = '/login';
+      // Si 404, l'endpoint n'existe pas encore (déploiement en cours)
+      if (err.response?.status === 404) {
+        setConversations([]);
+        setError(null);
+        setIsInitialLoad(false);
+      } else {
+        setError(err.message || 'Erreur lors du chargement des conversations');
+        setConversations([]); // Tableau vide en cas d'erreur
+        if (err.response?.status === 401) {
+          window.location.href = '/login';
+        }
       }
       setLoading(false);
     } finally {
@@ -122,10 +129,18 @@ export function useChatGroups() {
       setError(null);
       setIsInitialLoad(false);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des groupes');
-      setGroups([]); // Tableau vide en cas d'erreur
-      if (err.response?.status === 401) {
-        window.location.href = '/login';
+      // Si 404, l'endpoint n'existe pas encore (déploiement en cours)
+      // Ne pas afficher d'erreur, juste retourner tableau vide silencieusement
+      if (err.response?.status === 404) {
+        setGroups([]);
+        setError(null); // Pas d'erreur visible pour l'utilisateur
+        setIsInitialLoad(false);
+      } else {
+        setError(err.message || 'Erreur lors du chargement des groupes');
+        setGroups([]); // Tableau vide en cas d'erreur
+        if (err.response?.status === 401) {
+          window.location.href = '/login';
+        }
       }
       setLoading(false);
     } finally {

@@ -1,83 +1,323 @@
-# 🚀 GUIDE DE DÉPLOIEMENT - RENDER & VERCEL
+# 🚀 Guide de Déploiement SIGAC - Render + Vercel
 
-**Date**: 6 décembre 2025  
-**Status**: ✅ Prêt pour déploiement
-
----
-
-## 📋 PRÉREQUIS
-
-### Render
-- ✅ Compte Render (render.com)
-- ✅ Projet SIGAC configuré
-- ✅ PostgreSQL 15 lié
-- ✅ Variables d'environnement configurées
-
-### Vercel
-- ✅ Compte Vercel (vercel.com)
-- ✅ Projet Frontend lié
-- ✅ Domain configuré (optionnel)
-
-### GitHub
-- ✅ Repository `stevendolela/SIGAC`
-- ✅ Commit actuel poussé (`main` branch)
-- ✅ Deploy keys configurées
+**Date**: 17 décembre 2024  
+**Version**: Phase 1 Sécurité + GED Multi-Workspace  
+**Backend**: .NET 8 (Render)  
+**Frontend**: React + Vite (Vercel)  
+**Database**: PostgreSQL (Render)  
+**Status**: ✅ Configurations prêtes pour déploiement
 
 ---
 
-## 🔄 DÉPLOIEMENT AUTOMATIQUE
+## 📋 Vue d'ensemble
 
-### Option 1: Déploiement via Render Dashboard
+### Architecture de déploiement
 
-#### Étape 1: Accéder à Render
-1. Aller sur [render.com](https://render.com)
-2. Se connecter avec ton compte
-3. Sélectionner le projet **TAJI/SIGAC**
-
-#### Étape 2: Déployer le Backend
-1. Aller à **Services** → **sigac-api**
-2. Cliquer le bouton **"Deploy"** ou **"Manual Deploy"**
-3. Attendre le build (5-10 min)
-4. Vérifier les logs pour erreurs
-
-**Vérification**:
-```bash
-curl -s https://sigac-api.onrender.com/api/health
-# Résultat attendu: { "status": "healthy" }
+```
+┌──────────────┐      HTTPS       ┌───────────────────┐
+│   Frontend   │ ◄──────────────► │    Backend API    │
+│    Vercel    │   API Calls      │      Render       │
+│   (React)    │                  │     (.NET 8)      │
+└──────────────┘                  └─────────┬─────────┘
+                                            │
+                                            ▼
+                                  ┌───────────────────┐
+                                  │   PostgreSQL DB   │
+                                  │      Render       │
+                                  └───────────────────┘
 ```
 
-#### Étape 3: Vérifier PostgreSQL
-1. Aller à **Databases** → **postgresql-sigac**
-2. Vérifier le statut (should be "Available")
-3. Vérifier la connection string
+### URLs de production
+- **Frontend**: https://sigac-frontend.vercel.app
+- **Backend API**: https://sigac-backend-api.onrender.com
+- **Health Check**: https://sigac-backend-api.onrender.com/api/health
 
-### Option 2: Déploiement via Vercel Dashboard
+---
 
-#### Étape 1: Accéder à Vercel
-1. Aller sur [vercel.com](https://vercel.com)
-2. Se connecter avec ton compte
-3. Sélectionner le projet **SIGAC**
+## 🔐 Prérequis
 
-#### Étape 2: Déclencher le Build
-1. Cliquer **"Deployments"**
-2. Cliquer **"Redeploy"** sur le dernier commit
-3. Ou cliquer **"Create Deployment"** pour un commit spécifique
+### Comptes requis
+1. **GitHub Account** (pour auto-deploy)
+   - Repository: https://github.com/stevendolela/SIGAC
+   - ✅ Code déjà poussé (commit ce75234)
 
-**Vérification**:
+2. **Render Account**
+   - Créer compte: https://render.com/
+   - Lier GitHub repository
+
+3. **Vercel Account**
+   - Créer compte: https://vercel.com/
+   - Lier GitHub repository
+
+### Secrets à préparer
+
+#### JWT Secret Key
 ```bash
-curl -s https://sigac.vercel.app
-# Résultat attendu: Page React chargée
+# Générer une clé sécurisée (minimum 32 caractères)
+openssl rand -base64 64
+
+# Exemple de sortie:
+# GZejc/T9Fu+9re7Ract9X9vB2Kz1MmP3yQ4nL8hJ6sK7dF0wE5tA6cB9xY2zV3uC=
 ```
 
-#### Étape 3: Vérifier l'Environnement
-1. Aller à **Settings** → **Environment Variables**
-2. Vérifier que les variables sont correctes
-3. Exemple:
+Sauvegarder cette clé dans un gestionnaire de mots de passe. **NE JAMAIS la commiter dans Git.**
+
+---
+
+## 🗄️ Déploiement Backend (Render)
+
+### Étape 1: Créer la Database PostgreSQL
+
+
+1. **Dashboard Render** → **New** → **PostgreSQL**
+
+2. **Configurer la database**:
    ```
-   REACT_APP_API_URL=https://sigac-api.onrender.com
+   Name: sigac-db
+   Database: sigac_db
+   User: sigac_user
+   Region: Frankfurt (Europe - proche RDC)
+   Plan: Starter ($7/month)
+   ```
+
+3. **Créer**
+   - Render génère automatiquement:
+     - Internal Database URL
+     - External Database URL
+     - Connection String
+   
+4. **Sauvegarder** l'Internal Database URL (format PostgreSQL)
+
+### Étape 2: Créer le Backend Service
+
+1. **Dashboard Render** → **New** → **Blueprint**
+
+2. **Connecter GitHub Repository**:
+   ```
+   Repository: stevendolela/SIGAC
+   Branch: main
+   Blueprint File: render-backend.yaml
+   ```
+
+3. **Vérifier les variables d'environnement**:
+   
+   Render va lire `render-backend.yaml` et configurer automatiquement:
+   
+   ✅ Auto-générées:
+   - `JWT_SECRET_KEY` (généré automatiquement par Render)
+   - `ConnectionStrings__DefaultConnection` (depuis sigac-db)
+   
+   ✅ Pré-configurées:
+   - `ASPNETCORE_ENVIRONMENT=Production`
+   - `JWT_ISSUER=SIGAC.CourConstitutionnelle.RDC`
+   - `JWT_AUDIENCE=SIGAC.Client`
+   - `JWT_EXPIRATION_MINUTES=60`
+   - `CORS_ORIGINS=https://sigac-frontend.vercel.app,...`
+   - `ENABLE_RATE_LIMITING=true`
+
+4. **Créer le Service**
+   - Render va:
+     - Builder le Docker image (Dockerfile.api)
+     - Démarrer le service
+     - Créer le volume `/var/data/uploads` (10GB)
+
+5. **Attendre le déploiement** (~5-10 minutes)
+
+6. **Vérifier le Health Check**:
+   ```bash
+   curl https://sigac-backend-api.onrender.com/api/health
+   # Devrait retourner: {"status":"Healthy","timestamp":"..."}
+   ```
+
+### Étape 3: Appliquer les Migrations Database
+
+#### Option A: Via Render Shell (Recommandé)
+
+1. **Dashboard Render** → **sigac-backend-api** → **Shell**
+
+2. **Exécuter les migrations**:
+   ```bash
+   cd /app
+   dotnet ef database update --no-build
+   ```
+
+3. **Vérifier**:
+   ```bash
+   # Lister les tables créées
+   psql $DATABASE_URL -c "\dt"
+   ```
+
+#### Option B: Depuis votre machine locale
+
+1. **Récupérer l'External Database URL** depuis Render Dashboard
+
+2. **Exécuter les migrations**:
+   ```bash
+   cd sigac-backend/SIGAC.Infrastructure
+   
+   # Définir la connection string
+   export ConnectionStrings__DefaultConnection="<External_Database_URL>"
+   
+   # Appliquer les migrations
+   dotnet ef database update --startup-project ../SIGAC.API
    ```
 
 ---
+
+## 🎨 Déploiement Frontend (Vercel)
+
+### Étape 1: Importer le projet
+
+1. **Dashboard Vercel** → **Add New** → **Project**
+
+2. **Import Git Repository**:
+   ```
+   Repository: stevendolela/SIGAC
+   Framework Preset: Vite
+   Root Directory: sigac-frontend
+   ```
+
+3. **Configure Project**:
+   ```
+   Project Name: sigac-frontend
+   Framework: Vite
+   Build Command: npm run build
+   Output Directory: dist
+   Install Command: npm ci
+   ```
+
+### Étape 2: Configurer les Variables d'Environnement
+
+**Settings** → **Environment Variables**:
+
+```
+VITE_API_URL = https://sigac-backend-api.onrender.com/api
+```
+
+**Important**: Vercel rebuild automatiquement quand on ajoute/modifie une variable d'environnement.
+
+### Étape 3: Déployer
+
+1. **Deploy** (premier déploiement)
+   - Vercel va:
+     - Installer les dépendances
+     - Builder avec Vite
+     - Déployer sur CDN global
+
+2. **Attendre le déploiement** (~2-3 minutes)
+
+3. **Vérifier**:
+   - Ouvrir: https://sigac-frontend.vercel.app
+   - Devrait afficher la page de login
+
+---
+
+## 🧪 Tests Post-Déploiement
+
+### 1. Backend Health Check
+```bash
+curl https://sigac-backend-api.onrender.com/api/health
+
+# Attendu:
+{
+  "status": "Healthy",
+  "timestamp": "2024-12-17T10:30:00Z"
+}
+```
+
+### 2. JWT Authentication
+```bash
+# Login
+curl -X POST https://sigac-backend-api.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "Admin@2024!"
+  }'
+
+# Attendu:
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": { ... }
+}
+```
+
+### 3. Rate Limiting
+```bash
+# Tester 7 requêtes login (limite: 5/min)
+for i in {1..7}; do
+  curl -X POST https://sigac-backend-api.onrender.com/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username":"test","password":"test"}' \
+    -w "\nHTTP Status: %{http_code}\n"
+  sleep 0.5
+done
+
+# Attendu à la 6ème tentative:
+# HTTP Status: 429 (Too Many Requests)
+```
+
+### 4. Frontend → Backend Integration
+1. Ouvrir: https://sigac-frontend.vercel.app
+2. Login avec `admin` / `Admin@2024!`
+3. Vérifier:
+   - ✅ Dashboard charge
+   - ✅ Liste des dossiers visible
+   - ✅ Workspaces disponibles
+   - ✅ Pas d'erreurs CORS dans la console
+
+---
+
+## 💰 Coûts Estimés
+
+### Plan Starter (Recommandé pour début)
+| Service | Plan | Prix/mois |
+|---------|------|-----------|
+| Backend (Render Web Service) | Starter | $7 |
+| Database (Render PostgreSQL) | Starter | $7 |
+| Frontend (Vercel Hobby) | Hobby | **GRATUIT** |
+| **Total** | | **$14/mois** |
+
+---
+
+## 📝 Checklist de Déploiement
+
+### Pré-déploiement
+- [x] Repository GitHub à jour (push `main` ✅ commit ce75234)
+- [ ] JWT Secret Key générée et sauvegardée
+- [ ] Compte Render créé et lié à GitHub
+- [ ] Compte Vercel créé et lié à GitHub
+
+### Backend (Render)
+- [ ] Database PostgreSQL créée
+- [ ] Backend service créé avec `render-backend.yaml`
+- [ ] Variables d'environnement vérifiées
+- [ ] Health check passe: `/api/health`
+- [ ] Migrations database appliquées
+- [ ] Compte admin créé
+
+### Frontend (Vercel)
+- [ ] Projet importé depuis GitHub
+- [ ] Variable `VITE_API_URL` configurée
+- [ ] Build réussi
+- [ ] Application accessible
+- [ ] Login fonctionne
+
+### Tests Post-Déploiement
+- [ ] Health check backend OK
+- [ ] Login/Logout fonctionnels
+- [ ] Dashboard charge
+- [ ] Workspaces affichés
+- [ ] Rate limiting actif
+- [ ] CORS configuré correctement
+
+---
+
+**Auteur**: GitHub Copilot + stevendolela  
+**Dernière mise à jour**: 17 décembre 2024  
+**Version**: 1.0.0 (Phase 1 Sécurité + Workspace GED)
+
 
 ## 📝 CONFIGURATION REQUISE
 

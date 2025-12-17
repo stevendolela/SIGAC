@@ -1,0 +1,92 @@
+# Render Blueprint - Backend SIGAC
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API (.NET 8)
+  - type: web
+    name: sigac-backend-api
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.api
+    region: frankfurt  # Europe (proche RDC)
+    plan: starter  # $7/month (peut upgrader à standard $25/month si besoin)
+    
+    # Variables d'environnement CRITIQUES
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      
+      # JWT Security (REQUIS - Phase 1 Sécurité)
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Render génère automatiquement une clé sécurisée
+      
+      - key: JWT_ISSUER
+        value: SIGAC.CourConstitutionnelle.RDC
+      
+      - key: JWT_AUDIENCE
+        value: SIGAC.Client
+      
+      - key: JWT_EXPIRATION_MINUTES
+        value: 60
+      
+      - key: JWT_REFRESH_EXPIRATION_DAYS
+        value: 7
+      
+      # Database PostgreSQL (connexion via DATABASE_URL automatique de Render)
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: sigac-db
+          property: connectionString
+      
+      # CORS (Frontend Vercel)
+      - key: CORS_ORIGINS
+        value: https://sigac-frontend.vercel.app,https://ged.courconstitutionnelle.cd,http://localhost:5173
+      
+      # File Storage
+      - key: FILE_STORAGE_PATH
+        value: /var/data/uploads
+      
+      - key: MAX_FILE_SIZE_MB
+        value: 50
+      
+      # SMTP (Email - optionnel, configurer si besoin)
+      - key: SMTP_ENABLED
+        value: false
+      
+      # Rate Limiting (Phase 1 Sécurité)
+      - key: ENABLE_RATE_LIMITING
+        value: true
+      
+      - key: RATE_LIMIT_REQUESTS_PER_MINUTE
+        value: 100
+    
+    # Volumes persistants pour les uploads
+    disk:
+      name: uploads
+      mountPath: /var/data/uploads
+      sizeGB: 10  # 10GB pour les documents
+    
+    # Health check
+    healthCheckPath: /api/health
+    
+    # Auto-deploy depuis GitHub
+    autoDeploy: true
+    branch: main
+    
+  # Database PostgreSQL
+  - type: pserv
+    name: sigac-db
+    runtime: postgres
+    plan: starter  # $7/month (1GB RAM, 1GB stockage)
+    region: frankfurt
+    
+    databaseName: sigac_db
+    databaseUser: sigac_user
+    
+    # Backups automatiques
+    ipAllowList: []  # Accès depuis tous les services Render
+
+# Build Command (si besoin de custom build)
+# buildCommand: dotnet publish -c Release -o /app/publish
+
+# Estimated Monthly Cost: $14 (Backend $7 + Database $7)
+# Pour production, upgrader à Standard: $50 (Backend $25 + Database $25)
