@@ -24,9 +24,16 @@ public class Workspace
     public string? Description { get; set; }
     
     /// <summary>
-    /// URL du logo de l'organisation
+    /// URL du logo de l'organisation (deprecated - utiliser LogoBase64)
     /// </summary>
+    [Obsolete("Use LogoBase64 instead for better cross-browser compatibility")]
     public string? LogoUrl { get; set; }
+    
+    /// <summary>
+    /// Logo encodé en base64 avec data URI (ex: "data:image/png;base64,iVBORw0KG...")
+    /// Stocké directement en BDD pour éviter les problèmes CORS et de chemins
+    /// </summary>
+    public string? LogoBase64 { get; set; }
     
     // Configuration & Limits
     

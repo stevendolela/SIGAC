@@ -11,7 +11,14 @@ public class WorkspaceDto
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public string? Description { get; set; }
+    
+    [Obsolete("Use LogoBase64 instead")]
     public string? LogoUrl { get; set; }
+    
+    /// <summary>
+    /// Logo en base64 avec data URI (ex: "data:image/png;base64,...")
+    /// </summary>
+    public string? LogoBase64 { get; set; }
     
     public int MaxStorageGB { get; set; }
     public int MaxUsers { get; set; }
@@ -74,8 +81,17 @@ public class UpdateWorkspaceDto
     [System.ComponentModel.DataAnnotations.StringLength(1000)]
     public string? Description { get; set; }
     
+    [Obsolete("Use LogoBase64 instead")]
     [System.ComponentModel.DataAnnotations.Url]
     public string? LogoUrl { get; set; }
+    
+    /// <summary>
+    /// Logo en base64 avec data URI (doit commencer par "data:image/")
+    /// Taille max recommandée: 500KB
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.RegularExpression(@"^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,.*$",
+        ErrorMessage = "Le logo doit être une image encodée en base64 avec data URI")]
+    public string? LogoBase64 { get; set; }
     
     [System.ComponentModel.DataAnnotations.Range(1, 1000)]
     public int? MaxStorageGB { get; set; }

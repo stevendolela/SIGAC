@@ -11,7 +11,15 @@ public class User
     public string? NomComplet { get; set; }
     public UserRole Role { get; set; }
     public string? Matricule { get; set; }
+    
+    [Obsolete("Use AvatarBase64 instead for better cross-browser compatibility")]
     public string? AvatarUrl { get; set; }
+    
+    /// <summary>
+    /// Avatar encodé en base64 avec data URI (ex: "data:image/png;base64,iVBORw0KG...")
+    /// </summary>
+    public string? AvatarBase64 { get; set; }
+    
     public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; } = true;
     
