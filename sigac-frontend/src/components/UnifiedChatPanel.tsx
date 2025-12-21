@@ -74,6 +74,10 @@ export const UnifiedChatPanel: React.FC = () => {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Charger le statut de l'utilisateur
   useEffect(() => {
@@ -241,6 +245,56 @@ export const UnifiedChatPanel: React.FC = () => {
   };
 
   const isLoading = selectedChat?.type === 'conversation' ? convDetailLoading : groupDetailLoading;
+  
+  // Emojis populaires
+  const popularEmojis = ['😊', '😂', '❤️', '👍', '🎉', '🙏', '👏', '🔥', '✨', '💯', '🤝', '📝', '✅', '⚡', '💡'];
+  
+  // Fonction pour ajouter un emoji
+  const addEmoji = (emoji: string) => {
+    setMessageInput(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+  
+  // Fonction pour gérer les pièces jointes
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // TODO: Implémenter l'upload de fichiers
+      console.log('Fichiers sélectionnés:', files);
+      alert('Upload de fichiers - À implémenter avec l\'API backend');
+    }
+  };
+  
+  // Fonction pour démarrer/arrêter l'enregistrement audio
+  const toggleRecording = async () => {
+    if (isRecording) {
+      // Arrêter l'enregistrement
+      setIsRecording(false);
+      alert('Note vocale enregistrée - À implémenter avec l\'API backend');
+    } else {
+      // Démarrer l'enregistrement
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setIsRecording(true);
+        // TODO: Implémenter l'enregistrement avec MediaRecorder
+        console.log('Enregistrement démarré');
+      } catch (error) {
+        alert('Impossible d\'accéder au microphone');
+      }
+    }
+  };
+  
+  // Filtrer les conversations selon la recherche
+  const filteredConversations = conversations.filter(conv => {
+    if (!searchQuery) return true;
+    const otherUserName = getOtherUserName(conv).toLowerCase();
+    return otherUserName.includes(searchQuery.toLowerCase());
+  });
+  
+  const filteredGroups = groups.filter(grp => {
+    if (!searchQuery) return true;
+    return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="unified-chat-panel">
@@ -307,20 +361,51 @@ export const UnifiedChatPanel: React.FC = () => {
                       ➕
                     </button>
                   </div>
+                  
+                  {/* Barre de recherche */}
+                  <div style={{ padding: '12px 16px' }}>
+                    <input
+                      type="text"
+                      placeholder="🔍 Rechercher une conversation..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        background: '#f9fafb'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#667eea';
+                        e.currentTarget.style.background = '#fff';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.background = '#f9fafb';
+                      }}
+                    />
+                  </div>
+                  
                   {convLoading ? (
                     <div className="loading">Chargement...</div>
-                  ) : conversations.length === 0 ? (
-                    <div className="empty-state">Aucune conversation</div>
+                  ) : filteredConversations.length === 0 ? (
+                    <div className="empty-state">
+                      {searchQuery ? 'Aucun résultat' : 'Aucune conversation'}
+                    </div>
                   ) : (
-                    conversations.map(conv => (
+                    filteredConversations.map(conv => (
                       <div
                         key={conv.id}
                         className={`chat-item ${selectedChat?.id === conv.id && selectedChat?.type === 'conversation' ? 'active' : ''}`}
                         onClick={() => setSelectedChat({ type: 'conversation', id: conv.id })}
                       >
                         <div className="chat-item-header">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <StatusIndicator status={getOtherUserStatus(conv)} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <StatusIndicator status={getOtherUserStatus(conv)} size={12} showPulse={true} />
                             <span className="chat-name">{getOtherUserName(conv)}</span>
                           </div>
                           {conv.unreadCount > 0 && (
@@ -348,12 +433,43 @@ export const UnifiedChatPanel: React.FC = () => {
                       ➕
                     </button>
                   </div>
+                  
+                  {/* Barre de recherche pour groupes */}
+                  <div style={{ padding: '12px 16px' }}>
+                    <input
+                      type="text"
+                      placeholder="🔍 Rechercher un groupe..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        background: '#f9fafb'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#667eea';
+                        e.currentTarget.style.background = '#fff';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.background = '#f9fafb';
+                      }}
+                    />
+                  </div>
+                  
                   {groupsLoading ? (
                     <div className="loading">Chargement...</div>
-                  ) : groups.length === 0 ? (
-                    <div className="empty-state">Aucun groupe</div>
+                  ) : filteredGroups.length === 0 ? (
+                    <div className="empty-state">
+                      {searchQuery ? 'Aucun résultat' : 'Aucun groupe'}
+                    </div>
                   ) : (
-                    groups.map(grp => (
+                    filteredGroups.map(grp => (
                       <div
                         key={grp.id}
                         className={`chat-item ${selectedChat?.id === grp.id && selectedChat?.type === 'group' ? 'active' : ''}`}
@@ -424,18 +540,139 @@ export const UnifiedChatPanel: React.FC = () => {
                 </div>
 
                 <div className="message-input-area">
-                  <input
-                    type="text"
-                    placeholder="Votre message..."
-                    value={messageInput}
-                    onChange={e => setMessageInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, position: 'relative' }}>
+                    {/* Bouton emoji */}
+                    <button
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '24px',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        transition: 'transform 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      title="Ajouter un emoji"
+                    >
+                      😊
+                    </button>
+                    
+                    {/* Bouton pièce jointe */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '22px',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        transition: 'transform 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      title="Joindre un fichier"
+                    >
+                      📎
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                    />
+                    
+                    {/* Bouton note vocale */}
+                    <button
+                      onClick={toggleRecording}
+                      style={{
+                        background: isRecording ? '#ef4444' : 'transparent',
+                        border: isRecording ? '2px solid #dc2626' : 'none',
+                        borderRadius: '50%',
+                        fontSize: '22px',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        transition: 'all 0.2s ease',
+                        animation: isRecording ? 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isRecording) e.currentTarget.style.transform = 'scale(1.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isRecording) e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                      title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer une note vocale"}
+                    >
+                      🎤
+                    </button>
+                    
+                    <input
+                      type="text"
+                      placeholder="Votre message..."
+                      value={messageInput}
+                      onChange={e => setMessageInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    
+                    {/* Emoji Picker */}
+                    {showEmojiPicker && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '60px',
+                          left: '0',
+                          background: '#fff',
+                          borderRadius: '12px',
+                          padding: '16px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                          zIndex: 1000,
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(5, 1fr)',
+                          gap: '8px',
+                          maxWidth: '280px',
+                        }}
+                      >
+                        <div style={{ gridColumn: '1 / -1', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '14px' }}>
+                          Emojis populaires
+                        </div>
+                        {popularEmojis.map((emoji, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => addEmoji(emoji)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              fontSize: '28px',
+                              cursor: 'pointer',
+                              padding: '8px',
+                              borderRadius: '8px',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#f3f4f6';
+                              e.currentTarget.style.transform = 'scale(1.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <button onClick={handleSendMessage} disabled={!messageInput.trim()}>
                     Envoyer
                   </button>
