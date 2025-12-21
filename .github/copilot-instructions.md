@@ -1,15 +1,29 @@
-# SIGAC - Instructions pour les Agents IA
+# SIGAC (Taajii GED) - Instructions pour les Agents IA
 
 ## Architecture Générale
 
-SIGAC est un système de gestion des affaires constitutionnelles pour la Cour Constitutionnelle RDC. Architecture 3-tier :
+SIGAC/Taajii est un système de gestion électronique des dossiers (GED) pour la Cour Constitutionnelle RDC. Architecture 3-tier moderne:
 
 - **Backend** (.NET 8, C#): API REST avec Entity Framework Core + PostgreSQL
   - `SIGAC.API`: Contrôleurs, middleware, configuration startup
   - `SIGAC.Core`: DTOs, Entities, Services métier, Interfaces, Enums
   - `SIGAC.Infrastructure`: DbContext, Repositories, Migrations EF Core
-- **Frontend** (React, TypeScript): SPA avec hooks customs, store global, API client
+- **Frontend** (React 18, TypeScript, Vite): SPA avec hooks customs, store global, API client
 - **Database**: PostgreSQL 15 avec migrations EF Core managées
+- **Production**: Déployé sur **Vercel** (frontend) + **Render** (backend + PostgreSQL)
+
+### URLs Clés
+
+**Production Live**:
+- Frontend: https://taajii.fr
+- Backend API: https://sigac-api.onrender.com/api
+- Swagger: https://sigac-api.onrender.com/swagger
+
+**Développement Local**:
+- Frontend: http://localhost:5174 (Vite dev server)
+- Backend API: http://localhost:5210 (Kestrel)
+- Swagger: http://localhost:5210/swagger
+- PostgreSQL: localhost:5434 (mappé sur 5432 dans conteneur)
 
 ### Flux de Données Clés
 
@@ -17,6 +31,44 @@ SIGAC est un système de gestion des affaires constitutionnelles pour la Cour Co
 2. **Audit complet**: Tous les CRUD enregistrés dans `AuditLog` (IP, user, timestamp, old/new values)
 3. **Historiques métier**: Chaque action sur Dossier ajoute une entrée `Historique` (traçabilité complète)
 4. **Pagination standardisée**: `PaginatedResult<T>` avec `PaginationMetadata` (page, pageSize, totalItems, totalPages)
+
+---
+
+## Fonctionnalités Principales
+
+### 1. Gestion des Dossiers (Core Feature)
+Le système central de SIGAC - gestion complète du cycle de vie des affaires constitutionnelles:
+- **Entities**: `Dossier`, `Document`, `Historique`, `TypeAffaire`
+- **Workflow**: Nouveau → EnInstruction → EnDelibere → Juge → Classe
+- **RBAC**: Juges voient seulement leurs dossiers assignés
+- **Audit**: Historique métier + AuditLog système
+
+### 2. Workspaces (Multi-tenancy)
+Organisation multi-tenant permettant de gérer plusieurs institutions:
+- **Entity**: `Workspace` avec `Members` (via `WorkspaceUser`)
+- **Features**: Slug URL, quotas (MaxStorageGB, MaxUsers), logo Base64
+- **Roles**: Owner > Admin > Member > Guest (enum `WorkspaceRole`)
+- **Soft Delete**: `IsActive` pour archivage
+
+### 3. Chat Système (Collaboration)
+Chat intégré 1-to-1 et groupes pour collaboration en temps réel:
+- **Entities**: 
+  - `ChatConversation` + `Message`: Chat 1-to-1 entre deux utilisateurs
+  - `ChatGroup` + `ChatGroupMember` + `GroupMessage`: Chat de groupe
+- **UI**: `UnifiedChatPanel` avec onglets (Conversations/Groupes)
+- **Performance**: Polling 2-3s avec checksum-based change detection
+- **Unread Counts**: Badges sur conversations/groupes non lus
+
+### 4. Audiences & Calendrier
+Gestion des audiences de la cour:
+- **Entities**: `Audience`, `CalendarEvent`, `Salle`
+- **Types**: `TypeAudience` (PubliqueOrale, PriseDeplieConclusions, etc.)
+- **Statuts**: `StatutAudience` (Planifiee, EnCours, Terminee, Reportee)
+
+### 5. Formations & Équipes
+Gestion des équipes de juges et participation:
+- **Entities**: `Formation`, `FormationParticipation`
+- **Link**: Formations liées à un `Workspace` spécifique
 
 ---
 
@@ -177,19 +229,20 @@ Statuts définis en `SIGAC.Core/Enums/StatusDossier.cs`.
 # 1. Démarrer PostgreSQL (une fois)
 cd /Users/steve/Projects/SIGAC
 docker-compose up -d
+# Note: Postgres exposé sur port 5434 (mappé sur 5432 interne)
 
 # 2. Backend (Terminal 1)
 cd sigac-backend
 dotnet restore
 dotnet ef database update --project SIGAC.Infrastructure --startup-project SIGAC.API
 dotnet run --project SIGAC.API
-# Écoute sur http://localhost:5000 + Swagger sur http://localhost:5000/swagger
+# Écoute sur http://localhost:5210 + Swagger sur http://localhost:5210/swagger
 
 # 3. Frontend (Terminal 2)
 cd sigac-frontend
 npm install
 npm run dev
-# Écoute sur http://localhost:5173
+# Écoute sur http://localhost:5174 (Vite dev server)
 ```
 
 ### Vérifier PostgreSQL
@@ -197,6 +250,9 @@ npm run dev
 ```bash
 # Logs
 docker-compose logs -f postgres
+
+# Connecter via psql
+docker exec -it sigac-postgres psql -U sigac_user -d sigac_db
 
 # Redémarrer si besoin
 docker-compose restart postgres
@@ -416,7 +472,7 @@ sigac-frontend/src/
 ```typescript
 // src/api/dossierApi.ts
 export class DossierApi {
-  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5210/api';
   
   async getDossiers(page: number, pageSize: number, filters?: DossierFilters) {
     const response = await this.fetchWithAuth(
@@ -568,7 +624,7 @@ export function useDossiers(page: number = 1, pageSize: number = 10, filters?: D
 
 ```bash
 # 1. Ouvrir Swagger
-# http://localhost:5000/swagger
+# http://localhost:5210/swagger (dev) ou https://sigac-api.onrender.com/swagger (prod)
 
 # 2. Login d'abord
 # POST /api/auth/login
@@ -748,9 +804,9 @@ juge.kabongo / Juge@2024! → JugeConstitutionnel
 
 ## Ressources Clés
 
-- **Swagger API Docs**: http://localhost:5000/swagger (Bearer token authentification)
+- **Swagger API Docs**: http://localhost:5210/swagger (Bearer token authentification)
 - **Logs Backend**: `sigac-backend/logs/sigac-YYYY-MM-DD.txt` (rolling daily, Serilog)
-- **Database**: `postgres://sigac_user:SecurePassword2024!@localhost:5432/sigac_db`
+- **Database**: `postgres://sigac_user:SecurePassword2024!@localhost:5434/sigac_db`
 - **JWT Token**: Validité 30 min, refresh token 7 jours
 - **File Storage**: `/uploads/YYYY/MM/` structure, 50MB limit par fichier
 
@@ -774,4 +830,5 @@ juge.kabongo / Juge@2024! → JugeConstitutionnel
 - Foreign key constraint failed → Check OnDelete behavior
 - Unique constraint violation → NumeroDossier, Username, Email uniques
 - Connection timeout → PostgreSQL running ?
+
 
