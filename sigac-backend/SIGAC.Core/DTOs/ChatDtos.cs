@@ -17,6 +17,7 @@ public class MessageDto
     public DateTime SentAt { get; set; }
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
+    public List<ChatAttachmentDto> Attachments { get; set; } = new List<ChatAttachmentDto>();
 }
 
 /// <summary>
@@ -98,6 +99,7 @@ public class GroupMessageDto
     public UserStatus? SenderStatus { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateTime SentAt { get; set; }
+    public List<ChatAttachmentDto> Attachments { get; set; } = new List<ChatAttachmentDto>();
 }
 
 /// <summary>

@@ -58,6 +58,11 @@ public interface IChatRepository
     Task<ChatAttachment?> GetAttachmentByIdAsync(Guid attachmentId);
     
     /// <summary>
+    /// Obtient toutes les pièces jointes pour une liste de messages
+    /// </summary>
+    Task<List<ChatAttachment>> GetAttachmentsByMessageIdsAsync(List<Guid> messageIds);
+    
+    /// <summary>
     /// Supprime une pièce jointe
     /// </summary>
     Task DeleteAttachmentAsync(ChatAttachment attachment);

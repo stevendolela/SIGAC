@@ -9,6 +9,20 @@ export enum UserStatus {
   Absent = 2
 }
 
+export interface ChatAttachmentDto {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  fileType: string;
+  isVoiceNote: boolean;
+  durationSeconds?: number;
+  uploadedBy: string;
+  uploaderUsername?: string;
+  uploadedAt: string;
+  downloadUrl: string;
+}
+
 export interface MessageDto {
   id: string;
   conversationId: string;
@@ -20,6 +34,7 @@ export interface MessageDto {
   sentAt: string; // ISO DateTime
   isRead: boolean;
   readAt?: string; // ISO DateTime
+  attachments: ChatAttachmentDto[];
 }
 
 export interface CreateMessageDto {
@@ -71,6 +86,7 @@ export interface GroupMessageDto {
   senderStatus?: UserStatus; // Statut de disponibilité
   content: string;
   sentAt: string; // ISO DateTime
+  attachments: ChatAttachmentDto[];
 }
 
 export interface CreateGroupMessageDto {

@@ -12,7 +12,9 @@ public class ChatMappingProfile : Profile
         CreateMap<Message, MessageDto>()
             .ForMember(d => d.SenderUsername, opt => opt.MapFrom(s => s.Sender != null ? s.Sender.Username : "Unknown"))
             .ForMember(d => d.SenderNomComplet, opt => opt.MapFrom(s => s.Sender != null ? s.Sender.NomComplet : null))
-            .ForMember(d => d.SenderStatus, opt => opt.MapFrom(s => s.Sender != null ? (Enums.UserStatus?)s.Sender.Status : null));
+            .ForMember(d => d.SenderStatus, opt => opt.MapFrom(s => s.Sender != null ? (Enums.UserStatus?)s.Sender.Status : null))
+            .ForMember(d => d.Attachments, opt => opt.MapFrom((src, dest, destMember, context) => 
+                context.Items.ContainsKey("Attachments") ? context.Items["Attachments"] : new List<ChatAttachmentDto>()));
         
         CreateMap<CreateMessageDto, Message>();
         

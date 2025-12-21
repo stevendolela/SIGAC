@@ -102,6 +102,14 @@ public class ChatRepository : IChatRepository
             .FirstOrDefaultAsync(a => a.Id == attachmentId);
     }
 
+    public async Task<List<ChatAttachment>> GetAttachmentsByMessageIdsAsync(List<Guid> messageIds)
+    {
+        return await _context.ChatAttachments
+            .Where(a => a.MessageId.HasValue && messageIds.Contains(a.MessageId.Value))
+            .Include(a => a.Uploader)
+            .ToListAsync();
+    }
+
     public async Task DeleteAttachmentAsync(ChatAttachment attachment)
     {
         _context.ChatAttachments.Remove(attachment);

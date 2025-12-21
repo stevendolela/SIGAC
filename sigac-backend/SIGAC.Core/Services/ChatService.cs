@@ -54,7 +54,20 @@ public class ChatService : IChatService
             await _chatRepository.SaveChangesAsync();
         }
 
-        return _mapper.Map<ChatConversationDetailDto>(conversation);
+        // Charger les attachments pour chaque message
+        var messageIds = conversation.Messages.Select(m => m.Id).ToList();
+        var attachments = await _chatRepository.GetAttachmentsByMessageIdsAsync(messageIds);
+        
+        var result = _mapper.Map<ChatConversationDetailDto>(conversation);
+        
+        // Associer les attachments aux messages
+        foreach (var messageDto in result.Messages)
+        {
+            var messageAttachments = attachments.Where(a => a.MessageId == messageDto.Id).ToList();
+            messageDto.Attachments = _mapper.Map<List<ChatAttachmentDto>>(messageAttachments);
+        }
+
+        return result;
     }
 
     public async Task<MessageDto> SendMessageAsync(CreateMessageDto dto, Guid userId)

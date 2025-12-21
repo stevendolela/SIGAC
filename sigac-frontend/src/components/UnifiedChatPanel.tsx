@@ -6,6 +6,7 @@ import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
 import StatusSelector from './StatusSelector';
+import { AudioPlayer } from './AudioPlayer';
 import '../styles/unified-chat.css';
 
 type ChatTab = 'conversations' | 'groups';
@@ -619,6 +620,62 @@ export const UnifiedChatPanel: React.FC = () => {
                             <span>{msg.senderNomComplet || msg.senderUsername}</span>
                           </div>
                           <div className="message-content">{msg.content}</div>
+                          
+                          {/* Afficher les pièces jointes */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {msg.attachments.map(attachment => (
+                                <div key={attachment.id}>
+                                  {attachment.isVoiceNote ? (
+                                    <AudioPlayer attachment={attachment} />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        padding: '10px',
+                                        background: '#f0f2f5',
+                                        borderRadius: '8px',
+                                        maxWidth: '300px',
+                                      }}
+                                    >
+                                      <span style={{ fontSize: '24px' }}>
+                                        {attachment.fileType === 'Image' ? '🖼️' : 
+                                         attachment.fileType === 'Document' ? '📄' : 
+                                         attachment.fileType === 'Audio' ? '🎵' : '📎'}
+                                      </span>
+                                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                                        <div style={{ fontWeight: '500', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                          {attachment.fileName}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#667781' }}>
+                                          {(attachment.fileSize / 1024).toFixed(0)} KB
+                                        </div>
+                                      </div>
+                                      <a
+                                        href={attachment.downloadUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          padding: '8px 12px',
+                                          background: '#25D366',
+                                          color: 'white',
+                                          borderRadius: '6px',
+                                          textDecoration: 'none',
+                                          fontSize: '12px',
+                                          fontWeight: '500',
+                                        }}
+                                      >
+                                        ⬇️
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
                           <div className="message-time">
                             {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
                           </div>
