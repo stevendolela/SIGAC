@@ -8,22 +8,55 @@ interface AudioPlayerProps {
 const API_URL = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com';
 
 /**
- * Composant de lecture audio pour notes vocales - Style WhatsApp
+ * Composant de lecture audio pour notes vocales - Style moderne avec couleurs du site
  */
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(attachment.durationSeconds || 0);
+  const [blobUrl, setBlobUrl] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Construire l'URL complète avec token si nécessaire
-  const audioUrl = attachment.downloadUrl.startsWith('http') 
-    ? attachment.downloadUrl 
-    : `${API_URL}${attachment.downloadUrl}`;
+  // Télécharger le fichier audio avec authentification
+  useEffect(() => {
+    const fetchAudio = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const url = attachment.downloadUrl.startsWith('http') 
+          ? attachment.downloadUrl 
+          : `${API_URL}${attachment.downloadUrl}`;
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error('Erreur téléchargement audio:', response.status);
+          return;
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      } catch (err) {
+        console.error('Erreur fetch audio:', err);
+      }
+    };
+
+    fetchAudio();
+
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [attachment.downloadUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !blobUrl) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => {
@@ -36,7 +69,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
       setCurrentTime(0);
     };
     const handleError = (e: Event) => {
-      console.error('Erreur audio:', e);
+      console.error('Erreur lecture audio:', e);
     };
 
     audio.addEventListener('timeupdate', updateTime);
@@ -52,11 +85,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [blobUrl]);
 
   const togglePlayPause = async () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !blobUrl) return;
 
     try {
       if (isPlaying) {
@@ -89,109 +122,134 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  if (!blobUrl) {
+    return (
+      <div style={{ 
+        padding: '10px 12px', 
+        background: '#f3f4f6', 
+        borderRadius: '12px',
+        fontSize: '11px',
+        color: '#6b7280'
+      }}>
+        Chargement...
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{`
-        .whatsapp-audio-player {
+        .voice-note-player {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          background: #dcf8c6;
-          border-radius: 7.5px;
+          gap: 10px;
+          padding: 10px 12px;
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border-radius: 12px;
           max-width: 280px;
           min-width: 220px;
+          border: 1px solid #e5e7eb;
+          transition: all 0.2s ease;
         }
         
-        .whatsapp-play-btn {
-          width: 32px;
-          height: 32px;
-          min-width: 32px;
+        .voice-note-player:hover {
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+          border-color: #3b82f6;
+        }
+        
+        .voice-play-btn {
+          width: 34px;
+          height: 34px;
+          min-width: 34px;
           border-radius: 50%;
           border: none;
-          background: #25D366;
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
           color: white;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
+          font-size: 11px;
           padding: 0;
-          transition: background 0.2s;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
         
-        .whatsapp-play-btn:hover {
-          background: #128C7E;
+        .voice-play-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 3px 12px rgba(59, 130, 246, 0.4);
         }
         
-        .whatsapp-play-btn:active {
-          transform: scale(0.95);
+        .voice-play-btn:active {
+          transform: scale(0.98);
         }
         
-        .whatsapp-waveform {
+        .voice-waveform {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 5px;
         }
         
-        .whatsapp-progress-container {
+        .voice-progress-container {
           position: relative;
-          height: 2px;
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 1px;
+          height: 3px;
+          background: #e5e7eb;
+          border-radius: 1.5px;
+          overflow: hidden;
         }
         
-        .whatsapp-progress-bar {
+        .voice-progress-bar {
           position: absolute;
           top: 0;
           left: 0;
           height: 100%;
-          background: #128C7E;
-          border-radius: 1px;
+          background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+          border-radius: 1.5px;
           transition: width 0.1s linear;
         }
         
-        .whatsapp-progress-input {
+        .voice-progress-input {
           position: absolute;
-          top: -5px;
+          top: -6px;
           left: 0;
           width: 100%;
-          height: 12px;
+          height: 15px;
           opacity: 0;
           cursor: pointer;
         }
         
-        .whatsapp-time {
+        .voice-time {
           font-size: 11px;
-          color: rgba(0, 0, 0, 0.45);
+          color: #64748b;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+          font-weight: 500;
         }
         
-        .whatsapp-waves {
+        .voice-waves {
           display: flex;
           align-items: center;
-          gap: 1px;
-          height: 16px;
+          gap: 1.5px;
+          height: 18px;
         }
         
-        .whatsapp-wave-bar {
-          width: 2px;
-          background: #128C7E;
+        .voice-wave-bar {
+          width: 2.5px;
+          background: #3b82f6;
           border-radius: 1px;
-          transition: height 0.15s ease;
+          transition: all 0.15s ease;
         }
         
         @keyframes wave-bounce {
-          0%, 100% { height: 30%; }
-          50% { height: 100%; }
+          0%, 100% { height: 25%; opacity: 0.4; }
+          50% { height: 100%; opacity: 1; }
         }
       `}</style>
       
-      <div className="whatsapp-audio-player">
+      <div className="voice-note-player">
         {/* Bouton Play/Pause */}
         <button
-          className="whatsapp-play-btn"
+          className="voice-play-btn"
           onClick={togglePlayPause}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
@@ -199,19 +257,20 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
         </button>
 
         {/* Waveform et progression */}
-        <div className="whatsapp-waveform">
-          {/* Barres de wave simplifiées */}
-          <div className="whatsapp-waves">
-            {[...Array(30)].map((_, i) => {
-              const height = 20 + Math.sin(i * 0.5) * 20; // Variation de hauteur
+        <div className="voice-waveform">
+          {/* Barres de wave */}
+          <div className="voice-waves">
+            {[...Array(28)].map((_, i) => {
+              const baseHeight = 25 + Math.sin(i * 0.4) * 15;
+              const isActive = i <= (progress / 100) * 28;
               return (
                 <div
                   key={i}
-                  className="whatsapp-wave-bar"
+                  className="voice-wave-bar"
                   style={{
-                    height: `${height}%`,
-                    opacity: isPlaying && i <= (progress / 100) * 30 ? 1 : 0.3,
-                    animation: isPlaying ? `wave-bounce ${0.6 + (i % 3) * 0.2}s ease-in-out infinite ${i * 0.05}s` : 'none',
+                    height: `${baseHeight}%`,
+                    opacity: isActive ? 1 : 0.35,
+                    animation: isPlaying && isActive ? `wave-bounce ${0.5 + (i % 4) * 0.15}s ease-in-out infinite ${i * 0.04}s` : 'none',
                   }}
                 />
               );
@@ -219,14 +278,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
           </div>
           
           {/* Barre de progression interactive */}
-          <div className="whatsapp-progress-container">
+          <div className="voice-progress-container">
             <div 
-              className="whatsapp-progress-bar" 
+              className="voice-progress-bar" 
               style={{ width: `${progress}%` }}
             />
             <input
               type="range"
-              className="whatsapp-progress-input"
+              className="voice-progress-input"
               min="0"
               max={duration || 100}
               value={currentTime}
@@ -235,7 +294,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
           </div>
           
           {/* Temps */}
-          <div className="whatsapp-time">
+          <div className="voice-time">
             {formatTime(isPlaying ? currentTime : duration)}
           </div>
         </div>
@@ -244,7 +303,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
       {/* Audio element (hidden) */}
       <audio 
         ref={audioRef} 
-        src={audioUrl} 
+        src={blobUrl} 
         preload="metadata"
       />
     </>
