@@ -96,90 +96,80 @@ export default function App() {
     <div className="app">
       {token && (
         <>
-          {/* Barre d'actions utilisateur (en haut à droite) */}
-          <div className="top-actions-bar">
-            {user && (
-              <div ref={userMenuRef} style={{ position: 'relative' }}>
-                {/* Bouton utilisateur (avatar + nom court) */}
-                <button
-                  className="btn"
-                  onClick={() => setShowUserMenu(v => !v)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    padding: '8px 12px',
-                    fontSize: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8
-                  }}
-                >
-                  <span style={{
-                    display: 'inline-flex',
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: avatarUrl ? `url(${avatarUrl}) center/cover` : 'rgba(255,255,255,0.3)',
-                    color: '#0f172a',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    border: avatarUrl ? '2px solid rgba(255,255,255,0.5)' : 'none'
-                  }}>
-                    {!avatarUrl && `${((user.nomComplet || user.username)?.[0] || '').toUpperCase()}${((user.nomComplet || user.username)?.[1] || '').toUpperCase()}`}
-                  </span>
-                  <span style={{ fontWeight: 600 }}>{user.nomComplet || user.username}</span>
-                </button>
-                {/* Menu utilisateur */}
-                {showUserMenu && (
-                  <div className="user-menu-overlay" onClick={() => setShowUserMenu(false)}>
-                    <div className="user-menu-panel" style={{ position: 'absolute', right: 0, top: 42 }} onClick={(e) => e.stopPropagation()}>
-                      <button className="user-menu-close" onClick={() => setShowUserMenu(false)} aria-label="Fermer">✕</button>
-                      <div className="user-menu-top-email">{user.email || user.username}</div>
-                      <div className="user-menu-avatar-ring">
-                        <div className="user-menu-avatar" style={{
-                          background: avatarUrl ? `url(${avatarUrl}) center/cover` : '#1f2937'
-                        }}>
-                          {!avatarUrl && `${((user.nomComplet || user.username)?.[0] || '').toUpperCase()}${((user.nomComplet || user.username)?.[1] || '').toUpperCase()}`}
+          {/* Barre de recherche et actions fixe */}
+          <div className="fixed-search-bar">
+            <div className="search-bar-content">
+              {/* Zone de recherche globale */}
+              <div className="global-search-section">
+                <input
+                  type="text"
+                  placeholder="🔍 Rechercher un dossier..."
+                  className="global-search-input"
+                />
+              </div>
+
+              {/* Actions utilisateur à droite */}
+              <div className="user-actions-section">
+                <NotificationsBell onOpenLink={(href) => {
+                  const m = href.match(/^\/dossiers\/(.+)$/)
+                  if (m) {
+                    setView('dossiers')
+                    setSelectedDossierId(m[1])
+                  } else {
+                    setView('dashboard')
+                  }
+                }} />
+                <ApiHealth />
+                
+                {user && (
+                  <div ref={userMenuRef} style={{ position: 'relative' }}>
+                    <button
+                      className="user-button"
+                      onClick={() => setShowUserMenu(v => !v)}
+                    >
+                      <span className="user-avatar" style={{
+                        background: avatarUrl ? `url(${avatarUrl}) center/cover` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      }}>
+                        {!avatarUrl && `${((user.nomComplet || user.username)?.[0] || '').toUpperCase()}${((user.nomComplet || user.username)?.[1] || '').toUpperCase()}`}
+                      </span>
+                      <span className="user-name">{user.nomComplet || user.username}</span>
+                    </button>
+                    
+                    {showUserMenu && (
+                      <div className="user-menu-overlay" onClick={() => setShowUserMenu(false)}>
+                        <div className="user-menu-panel" style={{ position: 'absolute', right: 0, top: 50 }} onClick={(e) => e.stopPropagation()}>
+                          <button className="user-menu-close" onClick={() => setShowUserMenu(false)} aria-label="Fermer">✕</button>
+                          <div className="user-menu-top-email">{user.email || user.username}</div>
+                          <div className="user-menu-avatar-ring">
+                            <div className="user-menu-avatar" style={{
+                              background: avatarUrl ? `url(${avatarUrl}) center/cover` : '#1f2937'
+                            }}>
+                              {!avatarUrl && `${((user.nomComplet || user.username)?.[0] || '').toUpperCase()}${((user.nomComplet || user.username)?.[1] || '').toUpperCase()}`}
+                            </div>
+                          </div>
+                          <div className="user-menu-greeting">{`Bonjour ${user.nomComplet || user.username}!`}</div>
+                          <button
+                            className="user-menu-primary"
+                            onClick={() => { setShowUserMenu(false); setShowAccountModal(true); }}
+                          >
+                            ⚙️ Gérer votre compte
+                          </button>
+                          <button 
+                            className="user-menu-disconnect"
+                            onClick={() => { setShowUserMenu(false); handleLogout(); }}
+                          >
+                            🚪 Se déconnecter
+                          </button>
                         </div>
                       </div>
-                      <div className="user-menu-greeting">{`Bonjour ${user.nomComplet || user.username}!`}</div>
-                      <button
-                        className="user-menu-primary"
-                        onClick={() => { setShowUserMenu(false); setShowAccountModal(true); }}
-                      >
-                        ⚙️ Gérer votre compte
-                      </button>
-                      <button 
-                        className="user-menu-disconnect"
-                        onClick={() => { setShowUserMenu(false); handleLogout(); }}
-                      >
-                        🚪 Se déconnecter
-                      </button>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-            <NotificationsBell onOpenLink={(href) => {
-              const m = href.match(/^\/dossiers\/(.+)$/)
-              if (m) {
-                setView('dossiers')
-                setSelectedDossierId(m[1])
-              } else {
-                window.open(href, '_blank')
-              }
-            }} />
-            {user?.role === 'Admin' && (
-              <button
-                className="header-api-button"
-                onClick={() => setShowApiSwitcher(true)}
-              >
-                🔌 API
-              </button>
-            )}
+            </div>
           </div>
+
+          {/* Ancienne barre d'actions - SUPPRIMÉE */}
         </>
       )}
       

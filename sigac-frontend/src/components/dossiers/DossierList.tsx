@@ -90,17 +90,18 @@ export default function DossierList({ onSelect }: Props) {
     <div className="panel">
       <div className="panel-title">📁 Liste des Dossiers</div>
       
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Recherche déplacée dans la barre fixe globale */}
         <input
-          placeholder="🔍 Rechercher par titre, numéro..."
+          placeholder="🔍 Recherche rapide..."
           value={pendingSearch}
           onChange={(e) => { setPendingSearch(e.target.value); setPage(1) }}
-          style={{ flex: '1 1 300px', minWidth: 250 }}
+          style={{ flex: '1 1 250px', minWidth: 200, padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
         />
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-          style={{ minWidth: 140 }}
+          style={{ minWidth: 140, padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
         >
           <option value="">📋 Tous statuts</option>
           {/* Valeurs exactes du enum backend StatusDossier */}
@@ -113,7 +114,7 @@ export default function DossierList({ onSelect }: Props) {
         <select
           value={priorite}
           onChange={(e) => { setPriorite(e.target.value); setPage(1) }}
-          style={{ minWidth: 130 }}
+          style={{ minWidth: 130, padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
         >
           <option value="">🎯 Toutes priorités</option>
           {/* Valeurs exactes du enum backend PrioriteDossier */}
@@ -123,7 +124,7 @@ export default function DossierList({ onSelect }: Props) {
           <option value="Urgente">🔴 Urgente</option>
         </select>
         {(status || priorite || search) && (
-          <button className="btn" onClick={() => { setPendingSearch(''); setSearch(''); setStatus(''); setPriorite(''); setPage(1) }}>Effacer</button>
+          <button className="btn" onClick={() => { setPendingSearch(''); setSearch(''); setStatus(''); setPriorite(''); setPage(1) }} style={{ padding: '10px 16px' }}>🗑️ Effacer filtres</button>
         )}
       </div>
 
