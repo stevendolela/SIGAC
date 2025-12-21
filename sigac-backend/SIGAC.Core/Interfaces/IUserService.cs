@@ -75,4 +75,9 @@ public interface IUserService
     /// Vérifie le code 2FA et change le mot de passe.
     /// </summary>
     Task<bool> VerifyPasswordChangeAsync(VerifyPasswordChangeDto dto, Guid userId);
+    
+    /// <summary>
+    /// Met à jour le statut de disponibilité de l'utilisateur (EnLigne, Occupé, Absent).
+    /// </summary>
+    Task<bool> UpdateStatusAsync(Guid userId, UserStatus status);
 }

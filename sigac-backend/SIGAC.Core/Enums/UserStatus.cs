@@ -1,37 +1,22 @@
 namespace SIGAC.Core.Enums;
 
 /// <summary>
-/// Statut de disponibilité utilisateur (inspiré de Microsoft Teams)
+/// Statut de disponibilité utilisateur (simplifié - 3 états)
 /// </summary>
 public enum UserStatus
 {
     /// <summary>
-    /// Disponible (pastille verte)
+    /// En ligne / Disponible (pastille verte) 🟢
     /// </summary>
-    Disponible = 0,
+    EnLigne = 0,
     
     /// <summary>
-    /// Occupé (pastille rouge)
+    /// Occupé / Ne pas déranger (pastille rouge) 🔴
     /// </summary>
     Occupe = 1,
     
     /// <summary>
-    /// Ne pas déranger (pastille rouge avec tiret)
+    /// Absent / Inactif (pastille orange) 🟠
     /// </summary>
-    NePasDeranger = 2,
-    
-    /// <summary>
-    /// Absent / De retour bientôt (pastille jaune)
-    /// </summary>
-    Absent = 3,
-    
-    /// <summary>
-    /// Hors ligne (pastille grise)
-    /// </summary>
-    HorsLigne = 4,
-    
-    /// <summary>
-    /// Apparaître absent (pastille jaune - utilisateur disponible mais veut paraître absent)
-    /// </summary>
-    ApparaitreAbsent = 5
+    Absent = 2
 }

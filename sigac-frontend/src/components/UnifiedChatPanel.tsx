@@ -4,6 +4,7 @@ import { chatApi } from '../api/chatApi';
 import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
+import StatusSelector from './StatusSelector';
 import '../styles/unified-chat.css';
 
 type ChatTab = 'conversations' | 'groups';
@@ -14,61 +15,54 @@ interface SelectedChat {
   id: string;
 }
 
-// Fonction pour obtenir la couleur du statut
+// Fonction pour obtenir la couleur du statut - Nouvelles couleurs modernes
 const getStatusColor = (status?: UserStatus): string => {
   switch (status) {
-    case UserStatus.Disponible:
-      return '#28a745'; // Vert
+    case UserStatus.EnLigne:
+      return '#10b981'; // Vert moderne
     case UserStatus.Occupe:
-      return '#dc3545'; // Rouge
-    case UserStatus.NePasDeranger:
-      return '#dc3545'; // Rouge
+      return '#ef4444'; // Rouge moderne
     case UserStatus.Absent:
-    case UserStatus.ApparaitreAbsent:
-      return '#ffc107'; // Jaune
-    case UserStatus.HorsLigne:
+      return '#f59e0b'; // Orange moderne
     default:
-      return '#6c757d'; // Gris
+      return '#6b7280'; // Gris par défaut
   }
 };
 
 // Fonction pour obtenir le libellé du statut
 const getStatusLabel = (status?: UserStatus): string => {
   switch (status) {
-    case UserStatus.Disponible:
-      return 'Disponible';
+    case UserStatus.EnLigne:
+      return 'En ligne';
     case UserStatus.Occupe:
       return 'Occupé';
-    case UserStatus.NePasDeranger:
-      return 'Ne pas déranger';
     case UserStatus.Absent:
       return 'Absent';
-    case UserStatus.ApparaitreAbsent:
-      return 'Apparaître absent';
-    case UserStatus.HorsLigne:
-      return 'Hors ligne';
     default:
       return 'Hors ligne';
   }
 };
 
-// Composant pour afficher le statut
-const StatusIndicator: React.FC<{ status?: UserStatus; showLabel?: boolean }> = ({ status, showLabel = false }) => (
-  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-    <span
-      style={{
-        display: 'inline-block',
-        width: '8px',
-        height: '8px',
-        borderRadius: '50%',
-        backgroundColor: getStatusColor(status),
-        border: '1px solid #fff',
-        boxShadow: '0 0 2px rgba(0,0,0,0.2)'
-      }}
-      title={getStatusLabel(status)}
-    />
-    {showLabel && <span style={{ fontSize: '11px', color: '#6c757d' }}>{getStatusLabel(status)}</span>}
-  </div>
+// Composant pour afficher le statut avec le nouveau design
+const StatusIndicator: React.FC<{ status?: UserStatus; size?: number; showPulse?: boolean }> = ({ 
+  status, 
+  size = 10, 
+  showPulse = false 
+}) => (
+  <span
+    style={{
+      display: 'inline-block',
+      position: 'relative',
+      width: `${size}px`,
+      height: `${size}px`,
+      borderRadius: '50%',
+      backgroundColor: getStatusColor(status),
+      border: '2px solid #fff',
+      boxShadow: `0 0 0 2px ${getStatusColor(status)}40, 0 0 8px ${getStatusColor(status)}60`,
+      animation: showPulse ? 'statusPulse 2s ease-in-out infinite' : 'none'
+    }}
+    title={getStatusLabel(status)}
+  />
 );
 
 export const UnifiedChatPanel: React.FC = () => {
@@ -79,6 +73,16 @@ export const UnifiedChatPanel: React.FC = () => {
   const [isCreateConvModalOpen, setIsCreateConvModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
+
+  // Charger le statut de l'utilisateur
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setCurrentUserStatus(user.status ?? UserStatus.EnLigne);
+    }
+  }, []);
 
   // Conversations
   const { conversations, loading: convLoading, refetch: refetchConversations } = useChatConversations();
@@ -255,7 +259,13 @@ export const UnifiedChatPanel: React.FC = () => {
         <div className="unified-chat-container">
           {/* Header */}
           <div className="unified-chat-header">
-            <h2>Messages</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h2 style={{ margin: 0 }}>Messages</h2>
+              <StatusSelector 
+                currentStatus={currentUserStatus} 
+                onStatusChange={(newStatus) => setCurrentUserStatus(newStatus)}
+              />
+            </div>
             <button className="close-btn" onClick={() => setIsOpen(false)}>✕</button>
           </div>
 

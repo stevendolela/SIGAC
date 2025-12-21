@@ -758,4 +758,43 @@ public class UsersController : ControllerBase
     }
 
     #endregion
+    
+    #region Status Management
+    
+    /// <summary>
+    /// Met à jour le statut de disponibilité de l'utilisateur actuel.
+    /// </summary>
+    /// <param name="dto">DTO contenant le nouveau statut</param>
+    /// <returns>Succès ou échec</returns>
+    [HttpPut("status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateStatus([FromBody] UpdateUserStatusDto dto)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty)
+                return Unauthorized(new { message = "Utilisateur non authentifié" });
+
+            var success = await _userService.UpdateStatusAsync(userId, dto.Status);
+            
+            if (success)
+                return Ok(new { message = "Statut mis à jour avec succès", status = dto.Status });
+            
+            return BadRequest(new { message = "Échec de la mise à jour du statut" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour du statut");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+    
+    #endregion
 }

@@ -725,4 +725,30 @@ public class UserService : IUserService
 
         return $"{localPart[0]}***{localPart[^1]}@{domain}";
     }
+    
+    public async Task<bool> UpdateStatusAsync(Guid userId, UserStatus status)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("Utilisateur non trouvé");
+
+        var oldStatus = user.Status;
+        user.Status = status;
+        user.ModifiedAt = DateTime.UtcNow;
+
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+
+        // Audit log
+        await _auditLogRepository.LogActionAsync(
+            userId,
+            "UPDATE_STATUS",
+            "User",
+            userId.ToString(),
+            System.Text.Json.JsonSerializer.Serialize(new { Status = oldStatus }),
+            System.Text.Json.JsonSerializer.Serialize(new { Status = status })
+        );
+
+        return true;
+    }
 }

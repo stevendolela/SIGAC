@@ -1,4 +1,4 @@
-/* Unified Chat Panel Styling */
+/* Unified Chat Panel Styling - Modern & Sexy Design */
 
 :root {
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -6,11 +6,14 @@
   --secondary-color: #764ba2;
   --accent-color: #f5576c;
   --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
   --light-bg: #f8f9fa;
   --border-color: #e9ecef;
-  --text-primary: #2d3748;
-  --text-secondary: #718096;
-  --text-light: #a0aec0;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-light: #9ca3af;
+  --chat-bg: #f9fafb;
 }
 
 /* Container principal */
@@ -22,95 +25,130 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Bouton toggle */
+/* Bouton toggle avec effet néon */
 .unified-chat-toggle-btn {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: var(--primary-gradient);
   border: none;
   color: white;
-  font-size: 24px;
+  font-size: 28px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4),
+              0 0 0 0 rgba(102, 126, 234, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  animation: floatAnimation 3s ease-in-out infinite;
+}
+
+@keyframes floatAnimation {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes statusPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
 }
 
 .unified-chat-toggle-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6),
+              0 0 0 8px rgba(102, 126, 234, 0.1);
+  animation: none;
 }
 
 .unified-chat-toggle-btn:active {
   transform: scale(0.95);
 }
 
-/* Badge unread */
+/* Badge unread avec animation */
 .unread-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--accent-color);
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
   color: white;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: bold;
-  border: 2px solid white;
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+  font-size: 12px;
+  font-weight: 700;
+  border: 3px solid white;
+  box-shadow: 0 3px 12px rgba(245, 87, 108, 0.5);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Container principal du chat */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Container principal du chat - Design moderne */
 .unified-chat-container {
   position: fixed;
-  bottom: 90px;
+  bottom: 100px;
   right: 20px;
-  width: 500px;
-  height: 700px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
+  width: 520px;
+  height: 720px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 60px rgba(0, 0, 0, 0.15),
+              0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  backdrop-filter: blur(20px);
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-/* Header */
+/* Header avec gradient */
 .unified-chat-header {
   background: var(--primary-gradient);
   color: white;
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
 }
 
 .unified-chat-header h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .close-btn {

@@ -13,9 +13,9 @@ public class User
     public string? Matricule { get; set; }
     
     /// <summary>
-    /// Statut de disponibilité (Disponible, Occupé, Absent, etc.)
+    /// Statut de disponibilité (EnLigne, Occupé, Absent)
     /// </summary>
-    public UserStatus Status { get; set; } = UserStatus.Disponible;
+    public UserStatus Status { get; set; } = UserStatus.EnLigne;
     
     [Obsolete("Use AvatarBase64 instead for better cross-browser compatibility")]
     public string? AvatarUrl { get; set; }

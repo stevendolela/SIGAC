@@ -4,12 +4,9 @@
  */
 
 export enum UserStatus {
-  Disponible = 0,
+  EnLigne = 0,
   Occupe = 1,
-  NePasDeranger = 2,
-  Absent = 3,
-  HorsLigne = 4,
-  ApparaitreAbsent = 5
+  Absent = 2
 }
 
 export interface MessageDto {
