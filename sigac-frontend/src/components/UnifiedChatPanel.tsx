@@ -211,7 +211,12 @@ export const UnifiedChatPanel: React.FC = () => {
 
   const getOtherUserName = (conv: ChatConversationDto): string => {
     // Utilise le nom complet si disponible, sinon le username
-    const currentUserId = localStorage.getItem('userId');
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return conv.user1NomComplet || conv.user1Username;
+    
+    const user = JSON.parse(userStr);
+    const currentUserId = user.id;
+    
     if (conv.user1Id === currentUserId) {
       return conv.user2NomComplet || conv.user2Username;
     }
@@ -219,7 +224,12 @@ export const UnifiedChatPanel: React.FC = () => {
   };
 
   const getOtherUserStatus = (conv: ChatConversationDto): UserStatus | undefined => {
-    const currentUserId = localStorage.getItem('userId');
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return undefined;
+    
+    const user = JSON.parse(userStr);
+    const currentUserId = user.id;
+    
     if (conv.user1Id === currentUserId) {
       return conv.user2Status;
     }
