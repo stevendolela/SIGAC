@@ -238,10 +238,13 @@ export const UnifiedChatPanel: React.FC = () => {
     const user = JSON.parse(userStr);
     const currentUserId = user.id;
     
-    if (conv.user1Id === currentUserId) {
-      return conv.user2Status;
-    }
-    return conv.user1Status;
+    const otherUserStatus = conv.user1Id === currentUserId ? conv.user2Status : conv.user1Status;
+    
+    // Debug: afficher le statut dans la console
+    console.log(`[DEBUG] Conversation ${conv.id}: other user status =`, otherUserStatus, 
+      `(user1Status=${conv.user1Status}, user2Status=${conv.user2Status}, currentUserId=${currentUserId})`);
+    
+    return otherUserStatus;
   };
 
   const isLoading = selectedChat?.type === 'conversation' ? convDetailLoading : groupDetailLoading;
