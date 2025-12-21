@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatConversations, useChatConversation, useChatGroups, useChatGroup, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
+import { chatAttachmentApi } from '../api/chatAttachmentApi';
 import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
@@ -77,7 +78,10 @@ export const UnifiedChatPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Charger le statut de l'utilisateur
   useEffect(() => {
@@ -256,30 +260,116 @@ export const UnifiedChatPanel: React.FC = () => {
   };
   
   // Fonction pour gérer les pièces jointes
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      // TODO: Implémenter l'upload de fichiers
-      console.log('Fichiers sélectionnés:', files);
-      alert('Upload de fichiers - À implémenter avec l\'API backend');
+    if (!files || files.length === 0 || !selectedChat) return;
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Upload selon le type de chat
+        if (selectedChat.type === 'conversation') {
+          await chatAttachmentApi.uploadAttachment(selectedChat.id, file, false);
+        } else {
+          await chatAttachmentApi.uploadGroupAttachment(selectedChat.id, file, false);
+        }
+      }
+      
+      // Rafraîchir les messages
+      if (selectedChat.type === 'conversation') {
+        await refetchConversation();
+      } else {
+        await refetchGroup();
+      }
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      console.error('Erreur upload fichier:', error);
+      alert(error.response?.data?.message || 'Erreur lors de l\'upload du fichier');
     }
   };
   
   // Fonction pour démarrer/arrêter l'enregistrement audio
   const toggleRecording = async () => {
+    if (!selectedChat) {
+      alert('Veuillez sélectionner une conversation');
+      return;
+    }
+
     if (isRecording) {
       // Arrêter l'enregistrement
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
       setIsRecording(false);
-      alert('Note vocale enregistrée - À implémenter avec l\'API backend');
     } else {
       // Démarrer l'enregistrement
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Créer MediaRecorder avec format WebM
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'audio/webm;codecs=opus'
+        });
+        
+        audioChunksRef.current = [];
+        setRecordingStartTime(Date.now());
+        
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+        
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const durationSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+          
+          // Créer un File object
+          const audioFile = new File(
+            [audioBlob], 
+            `voice-note-${Date.now()}.webm`, 
+            { type: 'audio/webm' }
+          );
+          
+          try {
+            // Upload la note vocale
+            if (selectedChat.type === 'conversation') {
+              await chatAttachmentApi.uploadAttachment(
+                selectedChat.id, 
+                audioFile, 
+                true, 
+                durationSeconds
+              );
+              await refetchConversation();
+            } else {
+              await chatAttachmentApi.uploadGroupAttachment(
+                selectedChat.id, 
+                audioFile, 
+                true, 
+                durationSeconds
+              );
+              await refetchGroup();
+            }
+          } catch (error: any) {
+            console.error('Erreur upload note vocale:', error);
+            alert(error.response?.data?.message || 'Erreur lors de l\'envoi de la note vocale');
+          }
+          
+          // Arrêter le stream
+          stream.getTracks().forEach(track => track.stop());
+        };
+        
+        mediaRecorderRef.current = mediaRecorder;
+        mediaRecorder.start();
         setIsRecording(true);
-        // TODO: Implémenter l'enregistrement avec MediaRecorder
-        console.log('Enregistrement démarré');
       } catch (error) {
-        alert('Impossible d\'accéder au microphone');
+        console.error('Erreur microphone:', error);
+        alert('Impossible d\'accéder au microphone. Vérifiez les permissions.');
       }
     }
   };
