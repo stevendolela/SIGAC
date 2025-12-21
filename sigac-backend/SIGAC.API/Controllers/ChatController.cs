@@ -264,23 +264,33 @@ public class ChatController : ControllerBase
     {
         try
         {
+            Console.WriteLine($"[DOWNLOAD] Tentative téléchargement attachment: {attachmentId}");
+            
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(userId, out var parsedUserId))
+            {
+                Console.WriteLine($"[DOWNLOAD] Échec parse userId: {userId}");
                 return Unauthorized(new { success = false, message = "Utilisateur invalide" });
+            }
 
+            Console.WriteLine($"[DOWNLOAD] UserId: {parsedUserId}, AttachmentId: {attachmentId}");
             var (fileData, fileName, mimeType) = await _chatService.DownloadAttachmentAsync(attachmentId, parsedUserId);
+            Console.WriteLine($"[DOWNLOAD] Succès! File: {fileName}, Size: {fileData.Length} bytes, MimeType: {mimeType}");
             return File(fileData, mimeType, fileName);
         }
         catch (KeyNotFoundException ex)
         {
+            Console.WriteLine($"[DOWNLOAD] KeyNotFoundException: {ex.Message}");
             return NotFound(new { success = false, message = ex.Message });
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
+            Console.WriteLine($"[DOWNLOAD] UnauthorizedAccessException: {ex.Message}");
             return Forbid();
         }
         catch (FileNotFoundException ex)
         {
+            Console.WriteLine($"[DOWNLOAD] FileNotFoundException: {ex.Message}");
             return NotFound(new { success = false, message = ex.Message });
         }
         catch (Exception ex)

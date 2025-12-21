@@ -306,32 +306,49 @@ public class ChatService : IChatService
 
     public async Task<(byte[] fileData, string fileName, string mimeType)> DownloadAttachmentAsync(Guid attachmentId, Guid userId)
     {
+        Console.WriteLine($"[ChatService.Download] Recherche attachment {attachmentId}...");
         var attachment = await _chatRepository.GetAttachmentByIdAsync(attachmentId);
         
         if (attachment == null)
+        {
+            Console.WriteLine($"[ChatService.Download] Attachment {attachmentId} non trouvé dans la DB");
             throw new KeyNotFoundException("Pièce jointe non trouvée");
+        }
+
+        Console.WriteLine($"[ChatService.Download] Attachment trouvé: {attachment.FileName}, FilePath: {attachment.FilePath}");
 
         // Vérifier les permissions (utilisateur doit être participant de la conversation ou membre du groupe)
         if (attachment.MessageId.HasValue)
         {
             var message = await _chatRepository.GetMessageByIdAsync(attachment.MessageId.Value);
             if (message?.Conversation == null)
+            {
+                Console.WriteLine($"[ChatService.Download] Message ou conversation non trouvé");
                 throw new KeyNotFoundException("Message non trouvé");
+            }
 
             if (message.Conversation.User1Id != userId && message.Conversation.User2Id != userId)
+            {
+                Console.WriteLine($"[ChatService.Download] Accès non autorisé pour user {userId}");
                 throw new UnauthorizedAccessException("Vous n'avez pas accès à cette pièce jointe");
+            }
         }
         else if (attachment.GroupMessageId.HasValue)
         {
             // TODO: Vérifier que l'utilisateur est membre du groupe
-            // Cela nécessite d'ajouter une méthode dans IChatGroupService
+            Console.WriteLine($"[ChatService.Download] Attachment de groupe - vérification permissions TODO");
         }
 
         // Lire le fichier
         if (!File.Exists(attachment.FilePath))
+        {
+            Console.WriteLine($"[ChatService.Download] ERREUR - Fichier inexistant: {attachment.FilePath}");
             throw new FileNotFoundException("Le fichier n'existe pas sur le serveur");
+        }
 
+        Console.WriteLine($"[ChatService.Download] Lecture du fichier...");
         var fileData = await File.ReadAllBytesAsync(attachment.FilePath);
+        Console.WriteLine($"[ChatService.Download] Fichier lu: {fileData.Length} bytes");
 
         // Audit log
         await _auditLogRepository.LogActionAsync(
