@@ -33,4 +33,19 @@ public interface ISystemConfigService
     /// Vérifie le statut de la base de données (ADMIN ONLY)
     /// </summary>
     Task<string> GetDatabaseStatusAsync();
+    
+    /// <summary>
+    /// Récupère le logo système actuel
+    /// </summary>
+    Task<string?> GetSystemLogoAsync();
+    
+    /// <summary>
+    /// Met à jour le logo système
+    /// </summary>
+    Task<string?> UpdateSystemLogoAsync(string logoBase64, Guid userId);
+    
+    /// <summary>
+    /// Supprime le logo système (retour au logo par défaut)
+    /// </summary>
+    Task DeleteSystemLogoAsync(Guid userId);
 }

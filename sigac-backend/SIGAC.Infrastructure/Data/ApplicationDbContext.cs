@@ -35,6 +35,9 @@ public class ApplicationDbContext : DbContext
     // Entities GED (transformation)
     public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceUser> WorkspaceUsers { get; set; }
+    
+    // System settings
+    public DbSet<SystemSetting> SystemSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

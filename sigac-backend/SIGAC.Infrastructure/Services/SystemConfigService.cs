@@ -343,4 +343,84 @@ public class SystemConfigService : ISystemConfigService
     {
         Interlocked.Increment(ref TotalRequestCount);
     }
+
+    public async Task<string?> GetSystemLogoAsync()
+    {
+        var setting = await _context.SystemSettings.FirstOrDefaultAsync();
+        return setting?.LogoBase64;
+    }
+
+    public async Task<string?> UpdateSystemLogoAsync(string logoBase64, Guid userId)
+    {
+        var setting = await _context.SystemSettings.FirstOrDefaultAsync();
+        
+        if (setting == null)
+        {
+            // Créer nouvelle entrée
+            setting = new SystemSetting
+            {
+                Id = Guid.NewGuid(),
+                LogoBase64 = logoBase64,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedBy = userId
+            };
+            _context.SystemSettings.Add(setting);
+        }
+        else
+        {
+            // Mettre à jour l'existante
+            var oldLogo = setting.LogoBase64;
+            setting.LogoBase64 = logoBase64;
+            setting.UpdatedAt = DateTime.UtcNow;
+            setting.UpdatedBy = userId;
+            
+            // Audit log
+            await _auditLogRepository.LogActionAsync(
+                userId,
+                "UPDATE",
+                "SystemSetting",
+                setting.Id.ToString(),
+                oldLogo ?? "",
+                $"Logo mis à jour ({logoBase64?.Length ?? 0} caractères)"
+            );
+        }
+
+        await _context.SaveChangesAsync();
+        
+        _logger.LogInformation(
+            "Logo système mis à jour par l'utilisateur {UserId}",
+            userId);
+
+        return setting.LogoBase64;
+    }
+
+    public async Task DeleteSystemLogoAsync(Guid userId)
+    {
+        var setting = await _context.SystemSettings.FirstOrDefaultAsync();
+        
+        if (setting != null)
+        {
+            var oldLogo = setting.LogoBase64;
+            setting.LogoBase64 = null;
+            setting.UpdatedAt = DateTime.UtcNow;
+            setting.UpdatedBy = userId;
+            
+            await _context.SaveChangesAsync();
+            
+            // Audit log
+            await _auditLogRepository.LogActionAsync(
+                userId,
+                "DELETE",
+                "SystemSetting",
+                setting.Id.ToString(),
+                oldLogo ?? "",
+                "Logo supprimé"
+            );
+            
+            _logger.LogInformation(
+                "Logo système supprimé par l'utilisateur {UserId}",
+                userId);
+        }
+    }
 }

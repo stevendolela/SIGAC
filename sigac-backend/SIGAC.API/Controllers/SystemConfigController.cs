@@ -153,4 +153,90 @@ public class SystemConfigController : ControllerBase
             return StatusCode(500, new { message = "Erreur lors de la vérification du statut" });
         }
     }
+
+    /// <summary>
+    /// Récupère le logo système actuel
+    /// </summary>
+    [HttpGet("logo")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSystemLogo()
+    {
+        try
+        {
+            var logo = await _systemConfigService.GetSystemLogoAsync();
+            return Ok(new { logoBase64 = logo });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération du logo système");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Met à jour le logo système
+    /// Endpoint ADMIN ONLY
+    /// </summary>
+    [HttpPut("logo")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateSystemLogo([FromBody] UpdateLogoDto dto)
+    {
+        try
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdStr);
+
+            if (string.IsNullOrWhiteSpace(dto.LogoBase64))
+                return BadRequest(new { message = "Le logo ne peut pas être vide" });
+
+            var logo = await _systemConfigService.UpdateSystemLogoAsync(dto.LogoBase64, userId);
+
+            _logger.LogInformation(
+                "Logo système mis à jour par l'utilisateur {UserId}",
+                userId);
+
+            return Ok(new { logoBase64 = logo });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour du logo système");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Supprime le logo système (retour au logo par défaut)
+    /// Endpoint ADMIN ONLY
+    /// </summary>
+    [HttpDelete("logo")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteSystemLogo()
+    {
+        try
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdStr);
+
+            await _systemConfigService.DeleteSystemLogoAsync(userId);
+
+            _logger.LogInformation(
+                "Logo système supprimé par l'utilisateur {UserId}",
+                userId);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la suppression du logo système");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
 }

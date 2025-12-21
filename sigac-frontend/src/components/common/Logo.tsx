@@ -9,36 +9,47 @@ type Props = {
 
 export default function Logo({ size = 48, alt = 'Taji Logo', style, onClick }: Props) {
   const [customLogo, setCustomLogo] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Charger le logo personnalisé du localStorage
-    const loadLogo = () => {
-      const logo = localStorage.getItem('customLogo')
-      setCustomLogo(logo)
+    // Charger le logo depuis l'API
+    const loadLogo = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/system/logo`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setCustomLogo(data.logoBase64)
+        }
+      } catch (error) {
+        console.error('Erreur chargement logo:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     loadLogo()
 
-    // Écouter les changements de logo (quand l'utilisateur upload un nouveau logo)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customLogo') {
-        setCustomLogo(e.newValue)
-      }
-    }
-
-    // Écouter aussi un événement custom pour le même onglet
+    // Écouter les mises à jour du logo
     const handleLogoUpdate = () => {
       loadLogo()
     }
 
-    window.addEventListener('storage', handleStorageChange)
     window.addEventListener('logoUpdated', handleLogoUpdate)
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('logoUpdated', handleLogoUpdate)
     }
   }, [])
+
+  if (loading) {
+    return <div style={{ width: size, height: size }} />
+  }
 
   const logoSrc = customLogo || '/taji-logo.png'
 
