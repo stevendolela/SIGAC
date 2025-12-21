@@ -84,6 +84,11 @@ public class ChatMappingProfile : Profile
                         SentAt = m.SentAt
                     })
             ));
+
+        // ChatAttachment mappings
+        CreateMap<ChatAttachment, ChatAttachmentDto>()
+            .ForMember(d => d.UploaderUsername, opt => opt.MapFrom(s => s.Uploader != null ? s.Uploader.Username : "Unknown"))
+            .ForMember(d => d.DownloadUrl, opt => opt.MapFrom(s => $"/api/chat/attachments/{s.Id}/download"));
     }
 }
 

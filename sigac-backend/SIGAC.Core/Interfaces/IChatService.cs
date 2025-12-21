@@ -1,4 +1,5 @@
 using SIGAC.Core.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace SIGAC.Core.Interfaces;
 
@@ -42,4 +43,24 @@ public interface IChatService
     /// Obtient le nombre total de messages non lus pour l'utilisateur
     /// </summary>
     Task<int> GetUnreadCountAsync(Guid userId);
+    
+    /// <summary>
+    /// Upload une pièce jointe dans une conversation
+    /// </summary>
+    Task<ChatAttachmentDto> UploadAttachmentAsync(Guid conversationId, IFormFile file, bool isVoiceNote, int? durationSeconds, Guid userId);
+    
+    /// <summary>
+    /// Upload une pièce jointe dans un groupe
+    /// </summary>
+    Task<ChatAttachmentDto> UploadGroupAttachmentAsync(Guid chatGroupId, IFormFile file, bool isVoiceNote, int? durationSeconds, Guid userId);
+    
+    /// <summary>
+    /// Télécharge une pièce jointe
+    /// </summary>
+    Task<(byte[] fileData, string fileName, string mimeType)> DownloadAttachmentAsync(Guid attachmentId, Guid userId);
+    
+    /// <summary>
+    /// Supprime une pièce jointe
+    /// </summary>
+    Task DeleteAttachmentAsync(Guid attachmentId, Guid userId);
 }

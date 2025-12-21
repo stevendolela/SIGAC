@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ChatGroup> ChatGroups { get; set; }
     public DbSet<ChatGroupMember> ChatGroupMembers { get; set; }
     public DbSet<GroupMessage> GroupMessages { get; set; }
+    public DbSet<ChatAttachment> ChatAttachments { get; set; }
     
     // Entities GED (transformation)
     public DbSet<Workspace> Workspaces { get; set; }
@@ -300,6 +301,37 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(m => m.Sender)
                 .WithMany()
                 .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration ChatAttachment
+        modelBuilder.Entity<ChatAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.MessageId);
+            entity.HasIndex(e => e.GroupMessageId);
+            entity.HasIndex(e => e.UploadedBy);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.FilePath).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.MimeType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.HashSHA256).HasMaxLength(64);
+
+            entity.HasOne(a => a.Message)
+                .WithMany()
+                .HasForeignKey(a => a.MessageId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+
+            entity.HasOne(a => a.GroupMessage)
+                .WithMany()
+                .HasForeignKey(a => a.GroupMessageId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+
+            entity.HasOne(a => a.Uploader)
+                .WithMany()
+                .HasForeignKey(a => a.UploadedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

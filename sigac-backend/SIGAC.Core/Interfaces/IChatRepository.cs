@@ -43,6 +43,26 @@ public interface IChatRepository
     Task DeleteConversationAsync(ChatConversation conversation);
     
     /// <summary>
+    /// Obtient un message par ID
+    /// </summary>
+    Task<Message?> GetMessageByIdAsync(Guid messageId);
+    
+    /// <summary>
+    /// Ajoute une pièce jointe
+    /// </summary>
+    Task AddAttachmentAsync(ChatAttachment attachment);
+    
+    /// <summary>
+    /// Obtient une pièce jointe par ID
+    /// </summary>
+    Task<ChatAttachment?> GetAttachmentByIdAsync(Guid attachmentId);
+    
+    /// <summary>
+    /// Supprime une pièce jointe
+    /// </summary>
+    Task DeleteAttachmentAsync(ChatAttachment attachment);
+    
+    /// <summary>
     /// Sauvegarde les changements dans la base de données
     /// </summary>
     Task SaveChangesAsync();

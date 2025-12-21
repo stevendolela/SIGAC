@@ -2,6 +2,8 @@ using AutoMapper;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Entities;
 using SIGAC.Core.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System.Security.Cryptography;
 
 namespace SIGAC.Core.Services;
 
@@ -204,5 +206,246 @@ public class ChatService : IChatService
         return conversations
             .SelectMany(c => c.Messages)
             .Count(m => !m.IsRead && m.SenderId != userId);
+    }
+
+    public async Task<ChatAttachmentDto> UploadAttachmentAsync(Guid conversationId, IFormFile file, bool isVoiceNote, int? durationSeconds, Guid userId)
+    {
+        // Validation du fichier
+        ValidateFile(file, isVoiceNote);
+
+        // Vérifier que la conversation existe et que l'utilisateur en est participant
+        var conversation = await _chatRepository.GetConversationByIdAsync(conversationId);
+        if (conversation == null)
+            throw new KeyNotFoundException("Conversation non trouvée");
+
+        if (conversation.User1Id != userId && conversation.User2Id != userId)
+            throw new UnauthorizedAccessException("Vous n'avez pas accès à cette conversation");
+
+        // Créer un message pour contenir la pièce jointe
+        var message = new Message
+        {
+            Id = Guid.NewGuid(),
+            ConversationId = conversationId,
+            SenderId = userId,
+            Content = isVoiceNote ? "[Note vocale]" : $"[Fichier: {file.FileName}]",
+            SentAt = DateTime.UtcNow,
+            IsRead = false
+        };
+
+        await _chatRepository.AddMessageAsync(message);
+
+        // Mettre à jour la conversation
+        conversation.LastMessageAt = DateTime.UtcNow;
+
+        // Sauvegarder le fichier et créer l'attachment
+        var attachment = await SaveFileAsync(file, message.Id, null, isVoiceNote, durationSeconds, userId);
+
+        await _chatRepository.SaveChangesAsync();
+
+        // Audit log
+        await _auditLogRepository.LogActionAsync(
+            userId,
+            "UPLOAD_CHAT_ATTACHMENT",
+            "ChatAttachment",
+            attachment.Id.ToString(),
+            null,
+            System.Text.Json.JsonSerializer.Serialize(new { attachment.FileName, attachment.FileSize, attachment.IsVoiceNote })
+        );
+
+        return _mapper.Map<ChatAttachmentDto>(attachment);
+    }
+
+    public async Task<ChatAttachmentDto> UploadGroupAttachmentAsync(Guid chatGroupId, IFormFile file, bool isVoiceNote, int? durationSeconds, Guid userId)
+    {
+        // Validation du fichier
+        ValidateFile(file, isVoiceNote);
+
+        // TODO: Vérifier que le groupe existe et que l'utilisateur en est membre
+        // Cela nécessite d'ajouter une méthode dans IChatGroupService
+
+        // Créer un message de groupe pour contenir la pièce jointe
+        var groupMessage = new GroupMessage
+        {
+            Id = Guid.NewGuid(),
+            ChatGroupId = chatGroupId,
+            SenderId = userId,
+            Content = isVoiceNote ? "[Note vocale]" : $"[Fichier: {file.FileName}]",
+            SentAt = DateTime.UtcNow
+        };
+
+        // Sauvegarder le fichier et créer l'attachment
+        var attachment = await SaveFileAsync(file, null, groupMessage.Id, isVoiceNote, durationSeconds, userId);
+
+        await _chatRepository.SaveChangesAsync();
+
+        // Audit log
+        await _auditLogRepository.LogActionAsync(
+            userId,
+            "UPLOAD_GROUP_ATTACHMENT",
+            "ChatAttachment",
+            attachment.Id.ToString(),
+            null,
+            System.Text.Json.JsonSerializer.Serialize(new { attachment.FileName, attachment.FileSize, attachment.IsVoiceNote })
+        );
+
+        return _mapper.Map<ChatAttachmentDto>(attachment);
+    }
+
+    public async Task<(byte[] fileData, string fileName, string mimeType)> DownloadAttachmentAsync(Guid attachmentId, Guid userId)
+    {
+        var attachment = await _chatRepository.GetAttachmentByIdAsync(attachmentId);
+        
+        if (attachment == null)
+            throw new KeyNotFoundException("Pièce jointe non trouvée");
+
+        // Vérifier les permissions (utilisateur doit être participant de la conversation ou membre du groupe)
+        if (attachment.MessageId.HasValue)
+        {
+            var message = await _chatRepository.GetMessageByIdAsync(attachment.MessageId.Value);
+            if (message?.Conversation == null)
+                throw new KeyNotFoundException("Message non trouvé");
+
+            if (message.Conversation.User1Id != userId && message.Conversation.User2Id != userId)
+                throw new UnauthorizedAccessException("Vous n'avez pas accès à cette pièce jointe");
+        }
+        else if (attachment.GroupMessageId.HasValue)
+        {
+            // TODO: Vérifier que l'utilisateur est membre du groupe
+            // Cela nécessite d'ajouter une méthode dans IChatGroupService
+        }
+
+        // Lire le fichier
+        if (!File.Exists(attachment.FilePath))
+            throw new FileNotFoundException("Le fichier n'existe pas sur le serveur");
+
+        var fileData = await File.ReadAllBytesAsync(attachment.FilePath);
+
+        // Audit log
+        await _auditLogRepository.LogActionAsync(
+            userId,
+            "DOWNLOAD_CHAT_ATTACHMENT",
+            "ChatAttachment",
+            attachmentId.ToString(),
+            null,
+            System.Text.Json.JsonSerializer.Serialize(new { attachment.FileName })
+        );
+
+        return (fileData, attachment.FileName, attachment.MimeType);
+    }
+
+    public async Task DeleteAttachmentAsync(Guid attachmentId, Guid userId)
+    {
+        var attachment = await _chatRepository.GetAttachmentByIdAsync(attachmentId);
+        
+        if (attachment == null)
+            throw new KeyNotFoundException("Pièce jointe non trouvée");
+
+        // Seul l'uploader peut supprimer
+        if (attachment.UploadedBy != userId)
+            throw new UnauthorizedAccessException("Vous n'avez pas le droit de supprimer cette pièce jointe");
+
+        // Supprimer le fichier physique
+        if (File.Exists(attachment.FilePath))
+        {
+            File.Delete(attachment.FilePath);
+        }
+
+        await _chatRepository.DeleteAttachmentAsync(attachment);
+        await _chatRepository.SaveChangesAsync();
+
+        // Audit log
+        await _auditLogRepository.LogActionAsync(
+            userId,
+            "DELETE_CHAT_ATTACHMENT",
+            "ChatAttachment",
+            attachmentId.ToString(),
+            System.Text.Json.JsonSerializer.Serialize(new { attachment.FileName, attachment.FileSize }),
+            null
+        );
+    }
+
+    // Méthodes privées pour la gestion des fichiers
+
+    private void ValidateFile(IFormFile file, bool isVoiceNote)
+    {
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("Aucun fichier fourni");
+
+        // Limite de taille: 50MB pour fichiers normaux, 10MB pour notes vocales
+        var maxSize = isVoiceNote ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+        if (file.Length > maxSize)
+            throw new ArgumentException($"Le fichier est trop volumineux (max {maxSize / (1024 * 1024)}MB)");
+
+        // Validation du type MIME
+        var allowedMimeTypes = isVoiceNote
+            ? new[] { "audio/webm", "audio/wav", "audio/mp3", "audio/mpeg", "audio/ogg", "audio/m4a" }
+            : new[] { "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", 
+                     "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                     "text/plain", "audio/webm", "audio/wav", "audio/mp3", "audio/mpeg", "audio/ogg" };
+
+        if (!allowedMimeTypes.Contains(file.ContentType.ToLower()))
+            throw new ArgumentException($"Type de fichier non autorisé: {file.ContentType}");
+    }
+
+    private async Task<ChatAttachment> SaveFileAsync(IFormFile file, Guid? messageId, Guid? groupMessageId, bool isVoiceNote, int? durationSeconds, Guid userId)
+    {
+        // Créer le répertoire de stockage si nécessaire
+        var basePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "chat", DateTime.UtcNow.Year.ToString(), DateTime.UtcNow.Month.ToString("D2"));
+        Directory.CreateDirectory(basePath);
+
+        // Générer un nom de fichier unique
+        var fileExtension = Path.GetExtension(file.FileName);
+        var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+        var filePath = Path.Combine(basePath, uniqueFileName);
+
+        // Calculer le hash SHA256
+        string hash;
+        using (var stream = file.OpenReadStream())
+        {
+            using var sha256 = SHA256.Create();
+            var hashBytes = await sha256.ComputeHashAsync(stream);
+            hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            stream.Position = 0; // Reset pour l'écriture
+
+            // Sauvegarder le fichier
+            using var fileStream = new FileStream(filePath, FileMode.Create);
+            await stream.CopyToAsync(fileStream);
+        }
+
+        // Déterminer le type de fichier
+        var fileType = DetermineFileType(file.ContentType, isVoiceNote);
+
+        // Créer l'entité ChatAttachment
+        var attachment = new ChatAttachment
+        {
+            Id = Guid.NewGuid(),
+            MessageId = messageId,
+            GroupMessageId = groupMessageId,
+            FileName = file.FileName,
+            FilePath = filePath,
+            MimeType = file.ContentType,
+            FileSize = file.Length,
+            FileType = fileType,
+            HashSHA256 = hash,
+            IsVoiceNote = isVoiceNote,
+            DurationSeconds = durationSeconds,
+            UploadedBy = userId,
+            UploadedAt = DateTime.UtcNow
+        };
+
+        await _chatRepository.AddAttachmentAsync(attachment);
+
+        return attachment;
+    }
+
+    private string DetermineFileType(string mimeType, bool isVoiceNote)
+    {
+        if (isVoiceNote) return "Audio";
+        if (mimeType.StartsWith("image/")) return "Image";
+        if (mimeType.StartsWith("audio/")) return "Audio";
+        if (mimeType.StartsWith("video/")) return "Video";
+        if (mimeType == "application/pdf") return "Document";
+        if (mimeType.Contains("word") || mimeType.Contains("document")) return "Document";
+        return "Other";
     }
 }

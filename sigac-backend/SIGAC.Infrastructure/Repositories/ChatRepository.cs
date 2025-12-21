@@ -76,4 +76,35 @@ public class ChatRepository : IChatRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<Message?> GetMessageByIdAsync(Guid messageId)
+    {
+        return await _context.Messages
+            .Include(m => m.Conversation)
+                .ThenInclude(c => c.User1)
+            .Include(m => m.Conversation)
+                .ThenInclude(c => c.User2)
+            .FirstOrDefaultAsync(m => m.Id == messageId);
+    }
+
+    public async Task AddAttachmentAsync(ChatAttachment attachment)
+    {
+        await _context.ChatAttachments.AddAsync(attachment);
+    }
+
+    public async Task<ChatAttachment?> GetAttachmentByIdAsync(Guid attachmentId)
+    {
+        return await _context.ChatAttachments
+            .Include(a => a.Message)
+                .ThenInclude(m => m.Conversation)
+            .Include(a => a.GroupMessage)
+            .Include(a => a.Uploader)
+            .FirstOrDefaultAsync(a => a.Id == attachmentId);
+    }
+
+    public async Task DeleteAttachmentAsync(ChatAttachment attachment)
+    {
+        _context.ChatAttachments.Remove(attachment);
+        await Task.CompletedTask;
+    }
 }

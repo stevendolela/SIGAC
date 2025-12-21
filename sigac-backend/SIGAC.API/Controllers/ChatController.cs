@@ -181,4 +181,140 @@ public class ChatController : ControllerBase
             return BadRequest(new { success = false, message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Upload une pièce jointe dans une conversation
+    /// </summary>
+    [HttpPost("conversations/{conversationId}/attachments")]
+    public async Task<ActionResult<ChatAttachmentDto>> UploadAttachment(
+        [FromRoute] Guid conversationId,
+        [FromForm] IFormFile file,
+        [FromForm] bool isVoiceNote = false,
+        [FromForm] int? durationSeconds = null)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                return Unauthorized(new { success = false, message = "Utilisateur invalide" });
+
+            var attachment = await _chatService.UploadAttachmentAsync(conversationId, file, isVoiceNote, durationSeconds, parsedUserId);
+            return Ok(new { success = true, data = attachment });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Upload une pièce jointe dans un groupe
+    /// </summary>
+    [HttpPost("groups/{chatGroupId}/attachments")]
+    public async Task<ActionResult<ChatAttachmentDto>> UploadGroupAttachment(
+        [FromRoute] Guid chatGroupId,
+        [FromForm] IFormFile file,
+        [FromForm] bool isVoiceNote = false,
+        [FromForm] int? durationSeconds = null)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                return Unauthorized(new { success = false, message = "Utilisateur invalide" });
+
+            var attachment = await _chatService.UploadGroupAttachmentAsync(chatGroupId, file, isVoiceNote, durationSeconds, parsedUserId);
+            return Ok(new { success = true, data = attachment });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Télécharge une pièce jointe
+    /// </summary>
+    [HttpGet("attachments/{attachmentId}/download")]
+    public async Task<IActionResult> DownloadAttachment([FromRoute] Guid attachmentId)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                return Unauthorized(new { success = false, message = "Utilisateur invalide" });
+
+            var (fileData, fileName, mimeType) = await _chatService.DownloadAttachmentAsync(attachmentId, parsedUserId);
+            return File(fileData, mimeType, fileName);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (FileNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Supprime une pièce jointe
+    /// </summary>
+    [HttpDelete("attachments/{attachmentId}")]
+    public async Task<ActionResult> DeleteAttachment([FromRoute] Guid attachmentId)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                return Unauthorized(new { success = false, message = "Utilisateur invalide" });
+
+            await _chatService.DeleteAttachmentAsync(attachmentId, parsedUserId);
+            return Ok(new { success = true, message = "Pièce jointe supprimée avec succès" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
 }
