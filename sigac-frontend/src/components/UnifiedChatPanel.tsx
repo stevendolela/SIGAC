@@ -619,10 +619,9 @@ export const UnifiedChatPanel: React.FC = () => {
                             <StatusIndicator status={msg.senderStatus} />
                             <span>{msg.senderNomComplet || msg.senderUsername}</span>
                           </div>
-                          <div className="message-content">{msg.content}</div>
                           
                           {/* Afficher les pièces jointes */}
-                          {msg.attachments && msg.attachments.length > 0 && (
+                          {msg.attachments && msg.attachments.length > 0 && msg.attachments.some(a => a.isVoiceNote) ? (
                             <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {msg.attachments.map(attachment => (
                                 <div key={attachment.id}>
@@ -674,6 +673,8 @@ export const UnifiedChatPanel: React.FC = () => {
                                 </div>
                               ))}
                             </div>
+                          ) : (
+                            <div className="message-content">{msg.content}</div>
                           )}
                           
                           <div className="message-time">
