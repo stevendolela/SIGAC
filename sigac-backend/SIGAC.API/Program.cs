@@ -253,15 +253,15 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {
-        // Use camel case and serialize enums as strings to match previous behavior
+        // Use camel case and serialize enums as NUMBERS (not strings) for frontend compatibility
         options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
-        options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+        // REMOVED StringEnumConverter to serialize enums as numbers (0, 1, 2) instead of strings
     })
     .AddJsonOptions(options =>
     {
-        // Keep System.Text.Json settings for other usages (fallback)
+        // Keep System.Text.Json settings for other usages (fallback) - also serialize enums as numbers
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        // REMOVED JsonStringEnumConverter to serialize enums as numbers
     })
     .ConfigureApiBehaviorOptions(opts => { /* keep defaults */ })
     .AddMvcOptions(mvcOptions =>

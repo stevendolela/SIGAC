@@ -17,7 +17,6 @@ interface SelectedChat {
 
 // Fonction pour obtenir la couleur du statut - Nouvelles couleurs modernes
 const getStatusColor = (status?: UserStatus): string => {
-  console.log('[DEBUG getStatusColor] status =', status, 'type =', typeof status);
   switch (status) {
     case UserStatus.EnLigne:
       return '#10b981'; // Vert moderne
@@ -239,13 +238,10 @@ export const UnifiedChatPanel: React.FC = () => {
     const user = JSON.parse(userStr);
     const currentUserId = user.id;
     
-    const otherUserStatus = conv.user1Id === currentUserId ? conv.user2Status : conv.user1Status;
-    
-    // Debug: afficher le statut dans la console
-    console.log(`[DEBUG] Conversation ${conv.id}: other user status =`, otherUserStatus, 
-      `(user1Status=${conv.user1Status}, user2Status=${conv.user2Status}, currentUserId=${currentUserId})`);
-    
-    return otherUserStatus;
+    if (conv.user1Id === currentUserId) {
+      return conv.user2Status;
+    }
+    return conv.user1Status;
   };
 
   const isLoading = selectedChat?.type === 'conversation' ? convDetailLoading : groupDetailLoading;
