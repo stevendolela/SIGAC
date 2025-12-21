@@ -1,3 +1,5 @@
+using SIGAC.Core.Enums;
+
 namespace SIGAC.Core.DTOs;
 
 /// <summary>
@@ -9,6 +11,8 @@ public class MessageDto
     public Guid ConversationId { get; set; }
     public Guid SenderId { get; set; }
     public string? SenderUsername { get; set; }
+    public string? SenderNomComplet { get; set; }
+    public UserStatus? SenderStatus { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateTime SentAt { get; set; }
     public bool IsRead { get; set; }
@@ -32,8 +36,12 @@ public class ChatConversationDto
     public Guid Id { get; set; }
     public Guid User1Id { get; set; }
     public string? User1Username { get; set; }
+    public string? User1NomComplet { get; set; }
+    public UserStatus? User1Status { get; set; }
     public Guid User2Id { get; set; }
     public string? User2Username { get; set; }
+    public string? User2NomComplet { get; set; }
+    public UserStatus? User2Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastMessageAt { get; set; }
     
@@ -51,8 +59,12 @@ public class ChatConversationDetailDto
     public Guid Id { get; set; }
     public Guid User1Id { get; set; }
     public string? User1Username { get; set; }
+    public string? User1NomComplet { get; set; }
+    public UserStatus? User1Status { get; set; }
     public Guid User2Id { get; set; }
     public string? User2Username { get; set; }
+    public string? User2NomComplet { get; set; }
+    public UserStatus? User2Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastMessageAt { get; set; }
     
@@ -82,6 +94,8 @@ public class GroupMessageDto
     public Guid ChatGroupId { get; set; }
     public Guid SenderId { get; set; }
     public string? SenderUsername { get; set; }
+    public string? SenderNomComplet { get; set; }
+    public UserStatus? SenderStatus { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateTime SentAt { get; set; }
 }
@@ -94,6 +108,8 @@ public class ChatGroupMemberDto
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string? Username { get; set; }
+    public string? NomComplet { get; set; }
+    public UserStatus? Status { get; set; }
     public string? Email { get; set; }
     public DateTime JoinedAt { get; set; }
     public bool IsAdmin { get; set; }

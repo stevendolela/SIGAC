@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatConversations, useChatConversation, useChatGroups, useChatGroup, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
-import { ChatConversationDto, ChatGroupDto } from '../types/chat';
+import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
 import '../styles/unified-chat.css';
@@ -13,6 +13,63 @@ interface SelectedChat {
   type: ChatType;
   id: string;
 }
+
+// Fonction pour obtenir la couleur du statut
+const getStatusColor = (status?: UserStatus): string => {
+  switch (status) {
+    case UserStatus.Disponible:
+      return '#28a745'; // Vert
+    case UserStatus.Occupe:
+      return '#dc3545'; // Rouge
+    case UserStatus.NePasDeranger:
+      return '#dc3545'; // Rouge
+    case UserStatus.Absent:
+    case UserStatus.ApparaitreAbsent:
+      return '#ffc107'; // Jaune
+    case UserStatus.HorsLigne:
+    default:
+      return '#6c757d'; // Gris
+  }
+};
+
+// Fonction pour obtenir le libellé du statut
+const getStatusLabel = (status?: UserStatus): string => {
+  switch (status) {
+    case UserStatus.Disponible:
+      return 'Disponible';
+    case UserStatus.Occupe:
+      return 'Occupé';
+    case UserStatus.NePasDeranger:
+      return 'Ne pas déranger';
+    case UserStatus.Absent:
+      return 'Absent';
+    case UserStatus.ApparaitreAbsent:
+      return 'Apparaître absent';
+    case UserStatus.HorsLigne:
+      return 'Hors ligne';
+    default:
+      return 'Hors ligne';
+  }
+};
+
+// Composant pour afficher le statut
+const StatusIndicator: React.FC<{ status?: UserStatus; showLabel?: boolean }> = ({ status, showLabel = false }) => (
+  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+    <span
+      style={{
+        display: 'inline-block',
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        backgroundColor: getStatusColor(status),
+        border: '1px solid #fff',
+        boxShadow: '0 0 2px rgba(0,0,0,0.2)'
+      }}
+      title={getStatusLabel(status)}
+    />
+    {showLabel && <span style={{ fontSize: '11px', color: '#6c757d' }}>{getStatusLabel(status)}</span>}
+  </div>
+);
 
 export const UnifiedChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -153,7 +210,20 @@ export const UnifiedChatPanel: React.FC = () => {
   };
 
   const getOtherUserName = (conv: ChatConversationDto): string => {
-    return `${conv.user1Username} & ${conv.user2Username}`;
+    // Utilise le nom complet si disponible, sinon le username
+    const currentUserId = localStorage.getItem('userId');
+    if (conv.user1Id === currentUserId) {
+      return conv.user2NomComplet || conv.user2Username;
+    }
+    return conv.user1NomComplet || conv.user1Username;
+  };
+
+  const getOtherUserStatus = (conv: ChatConversationDto): UserStatus | undefined => {
+    const currentUserId = localStorage.getItem('userId');
+    if (conv.user1Id === currentUserId) {
+      return conv.user2Status;
+    }
+    return conv.user1Status;
   };
 
   const isLoading = selectedChat?.type === 'conversation' ? convDetailLoading : groupDetailLoading;
@@ -229,7 +299,10 @@ export const UnifiedChatPanel: React.FC = () => {
                         onClick={() => setSelectedChat({ type: 'conversation', id: conv.id })}
                       >
                         <div className="chat-item-header">
-                          <span className="chat-name">{getOtherUserName(conv)}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <StatusIndicator status={getOtherUserStatus(conv)} />
+                            <span className="chat-name">{getOtherUserName(conv)}</span>
+                          </div>
                           {conv.unreadCount > 0 && (
                             <span className="unread-count">{conv.unreadCount}</span>
                           )}
@@ -284,10 +357,14 @@ export const UnifiedChatPanel: React.FC = () => {
             {selectedChat && (selectedChat.type === 'conversation' ? conversation : group) && (
               <div className="chat-detail">
                 <div className="chat-detail-header">
-                  <h3>
-                    {selectedChat.type === 'conversation'
-                      ? getOtherUserName(conversations.find(c => c.id === selectedChat.id) || {} as ChatConversationDto)
-                      : groups.find(g => g.id === selectedChat.id)?.name}
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {selectedChat.type === 'conversation' && (
+                      <>
+                        <StatusIndicator status={getOtherUserStatus(conversations.find(c => c.id === selectedChat.id) || {} as ChatConversationDto)} />
+                        {getOtherUserName(conversations.find(c => c.id === selectedChat.id) || {} as ChatConversationDto)}
+                      </>
+                    )}
+                    {selectedChat.type === 'group' && groups.find(g => g.id === selectedChat.id)?.name}
                   </h3>
                   <button
                     className="delete-btn"
@@ -311,7 +388,10 @@ export const UnifiedChatPanel: React.FC = () => {
                     <>
                       {(selectedChat.type === 'conversation' ? conversation?.messages : group?.messages)?.map(msg => (
                         <div key={msg.id} className="message">
-                          <div className="message-sender">{msg.senderUsername}</div>
+                          <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <StatusIndicator status={msg.senderStatus} />
+                            <span>{msg.senderNomComplet || msg.senderUsername}</span>
+                          </div>
                           <div className="message-content">{msg.content}</div>
                           <div className="message-time">
                             {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}

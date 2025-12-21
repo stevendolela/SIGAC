@@ -3,11 +3,22 @@
  * Doit correspondre exactement aux DTOs C# du backend
  */
 
+export enum UserStatus {
+  Disponible = 0,
+  Occupe = 1,
+  NePasDeranger = 2,
+  Absent = 3,
+  HorsLigne = 4,
+  ApparaitreAbsent = 5
+}
+
 export interface MessageDto {
   id: string;
   conversationId: string;
   senderId: string;
   senderUsername?: string;
+  senderNomComplet?: string; // Nom complet de l'expéditeur
+  senderStatus?: UserStatus; // Statut de disponibilité
   content: string;
   sentAt: string; // ISO DateTime
   isRead: boolean;
@@ -23,8 +34,12 @@ export interface ChatConversationDto {
   id: string;
   user1Id: string;
   user1Username?: string;
+  user1NomComplet?: string; // Nom complet user1
+  user1Status?: UserStatus; // Statut user1
   user2Id: string;
   user2Username?: string;
+  user2NomComplet?: string; // Nom complet user2
+  user2Status?: UserStatus; // Statut user2
   createdAt: string; // ISO DateTime
   lastMessageAt?: string; // ISO DateTime
   unreadCount: number;
@@ -34,8 +49,12 @@ export interface ChatConversationDetailDto {
   id: string;
   user1Id: string;
   user1Username?: string;
+  user1NomComplet?: string;
+  user1Status?: UserStatus;
   user2Id: string;
   user2Username?: string;
+  user2NomComplet?: string;
+  user2Status?: UserStatus;
   createdAt: string; // ISO DateTime
   lastMessageAt?: string; // ISO DateTime
   messages: MessageDto[];
@@ -51,6 +70,8 @@ export interface GroupMessageDto {
   chatGroupId: string;
   senderId: string;
   senderUsername?: string;
+  senderNomComplet?: string; // Nom complet de l'expéditeur
+  senderStatus?: UserStatus; // Statut de disponibilité
   content: string;
   sentAt: string; // ISO DateTime
 }
@@ -64,6 +85,8 @@ export interface ChatGroupMemberDto {
   id: string;
   userId: string;
   username?: string;
+  nomComplet?: string; // Nom complet du membre
+  status?: UserStatus; // Statut de disponibilité
   email?: string;
   joinedAt: string; // ISO DateTime
   isAdmin: boolean;

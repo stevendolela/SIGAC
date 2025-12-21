@@ -12,6 +12,11 @@ public class User
     public UserRole Role { get; set; }
     public string? Matricule { get; set; }
     
+    /// <summary>
+    /// Statut de disponibilité (Disponible, Occupé, Absent, etc.)
+    /// </summary>
+    public UserStatus Status { get; set; } = UserStatus.Disponible;
+    
     [Obsolete("Use AvatarBase64 instead for better cross-browser compatibility")]
     public string? AvatarUrl { get; set; }
     
