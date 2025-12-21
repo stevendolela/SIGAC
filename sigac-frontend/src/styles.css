@@ -147,7 +147,7 @@ body {
   position: fixed;
   top: 24px;
   right: 110px;
-  z-index: 9999; /* Priorité maximale pour rester au-dessus du contenu */
+  z-index: 50; /* Réduit pour ne pas chevaucher le contenu */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -285,7 +285,7 @@ body {
 /* Contenu principal avec sidebar */
 .main-content-wrapper {
   margin-left: 280px;
-  padding: 100px 48px 32px 48px;
+  padding: 32px 48px 32px 48px; /* Réduit le padding-top */
   min-height: 100vh;
   background: #f9fafb;
   max-width: calc(100vw - 280px);
