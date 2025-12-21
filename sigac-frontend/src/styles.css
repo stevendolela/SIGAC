@@ -561,12 +561,14 @@ label {
 .table-wrapper { 
   overflow-x: auto;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .table { 
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  font-size: 14px;
 }
 
 .table thead {
@@ -575,31 +577,33 @@ label {
 }
 
 .table th {
-  padding: 14px 12px;
+  padding: 16px 14px;
   text-align: left;
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .table th:first-child { border-radius: 12px 0 0 0; }
 .table th:last-child { border-radius: 0 12px 0 0; }
 
 .table td { 
-  padding: 14px 12px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 16px 14px;
+  border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
+  vertical-align: middle;
 }
 
 .table tbody tr {
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   background: white;
 }
 
 .table tbody tr:hover {
-  background: rgba(30, 58, 138, 0.05);
-  transform: scale(1.01);
+  background: #f9fafb;
+  transform: none;
 }
 
 /* Badges de statut */

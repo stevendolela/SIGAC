@@ -131,35 +131,35 @@ export default function DossierList({ onSelect }: Props) {
       {loading && <div className="info">Chargement…</div>}
       {error && <div className="error">{error}</div>}
       {!loading && !error && (
-        <div className="table-wrapper" style={{ fontSize: '13px', overflowX: 'auto' }}>
-          <table className="table" style={{ fontSize: '13px', minWidth: '100%', tableLayout: 'fixed' }}>
+        <div className="table-wrapper" style={{ overflowX: 'auto' }}>
+          <table className="table" style={{ minWidth: '100%' }}>
             <thead>
               <tr>
-                <th style={{ fontSize: '13px', width: '110px' }}>Numéro</th>
-                <th style={{ fontSize: '13px', width: 'auto', minWidth: '200px' }}>Titre</th>
-                <th style={{ fontSize: '13px', width: '180px' }}>Type</th>
-                <th style={{ fontSize: '13px', width: '140px' }}>Statut</th>
-                <th style={{ fontSize: '13px', width: '110px' }}>Priorité</th>
-                <th style={{ fontSize: '13px', width: '140px' }}>Date dépôt</th>
-                <th style={{ fontSize: '13px', width: '140px', textAlign: 'right' as const }}>Actions</th>
+                <th style={{ width: '120px', whiteSpace: 'nowrap' }}>Numéro</th>
+                <th style={{ minWidth: '200px' }}>Titre</th>
+                <th style={{ width: '180px' }}>Type</th>
+                <th style={{ width: '130px', textAlign: 'center' as const }}>Statut</th>
+                <th style={{ width: '120px', textAlign: 'center' as const }}>Priorité</th>
+                <th style={{ width: '160px' }}>Date dépôt</th>
+                <th style={{ width: '120px', textAlign: 'center' as const }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.map(d => (
                 <tr key={d.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{d.numeroDossier}</td>
-                  <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.titre}>{d.titre}</td>
+                  <td style={{ maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.titre}>{d.titre}</td>
                   <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={formatTypeAffaire(d.type || d.typeAffaire)}>{formatTypeAffaire(d.type || d.typeAffaire)}</td>
-                  <td><StatusBadge kind="status" status={d.status as any} /></td>
-                  <td><StatusBadge kind="priorite" priorite={d.priorite as any} /></td>
+                  <td style={{ textAlign: 'center' }}><StatusBadge kind="status" status={d.status as any} /></td>
+                  <td style={{ textAlign: 'center' }}><StatusBadge kind="priorite" priorite={d.priorite as any} /></td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     {(d.dateDepot || d.dateDebut) 
                       ? new Date(d.dateDepot || d.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
                       : '-'
                     }
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' }}>
                       {onSelect && (
                         <button className="btn" onClick={() => onSelect(d)} style={{ fontSize: '12px', padding: '4px 8px' }}>👁️ Voir</button>
                       )}
