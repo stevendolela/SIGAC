@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api-client';
 
 /**
  * API client pour gérer les pièces jointes et notes vocales dans le chat
