@@ -15,7 +15,9 @@ export interface UserDto {
   nomComplet?: string
   matricule?: string
   phoneNumber?: string
+  /** @deprecated Use avatarBase64 instead */
   avatarUrl?: string
+  avatarBase64?: string
   lastLogin?: string
   createdAt?: string
   updatedAt?: string

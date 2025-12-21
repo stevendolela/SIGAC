@@ -73,9 +73,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         aria-expanded={isOpen}
       >
         <div className="workspace-selector-current">
-          {currentWorkspace.logoUrl ? (
+          {(currentWorkspace.logoBase64 || currentWorkspace.logoUrl) ? (
             <img
-              src={currentWorkspace.logoUrl}
+              src={currentWorkspace.logoBase64 || currentWorkspace.logoUrl}
               alt={currentWorkspace.name}
               className="workspace-logo"
             />
@@ -119,9 +119,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                   onClick={() => handleWorkspaceChange(workspace.id)}
                 >
                   <div className="workspace-item-main">
-                    {workspace.logoUrl ? (
+                    {(workspace.logoBase64 || workspace.logoUrl) ? (
                       <img
-                        src={workspace.logoUrl}
+                        src={workspace.logoBase64 || workspace.logoUrl}
                         alt={workspace.name}
                         className="workspace-item-logo"
                       />

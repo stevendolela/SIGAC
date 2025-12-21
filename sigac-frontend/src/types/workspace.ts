@@ -14,7 +14,9 @@ export interface WorkspaceDto {
   name: string;
   slug: string;
   description?: string;
+  /** @deprecated Use logoBase64 instead */
   logoUrl?: string;
+  logoBase64?: string;
   maxStorageGB: number;
   maxUsers: number;
   allowGuestAccess: boolean;
@@ -40,7 +42,9 @@ export interface CreateWorkspaceDto {
 export interface UpdateWorkspaceDto {
   name?: string;
   description?: string;
+  /** @deprecated Use logoBase64 instead */
   logoUrl?: string;
+  logoBase64?: string;
   maxStorageGB?: number;
   maxUsers?: number;
   allowGuestAccess?: boolean;

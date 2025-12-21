@@ -44,13 +44,20 @@ export default function App() {
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showCreateWorkspaceModal, setShowCreateWorkspaceModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement | null>(null)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(localStorage.getItem('userAvatar'))
 
-  // Écouter les changements d'avatar
+  // Récupérer l'avatar depuis user (avec support Base64 et URL)
+  const getAvatarUrl = () => {
+    if (!user) return null;
+    return user.avatarBase64 || user.avatarUrl || null;
+  };
+  const avatarUrl = getAvatarUrl();
+
+  // Écouter les changements d'avatar (pour rafraîchir si user change) (pour rafraîchir si user change)
   useEffect(() => {
     function handleStorageChange(e: StorageEvent) {
-      if (e.key === 'userAvatar') {
-        setAvatarUrl(e.newValue)
+      if (e.key === 'user') {
+        // Le user a changé, forcer un re-render
+        window.location.reload();
       }
     }
     window.addEventListener('storage', handleStorageChange)

@@ -1,9 +1,11 @@
 import React, { useRef, useState } from 'react'
+import { fileToBase64, validateImageFile } from '../utils/fileHelpers'
 
 export default function AccountPage() {
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(localStorage.getItem('userAvatar'))
+  const avatarUrl = user?.avatarBase64 || user?.avatarUrl || null
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [nomComplet, setNomComplet] = useState(user?.nomComplet || '')
@@ -13,60 +15,67 @@ export default function AccountPage() {
     fileInputRef.current?.click()
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     
-    // Vérifier la taille (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('L\'image ne doit pas dépasser 2 MB')
+    // Validation
+    const validation = validateImageFile(file, 2)
+    if (!validation.isValid) {
+      alert(validation.errorMessage)
       return
     }
 
-    // Vérifier le type
-    if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner une image')
-      return
+    setIsUploading(true)
+
+    try {
+      // Convertir en Base64
+      const base64String = await fileToBase64(file)
+      
+      // Envoyer au backend (si l'API existe déjà, sinon commenter pour l'instant)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          avatarBase64: base64String
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'upload')
+      }
+
+      const data = await response.json()
+      
+      // Mettre à jour l'objet user dans localStorage
+      if (user) {
+        user.avatarBase64 = base64String
+        localStorage.setItem('user', JSON.stringify(user))
+      }
+      
+      // Forcer un refresh
+      window.location.reload()
+      
+    } catch (err) {
+      console.error(err)
+      alert('Erreur lors de l\'upload de l\'avatar')
+    } finally {
+      setIsUploading(false)
     }
-
-    // Upload vers le backend
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const token = localStorage.getItem('token')
-    fetch('http://localhost:5210/api/users/avatar', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.avatarUrl) {
-          const fullUrl = `http://localhost:5210${data.avatarUrl}`
-          setAvatarUrl(fullUrl)
-          localStorage.setItem('userAvatar', fullUrl)
-          // Mettre à jour l'objet user
-          if (user) {
-            user.avatarUrl = fullUrl
-            localStorage.setItem('user', JSON.stringify(user))
-          }
-          // Déclencher un événement pour synchroniser avec App.tsx
-          window.dispatchEvent(new Event('storage'))
-          alert('Avatar mis à jour avec succès!')
-        }
-      })
-      .catch(err => {
-        console.error(err)
-        alert('Erreur lors de l\'upload de l\'avatar')
-      })
   }
 
   function handleRemoveAvatar() {
-    setAvatarUrl(null)
-    localStorage.removeItem('userAvatar')
+    if (user) {
+      user.avatarBase64 = null
+      user.avatarUrl = null
+      localStorage.setItem('user', JSON.stringify(user))
+    }
     if (fileInputRef.current) fileInputRef.current.value = ''
+    window.location.reload()
   }
 
   function handleSaveProfile() {
