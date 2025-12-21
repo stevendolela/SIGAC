@@ -50,9 +50,14 @@ public class DossierService : IDossierService
             filtreRapporteur = userId;
         }
 
+        // 🆕 Les admins sans workspaceId voient TOUS les dossiers (y compris ceux sans workspace)
+        // Pour les autres rôles ou si un workspaceId est fourni, on applique le filtre
+        Guid? filtreWorkspace = workspaceId;
+        bool includeAllForAdmin = userRole == UserRole.Administrateur && !workspaceId.HasValue;
+
         var (dossiers, totalCount) = await _dossierRepository.GetDossiersAsync(
             page, pageSize, search, typeAffaireId, status, priorite,
-            dateDebutMin, dateDebutMax, filtreRapporteur, workspaceId);
+            dateDebutMin, dateDebutMax, filtreRapporteur, filtreWorkspace, includeAllForAdmin);
 
         // Manual projection to avoid AutoMapper runtime mapping issues in current runtime
         var dossierDtos = dossiers.Select(d => new DossierListDto

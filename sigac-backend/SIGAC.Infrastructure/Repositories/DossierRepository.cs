@@ -18,7 +18,7 @@ public class DossierRepository : IDossierRepository
 
     public async Task<(List<Dossier> dossiers, int totalCount)> GetDossiersAsync(
         int page, int pageSize, string? search, Guid? typeAffaireId, StatusDossier? status,
-        PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId, Guid? workspaceId)
+        PrioriteDossier? priorite, DateTime? dateDebutMin, DateTime? dateDebutMax, Guid? rapporteurId, Guid? workspaceId, bool includeAllForAdmin = false)
     {
         var query = _context.Dossiers
             .Include(d => d.TypeAffaire)
@@ -65,8 +65,9 @@ public class DossierRepository : IDossierRepository
             query = query.Where(d => d.RapporteurId == rapporteurId.Value);
         }
 
-        // 🆕 FILTRAGE PAR WORKSPACE
-        if (workspaceId.HasValue)
+        // 🆕 FILTRAGE PAR WORKSPACE (sauf si includeAllForAdmin = true)
+        // Les admins sans workspaceId voient TOUS les dossiers
+        if (!includeAllForAdmin && workspaceId.HasValue)
         {
             query = query.Where(d => d.WorkspaceId == workspaceId.Value);
         }

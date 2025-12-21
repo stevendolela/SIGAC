@@ -32,7 +32,7 @@ public class AudienceService : IAudienceService
         // Si juge, filtrer uniquement les audiences des dossiers dont il est rapporteur
         if (userRole == UserRole.JugeConstitutionnel)
         {
-            var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null);
+            var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null, false);
             var dossierIds = dossiers.Select(d => d.Id).ToHashSet();
             audiences = audiences.Where(a => dossierIds.Contains(a.DossierId)).ToList();
         }
@@ -90,7 +90,7 @@ public class AudienceService : IAudienceService
         // Si juge, filtrer uniquement les audiences des dossiers dont il est rapporteur
         if (userRole == UserRole.JugeConstitutionnel)
         {
-            var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null);
+            var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null, false);
             var dossierIds = dossiers.Select(d => d.Id).ToHashSet();
             audiences = audiences.Where(a => dossierIds.Contains(a.DossierId)).ToList();
         }

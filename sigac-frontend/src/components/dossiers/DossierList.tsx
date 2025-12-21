@@ -61,8 +61,11 @@ export default function DossierList({ onSelect }: Props) {
       if (q?.trim()) qs.set('search', q.trim())
       if (st) qs.set('status', st)
       if (pr) qs.set('priorite', pr)
-      // 🆕 FILTRAGE PAR WORKSPACE
-      if (currentWorkspace?.id) qs.set('workspaceId', currentWorkspace.id)
+      // 🆕 Les admins voient TOUS les dossiers si aucun workspace n'est sélectionné
+      // Pour les autres rôles, on filtre toujours par workspace
+      if (currentWorkspace?.id && !isAdmin) {
+        qs.set('workspaceId', currentWorkspace.id)
+      }
       const resp = await api.get<PaginatedResult<DossierListDto>>(`/Dossiers?${qs.toString()}`)
       setItems(resp.data.data)
       setPagination(resp.data.pagination)
@@ -71,7 +74,7 @@ export default function DossierList({ onSelect }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [pageSize, currentWorkspace?.id])
+  }, [pageSize, currentWorkspace?.id, isAdmin])
 
   useEffect(() => {
     fetchDossiers(page, search, status, priorite)
