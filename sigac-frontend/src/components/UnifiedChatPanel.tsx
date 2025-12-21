@@ -17,6 +17,7 @@ interface SelectedChat {
 
 // Fonction pour obtenir la couleur du statut - Nouvelles couleurs modernes
 const getStatusColor = (status?: UserStatus): string => {
+  console.log('[DEBUG getStatusColor] status =', status, 'type =', typeof status);
   switch (status) {
     case UserStatus.EnLigne:
       return '#10b981'; // Vert moderne
