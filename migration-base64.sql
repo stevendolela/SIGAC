@@ -1,24 +1,32 @@
--- Migration: AddBase64LogoAndAvatar
--- Date: 2025-12-17
--- Description: Ajoute les colonnes LogoBase64 et AvatarBase64
+-- Migration: Ajout de la colonne LogoBase64 à la table Workspaces
+-- Date: 2025-12-21
+-- Description: Ajoute la colonne LogoBase64 pour stocker les logos en base64 directement en BDD
 
--- Ajouter la colonne LogoBase64 à la table Workspaces
-ALTER TABLE "Workspaces" ADD COLUMN IF NOT EXISTS "LogoBase64" text;
+-- Vérifier si la colonne existe déjà avant de l'ajouter
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'Workspaces' 
+        AND column_name = 'LogoBase64'
+    ) THEN
+        -- Ajouter la colonne LogoBase64
+        ALTER TABLE "Workspaces" 
+        ADD COLUMN "LogoBase64" TEXT NULL;
+        
+        RAISE NOTICE 'Colonne LogoBase64 ajoutée avec succès à la table Workspaces';
+    ELSE
+        RAISE NOTICE 'La colonne LogoBase64 existe déjà dans la table Workspaces';
+    END IF;
+END $$;
 
--- Ajouter la colonne AvatarBase64 à la table Users
-ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "AvatarBase64" text;
-
--- Enregistrer la migration dans l'historique
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20251217133725_AddBase64LogoAndAvatar', '8.0.8')
-ON CONFLICT ("MigrationId") DO NOTHING;
-
--- Vérification
+-- Vérifier le résultat
 SELECT 
-    table_name, 
     column_name, 
-    data_type 
-FROM information_schema.columns 
-WHERE table_name IN ('Workspaces', 'Users') 
-  AND column_name IN ('LogoBase64', 'AvatarBase64')
-ORDER BY table_name, column_name;
+    data_type, 
+    is_nullable
+FROM information_schema.columns
+WHERE table_name = 'Workspaces' 
+AND column_name IN ('LogoUrl', 'LogoBase64')
+ORDER BY column_name;
