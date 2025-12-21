@@ -315,7 +315,7 @@ public class ChatService : IChatService
             throw new KeyNotFoundException("Pièce jointe non trouvée");
         }
 
-        Console.WriteLine($"[ChatService.Download] Attachment trouvé: {attachment.FileName}, FilePath: {attachment.FilePath}");
+        Console.WriteLine($"[ChatService.Download] Attachment trouvé: {attachment.FileName}, HasFileData: {!string.IsNullOrEmpty(attachment.FileData)}");
 
         // Vérifier les permissions (utilisateur doit être participant de la conversation ou membre du groupe)
         if (attachment.MessageId.HasValue)
@@ -335,20 +335,37 @@ public class ChatService : IChatService
         }
         else if (attachment.GroupMessageId.HasValue)
         {
-            // TODO: Vérifier que l'utilisateur est membre du groupe
             Console.WriteLine($"[ChatService.Download] Attachment de groupe - vérification permissions TODO");
         }
 
-        // Lire le fichier
-        if (!File.Exists(attachment.FilePath))
-        {
-            Console.WriteLine($"[ChatService.Download] ERREUR - Fichier inexistant: {attachment.FilePath}");
-            throw new FileNotFoundException("Le fichier n'existe pas sur le serveur");
-        }
+        byte[] fileData;
 
-        Console.WriteLine($"[ChatService.Download] Lecture du fichier...");
-        var fileData = await File.ReadAllBytesAsync(attachment.FilePath);
-        Console.WriteLine($"[ChatService.Download] Fichier lu: {fileData.Length} bytes");
+        // Prioriser FileData (stockage DB) sur FilePath (stockage fichier)
+        if (!string.IsNullOrEmpty(attachment.FileData))
+        {
+            Console.WriteLine($"[ChatService.Download] Décodage depuis FileData (Base64)");
+            try
+            {
+                fileData = Convert.FromBase64String(attachment.FileData);
+                Console.WriteLine($"[ChatService.Download] Fichier décodé: {fileData.Length} bytes");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ChatService.Download] Erreur décodage Base64: {ex.Message}");
+                throw new InvalidOperationException("Erreur lors du décodage du fichier");
+            }
+        }
+        else if (File.Exists(attachment.FilePath))
+        {
+            Console.WriteLine($"[ChatService.Download] Lecture depuis FilePath: {attachment.FilePath}");
+            fileData = await File.ReadAllBytesAsync(attachment.FilePath);
+            Console.WriteLine($"[ChatService.Download] Fichier lu: {fileData.Length} bytes");
+        }
+        else
+        {
+            Console.WriteLine($"[ChatService.Download] ERREUR - Ni FileData ni fichier physique disponible");
+            throw new FileNotFoundException("Le fichier n'existe pas");
+        }
 
         // Audit log
         await _auditLogRepository.LogActionAsync(
@@ -419,28 +436,27 @@ public class ChatService : IChatService
 
     private async Task<ChatAttachment> SaveFileAsync(IFormFile file, Guid? messageId, Guid? groupMessageId, bool isVoiceNote, int? durationSeconds, Guid userId)
     {
-        // Créer le répertoire de stockage si nécessaire
-        var basePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "chat", DateTime.UtcNow.Year.ToString(), DateTime.UtcNow.Month.ToString("D2"));
-        Directory.CreateDirectory(basePath);
-
-        // Générer un nom de fichier unique
-        var fileExtension = Path.GetExtension(file.FileName);
-        var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
-        var filePath = Path.Combine(basePath, uniqueFileName);
-
         // Calculer le hash SHA256
         string hash;
+        byte[] fileBytes;
+        
         using (var stream = file.OpenReadStream())
         {
             using var sha256 = SHA256.Create();
             var hashBytes = await sha256.ComputeHashAsync(stream);
             hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-            stream.Position = 0; // Reset pour l'écriture
+            stream.Position = 0;
 
-            // Sauvegarder le fichier
-            using var fileStream = new FileStream(filePath, FileMode.Create);
-            await stream.CopyToAsync(fileStream);
+            // Lire le contenu du fichier en mémoire
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            fileBytes = memoryStream.ToArray();
         }
+
+        // Convertir en Base64 pour stockage en DB
+        var fileDataBase64 = Convert.ToBase64String(fileBytes);
+        
+        Console.WriteLine($"[SaveFile] Fichier converti en Base64: {fileBytes.Length} bytes -> {fileDataBase64.Length} chars");
 
         // Déterminer le type de fichier
         var fileType = DetermineFileType(file.ContentType, isVoiceNote);
@@ -452,7 +468,8 @@ public class ChatService : IChatService
             MessageId = messageId,
             GroupMessageId = groupMessageId,
             FileName = file.FileName,
-            FilePath = filePath,
+            FilePath = string.Empty, // Plus utilisé, mais gardé pour compatibilité
+            FileData = fileDataBase64, // Stockage en Base64
             MimeType = file.ContentType,
             FileSize = file.Length,
             FileType = fileType,

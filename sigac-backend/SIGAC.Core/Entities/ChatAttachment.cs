@@ -25,9 +25,14 @@ public class ChatAttachment
     public string FileName { get; set; } = string.Empty;
     
     /// <summary>
-    /// Chemin physique du fichier sur le serveur
+    /// Chemin physique du fichier sur le serveur (legacy - déprécié)
     /// </summary>
     public string FilePath { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Contenu du fichier encodé en Base64 (pour persistance en DB)
+    /// </summary>
+    public string? FileData { get; set; }
     
     /// <summary>
     /// Type MIME du fichier
