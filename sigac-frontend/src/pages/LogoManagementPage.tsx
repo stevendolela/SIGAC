@@ -15,7 +15,7 @@ export default function LogoManagementPage() {
   const loadLogo = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/system/logo`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api'}/system/logo`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -55,7 +55,7 @@ export default function LogoManagementPage() {
         
         // Envoyer à l'API
         const token = localStorage.getItem('token')
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/system/logo`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api'}/system/logo`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ export default function LogoManagementPage() {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser le logo par défaut?')) {
       try {
         const token = localStorage.getItem('token')
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/system/logo`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api'}/system/logo`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
