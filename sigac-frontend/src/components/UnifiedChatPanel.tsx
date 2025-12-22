@@ -811,61 +811,172 @@ export const UnifiedChatPanel: React.FC = () => {
                           </div>
                           
                           {/* Afficher les pièces jointes */}
-                          {msg.attachments && msg.attachments.length > 0 && msg.attachments.some(a => a.isVoiceNote) ? (
+                          {msg.attachments && msg.attachments.length > 0 ? (
                             <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {msg.attachments.map(attachment => (
                                 <div key={attachment.id}>
                                   {attachment.isVoiceNote ? (
                                     <AudioPlayer attachment={attachment} />
+                                  ) : attachment.fileType === 'Image' ? (
+                                    /* Prévisualisation d'image */
+                                    <div style={{
+                                      maxWidth: '300px',
+                                      borderRadius: '12px',
+                                      overflow: 'hidden',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                      background: '#fff'
+                                    }}>
+                                      <img 
+                                        src={attachment.downloadUrl} 
+                                        alt={attachment.fileName}
+                                        style={{
+                                          width: '100%',
+                                          height: 'auto',
+                                          display: 'block',
+                                          cursor: 'pointer'
+                                        }}
+                                        onClick={() => window.open(attachment.downloadUrl, '_blank')}
+                                        title="Cliquer pour agrandir"
+                                      />
+                                      <div style={{
+                                        padding: '8px 12px',
+                                        background: '#f9fafb',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        borderTop: '1px solid #e5e7eb'
+                                      }}>
+                                        <div style={{ 
+                                          fontSize: '12px', 
+                                          color: '#6b7280',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                          flex: 1
+                                        }}>
+                                          {attachment.fileName}
+                                        </div>
+                                        <a
+                                          href={attachment.downloadUrl}
+                                          download={attachment.fileName}
+                                          style={{
+                                            padding: '4px 8px',
+                                            background: '#3b82f6',
+                                            color: 'white',
+                                            borderRadius: '4px',
+                                            textDecoration: 'none',
+                                            fontSize: '12px',
+                                            marginLeft: '8px'
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          ⬇️
+                                        </a>
+                                      </div>
+                                    </div>
                                   ) : (
+                                    /* Documents et autres fichiers */
                                     <div
                                       style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '10px',
-                                        padding: '10px',
-                                        background: '#f0f2f5',
-                                        borderRadius: '8px',
-                                        maxWidth: '300px',
+                                        gap: '12px',
+                                        padding: '12px',
+                                        background: '#f9fafb',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '10px',
+                                        maxWidth: '320px',
+                                        transition: 'all 0.2s ease',
+                                        cursor: 'pointer'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = '#f3f4f6';
+                                        e.currentTarget.style.borderColor = '#d1d5db';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = '#f9fafb';
+                                        e.currentTarget.style.borderColor = '#e5e7eb';
                                       }}
                                     >
-                                      <span style={{ fontSize: '24px' }}>
-                                        {attachment.fileType === 'Image' ? '🖼️' : 
-                                         attachment.fileType === 'Document' ? '📄' : 
-                                         attachment.fileType === 'Audio' ? '🎵' : '📎'}
-                                      </span>
-                                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <div style={{ fontWeight: '500', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '8px',
+                                        background: 
+                                          attachment.fileType === 'Document' ? '#ef4444' :
+                                          attachment.fileType === 'Audio' ? '#8b5cf6' :
+                                          attachment.fileType === 'Video' ? '#f59e0b' : '#6b7280',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '20px',
+                                        flexShrink: 0
+                                      }}>
+                                        {attachment.fileType === 'Document' ? '📄' : 
+                                         attachment.fileType === 'Audio' ? '🎵' : 
+                                         attachment.fileType === 'Video' ? '🎬' : '📎'}
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ 
+                                          fontWeight: '500', 
+                                          fontSize: '14px', 
+                                          color: '#111827',
+                                          whiteSpace: 'nowrap', 
+                                          overflow: 'hidden', 
+                                          textOverflow: 'ellipsis',
+                                          marginBottom: '2px'
+                                        }}>
                                           {attachment.fileName}
                                         </div>
-                                        <div style={{ fontSize: '12px', color: '#667781' }}>
-                                          {(attachment.fileSize / 1024).toFixed(0)} KB
+                                        <div style={{ 
+                                          fontSize: '12px', 
+                                          color: '#6b7280',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '8px'
+                                        }}>
+                                          <span>{(attachment.fileSize / 1024).toFixed(0)} KB</span>
+                                          {attachment.fileType === 'Document' && (
+                                            <span>• {attachment.mimeType.includes('pdf') ? 'PDF' : 
+                                                     attachment.mimeType.includes('word') ? 'Word' : 
+                                                     attachment.mimeType.includes('excel') ? 'Excel' : 'Doc'}</span>
+                                          )}
                                         </div>
                                       </div>
                                       <a
                                         href={attachment.downloadUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                        download={attachment.fileName}
                                         style={{
                                           padding: '8px 12px',
-                                          background: '#25D366',
+                                          background: '#3b82f6',
                                           color: 'white',
                                           borderRadius: '6px',
                                           textDecoration: 'none',
                                           fontSize: '12px',
                                           fontWeight: '500',
+                                          flexShrink: 0,
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background = '#2563eb';
+                                          e.currentTarget.style.transform = 'scale(1.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background = '#3b82f6';
+                                          e.currentTarget.style.transform = 'scale(1)';
                                         }}
                                       >
-                                        ⬇️
+                                        ⬇️ Télécharger
                                       </a>
                                     </div>
                                   )}
                                 </div>
                               ))}
                             </div>
-                          ) : (
+                          ) : msg.content ? (
                             <div className="message-content">{msg.content}</div>
-                          )}
+                          ) : null}
                           
                           <div className="message-time">
                             {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
