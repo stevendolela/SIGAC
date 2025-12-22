@@ -92,6 +92,7 @@ export const UnifiedChatPanel: React.FC = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<number | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const recordingDurationRef = useRef<number>(0);
 
   // Charger le statut de l'utilisateur
   useEffect(() => {
@@ -397,19 +398,24 @@ export const UnifiedChatPanel: React.FC = () => {
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
         const url = URL.createObjectURL(audioBlob);
+        
+        // Utiliser la ref pour avoir la durée correcte
         setAudioBlob(audioBlob);
         setBlobUrl(url);
-        setDuration(recordingTime);
+        setDuration(recordingDurationRef.current);
         setIsPreviewing(true);
+        
         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
+      recordingDurationRef.current = 0;
 
       // Timer
       recordingIntervalRef.current = window.setInterval(() => {
+        recordingDurationRef.current += 1;
         setRecordingTime(prev => prev + 1);
       }, 1000);
     } catch (error) {
@@ -457,7 +463,23 @@ export const UnifiedChatPanel: React.FC = () => {
     if (!audioBlob || !selectedChat) return;
 
     try {
-      const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: 'audio/webm;codecs=opus' });
+      console.log('Envoi note vocale:', {
+        blobSize: audioBlob.size,
+        blobType: audioBlob.type,
+        duration: duration,
+        chatId: selectedChat.id,
+        chatType: selectedChat.type
+      });
+
+      const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { 
+        type: 'audio/webm;codecs=opus' 
+      });
+      
+      console.log('File créé:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
       
       if (selectedChat.type === 'conversation') {
         await chatAttachmentApi.uploadAttachment(selectedChat.id, file, true, duration);
@@ -467,10 +489,20 @@ export const UnifiedChatPanel: React.FC = () => {
         await refetchGroup();
       }
 
+      console.log('Upload réussi!');
       cancelVoiceNote();
     } catch (error: any) {
-      console.error('Erreur upload:', error);
-      alert(error.response?.data?.message || 'Erreur lors de l\'envoi');
+      console.error('Erreur upload complète:', error);
+      console.error('Response:', error.response);
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.message 
+        || error.response?.data?.title
+        || error.message 
+        || 'Erreur lors de l\'envoi de la note vocale';
+      
+      alert(`Erreur upload: ${errorMessage}`);
     }
   };
 
