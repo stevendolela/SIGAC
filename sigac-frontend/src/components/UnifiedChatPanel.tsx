@@ -1103,11 +1103,11 @@ export const UnifiedChatPanel: React.FC = () => {
                           ))}
                         </div>
                       )}
-                    </div>
                     
-                    <button onClick={handleSendMessage} disabled={!messageInput.trim()}>
-                      Envoyer
-                    </button>
+                      <button onClick={handleSendMessage} disabled={!messageInput.trim()}>
+                        Envoyer
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
