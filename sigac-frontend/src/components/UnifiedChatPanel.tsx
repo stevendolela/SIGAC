@@ -948,100 +948,95 @@ export const UnifiedChatPanel: React.FC = () => {
 
                 <div className="message-input-area" style={{
                   background: (isRecording || isPreviewing) 
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    ? 'linear-gradient(135deg, #6264a7 0%, #464775 100%)'
                     : '#f9fafb',
                   transition: 'all 0.3s ease',
-                  padding: (isRecording || isPreviewing) ? '16px' : '12px',
-                  minHeight: (isRecording || isPreviewing) ? '80px' : 'auto'
+                  padding: (isRecording || isPreviewing) ? '8px 12px' : '12px',
+                  minHeight: (isRecording || isPreviewing) ? '50px' : 'auto'
                 }}>
                   {(isRecording || isPreviewing) ? (
-                    /* Mode Enregistrement / Preview */
+                    /* Mode Enregistrement / Preview - Style Teams compact */
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
-                      gap: '12px',
+                      gap: '10px',
                       width: '100%'
                     }}>
-                      {/* Bouton Annuler */}
+                      {/* Bouton Annuler compact */}
                       <button
                         onClick={cancelVoiceNote}
                         style={{
-                          background: 'rgba(239, 68, 68, 0.9)',
+                          background: 'transparent',
                           border: 'none',
-                          borderRadius: '50%',
-                          width: '40px',
-                          height: '40px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          color: '#fff',
                           cursor: 'pointer',
                           fontSize: '18px',
-                          transition: 'all 0.2s ease',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          padding: '4px',
+                          opacity: 0.9,
+                          transition: 'opacity 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
                         title="Annuler"
                       >
                         ✕
                       </button>
 
-                      {/* Icône Micro avec animation pulse */}
-                      {isRecording && (
+                      {/* Icône Micro/Play compact */}
+                      {isRecording ? (
                         <div style={{
-                          background: 'rgba(255, 255, 255, 0.95)',
+                          background: '#e53935',
                           borderRadius: '50%',
-                          width: '48px',
-                          height: '48px',
+                          width: '28px',
+                          height: '28px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                          boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)'
+                          animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                         }}>
-                          <span style={{ fontSize: '24px' }}>🎤</span>
+                          <span style={{ fontSize: '14px' }}>🎤</span>
                         </div>
-                      )}
-
-                      {/* Play/Pause pour preview */}
-                      {isPreviewing && (
+                      ) : (
                         <button
                           onClick={togglePlayPause}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            border: 'none',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
                             borderRadius: '50%',
-                            width: '48px',
-                            height: '48px',
+                            width: '28px',
+                            height: '28px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            fontSize: '20px',
+                            fontSize: '12px',
                             transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                            color: '#fff'
                           }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
                           title={isPlaying ? 'Pause' : 'Lire'}
                         >
-                          {isPlaying ? '⏸️' : '▶️'}
+                          {isPlaying ? '⏸' : '▶'}
                         </button>
                       )}
 
-                      {/* Waveform Animation */}
+                      {/* Waveform Animation compacte */}
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '3px',
+                        gap: '2px',
                         flex: 1,
-                        height: '40px',
-                        justifyContent: 'center'
+                        height: '24px'
                       }}>
-                        {[...Array(24)].map((_, i) => (
+                        {[...Array(18)].map((_, i) => (
                           <div
                             key={i}
                             style={{
-                              width: '3px',
-                              background: 'rgba(255, 255, 255, 0.8)',
-                              borderRadius: '2px',
-                              height: `${20 + Math.random() * 20}px`,
+                              width: '2px',
+                              background: 'rgba(255, 255, 255, 0.7)',
+                              borderRadius: '1px',
+                              height: `${8 + Math.random() * 12}px`,
                               animation: isRecording 
                                 ? `wave 1s ease-in-out infinite ${i * 0.05}s`
                                 : 'none',
@@ -1051,15 +1046,15 @@ export const UnifiedChatPanel: React.FC = () => {
                         ))}
                       </div>
 
-                      {/* Timer */}
+                      {/* Timer compact */}
                       <div style={{
                         color: '#fff',
-                        fontSize: '16px',
-                        fontWeight: '600',
+                        fontSize: '13px',
+                        fontWeight: '500',
                         fontFamily: 'monospace',
-                        minWidth: '50px',
+                        minWidth: '42px',
                         textAlign: 'center',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        opacity: 0.95
                       }}>
                         {isRecording 
                           ? `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`
@@ -1067,48 +1062,52 @@ export const UnifiedChatPanel: React.FC = () => {
                         }
                       </div>
 
-                      {/* Bouton Stop (enregistrement) ou Send (preview) */}
+                      {/* Bouton Stop (enregistrement) ou Send (preview) - compact */}
                       {isRecording ? (
                         <button
                           onClick={stopRecording}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            border: 'none',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
                             borderRadius: '50%',
-                            width: '48px',
-                            height: '48px',
+                            width: '32px',
+                            height: '32px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            fontSize: '20px',
+                            fontSize: '14px',
                             transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                            color: '#fff'
                           }}
-                          title="Arrêter l'enregistrement"
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                          title="Arrêter"
                         >
-                          ⏹️
+                          ⏹
                         </button>
                       ) : (
                         <button
                           onClick={sendVoiceNote}
                           style={{
-                            background: 'rgba(16, 185, 129, 0.95)',
+                            background: '#10b981',
                             border: 'none',
-                            borderRadius: '50%',
-                            width: '48px',
-                            height: '48px',
+                            borderRadius: '6px',
+                            padding: '6px 12px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            fontSize: '20px',
+                            fontSize: '13px',
+                            fontWeight: '600',
                             transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                            color: '#fff'
                           }}
-                          title="Envoyer la note vocale"
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+                          title="Envoyer"
                         >
-                          ✅
+                          Envoyer
                         </button>
                       )}
                     </div>
