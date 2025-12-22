@@ -26,14 +26,22 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
           ? attachment.downloadUrl 
           : `${API_URL}${attachment.downloadUrl}`;
 
+        console.log('[AudioPlayer] Tentative téléchargement:', url);
+        console.log('[AudioPlayer] Token présent:', !!token);
+        console.log('[AudioPlayer] Attachment ID:', attachment.id);
+
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
+        console.log('[AudioPlayer] Response status:', response.status);
+        console.log('[AudioPlayer] Response headers:', Object.fromEntries(response.headers.entries()));
+
         if (!response.ok) {
           console.error('Erreur téléchargement audio:', response.status);
+          console.error('Response text:', await response.text());
           return;
         }
 
