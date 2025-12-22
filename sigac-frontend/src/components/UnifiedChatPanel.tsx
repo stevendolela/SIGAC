@@ -79,11 +79,19 @@ export const UnifiedChatPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [previewTime, setPreviewTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string>('');
   const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<number | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Charger le statut de l'utilisateur
   useEffect(() => {
@@ -374,7 +382,121 @@ export const UnifiedChatPanel: React.FC = () => {
     return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Envoyer la note vocale après validation
+  // Démarrer l'enregistrement
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioBlob(audioBlob);
+        setBlobUrl(url);
+        setDuration(recordingTime);
+        setIsPreviewing(true);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Timer
+      recordingIntervalRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Erreur accès microphone:', error);
+      alert('Impossible d\'accéder au microphone');
+    }
+  };
+
+  // Arrêter l'enregistrement
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  // Lecture/Pause du preview
+  const togglePlayPause = () => {
+    if (!previewAudioRef.current) {
+      previewAudioRef.current = new Audio(blobUrl);
+      previewAudioRef.current.ontimeupdate = () => {
+        setPreviewTime(Math.floor(previewAudioRef.current!.currentTime));
+      };
+      previewAudioRef.current.onended = () => {
+        setIsPlaying(false);
+        setPreviewTime(0);
+      };
+    }
+
+    if (isPlaying) {
+      previewAudioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      previewAudioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  // Envoyer la note vocale inline
+  const sendVoiceNote = async () => {
+    if (!audioBlob || !selectedChat) return;
+
+    try {
+      const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: 'audio/webm;codecs=opus' });
+      
+      if (selectedChat.type === 'conversation') {
+        await chatAttachmentApi.uploadAttachment(selectedChat.id, file, true, duration);
+        await refetchConversation();
+      } else {
+        await chatAttachmentApi.uploadGroupAttachment(selectedChat.id, file, true, duration);
+        await refetchGroup();
+      }
+
+      cancelVoiceNote();
+    } catch (error: any) {
+      console.error('Erreur upload:', error);
+      alert(error.response?.data?.message || 'Erreur lors de l\'envoi');
+    }
+  };
+
+  // Annuler l'enregistrement/preview
+  const cancelVoiceNote = () => {
+    if (isRecording) {
+      stopRecording();
+    }
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+    }
+    setIsRecording(false);
+    setIsPreviewing(false);
+    setIsPlaying(false);
+    setRecordingTime(0);
+    setPreviewTime(0);
+    setDuration(0);
+    setAudioBlob(null);
+    setBlobUrl('');
+  };
+
+  // Envoyer la note vocale après validation (ancien système popup)
   const handleSendVoiceNote = async () => {
     if (!voiceNotePreview || !selectedChat) return;
 
@@ -824,143 +946,301 @@ export const UnifiedChatPanel: React.FC = () => {
                   </div>
                 )}
 
-                <div className="message-input-area">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, position: 'relative' }}>
-                    {/* Bouton emoji */}
-                    <button
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        fontSize: '24px',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        transition: 'transform 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                      title="Ajouter un emoji"
-                    >
-                      😊
-                    </button>
-                    
-                    {/* Bouton pièce jointe */}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        fontSize: '22px',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        transition: 'transform 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                      title="Joindre un fichier"
-                    >
-                      📎
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      onChange={handleFileUpload}
-                      style={{ display: 'none' }}
-                      accept="image/*,.pdf,.doc,.docx,.txt"
-                    />
-                    
-                    {/* Bouton note vocale */}
-                    <button
-                      onClick={toggleRecording}
-                      style={{
-                        background: isRecording ? '#ef4444' : 'transparent',
-                        border: isRecording ? '2px solid #dc2626' : 'none',
-                        borderRadius: '50%',
-                        fontSize: '22px',
-                        cursor: 'pointer',
-                        padding: '6px',
-                        transition: 'all 0.2s ease',
-                        animation: isRecording ? 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isRecording) e.currentTarget.style.transform = 'scale(1.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isRecording) e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                      title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer une note vocale"}
-                    >
-                      🎤
-                    </button>
-                    
-                    <input
-                      type="text"
-                      placeholder="Votre message..."
-                      value={messageInput}
-                      onChange={e => setMessageInput(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      style={{ flex: 1 }}
-                    />
-                    
-                    {/* Emoji Picker */}
-                    {showEmojiPicker && (
-                      <div
+                <div className="message-input-area" style={{
+                  background: (isRecording || isPreviewing) 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : '#f9fafb',
+                  transition: 'all 0.3s ease',
+                  padding: (isRecording || isPreviewing) ? '16px' : '12px',
+                  minHeight: (isRecording || isPreviewing) ? '80px' : 'auto'
+                }}>
+                  {(isRecording || isPreviewing) ? (
+                    /* Mode Enregistrement / Preview */
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      width: '100%'
+                    }}>
+                      {/* Bouton Annuler */}
+                      <button
+                        onClick={cancelVoiceNote}
                         style={{
-                          position: 'absolute',
-                          bottom: '60px',
-                          left: '0',
-                          background: '#fff',
-                          borderRadius: '12px',
-                          padding: '16px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                          zIndex: 1000,
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(5, 1fr)',
-                          gap: '8px',
-                          maxWidth: '280px',
+                          background: 'rgba(239, 68, 68, 0.9)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '40px',
+                          height: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: '18px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}
+                        title="Annuler"
                       >
-                        <div style={{ gridColumn: '1 / -1', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '14px' }}>
-                          Emojis populaires
+                        ✕
+                      </button>
+
+                      {/* Icône Micro avec animation pulse */}
+                      {isRecording && (
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          borderRadius: '50%',
+                          width: '48px',
+                          height: '48px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                          boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)'
+                        }}>
+                          <span style={{ fontSize: '24px' }}>🎤</span>
                         </div>
-                        {popularEmojis.map((emoji, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => addEmoji(emoji)}
+                      )}
+
+                      {/* Play/Pause pour preview */}
+                      {isPreviewing && (
+                        <button
+                          onClick={togglePlayPause}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '20px',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          }}
+                          title={isPlaying ? 'Pause' : 'Lire'}
+                        >
+                          {isPlaying ? '⏸️' : '▶️'}
+                        </button>
+                      )}
+
+                      {/* Waveform Animation */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        flex: 1,
+                        height: '40px',
+                        justifyContent: 'center'
+                      }}>
+                        {[...Array(24)].map((_, i) => (
+                          <div
+                            key={i}
                             style={{
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '28px',
-                              cursor: 'pointer',
-                              padding: '8px',
-                              borderRadius: '8px',
-                              transition: 'all 0.2s ease',
+                              width: '3px',
+                              background: 'rgba(255, 255, 255, 0.8)',
+                              borderRadius: '2px',
+                              height: `${20 + Math.random() * 20}px`,
+                              animation: isRecording 
+                                ? `wave 1s ease-in-out infinite ${i * 0.05}s`
+                                : 'none',
+                              transition: 'height 0.2s ease'
                             }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = '#f3f4f6';
-                              e.currentTarget.style.transform = 'scale(1.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'transparent';
-                              e.currentTarget.style.transform = 'scale(1)';
-                            }}
-                          >
-                            {emoji}
-                          </button>
+                          />
                         ))}
                       </div>
-                    )}
-                  </div>
-                  
-                  <button onClick={handleSendMessage} disabled={!messageInput.trim()}>
-                    Envoyer
-                  </button>
+
+                      {/* Timer */}
+                      <div style={{
+                        color: '#fff',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        fontFamily: 'monospace',
+                        minWidth: '50px',
+                        textAlign: 'center',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      }}>
+                        {isRecording 
+                          ? `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`
+                          : `${Math.floor(previewTime / 60)}:${(previewTime % 60).toString().padStart(2, '0')}`
+                        }
+                      </div>
+
+                      {/* Bouton Stop (enregistrement) ou Send (preview) */}
+                      {isRecording ? (
+                        <button
+                          onClick={stopRecording}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '20px',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          }}
+                          title="Arrêter l'enregistrement"
+                        >
+                          ⏹️
+                        </button>
+                      ) : (
+                        <button
+                          onClick={sendVoiceNote}
+                          style={{
+                            background: 'rgba(16, 185, 129, 0.95)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '20px',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          }}
+                          title="Envoyer la note vocale"
+                        >
+                          ✅
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    /* Mode Normal - Input classique */
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, position: 'relative' }}>
+                      {/* Bouton emoji */}
+                      <button
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '24px',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          transition: 'transform 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        title="Ajouter un emoji"
+                      >
+                        😊
+                      </button>
+                      
+                      {/* Bouton pièce jointe */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '22px',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          transition: 'transform 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        title="Joindre un fichier"
+                      >
+                        📎
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        accept="image/*,.pdf,.doc,.docx,.txt"
+                      />
+                      
+                      {/* Bouton note vocale */}
+                      <button
+                        onClick={startRecording}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '22px',
+                          cursor: 'pointer',
+                          padding: '6px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        title="Enregistrer une note vocale"
+                      >
+                        🎤
+                      </button>
+                      
+                      <input
+                        type="text"
+                        placeholder="Votre message..."
+                        value={messageInput}
+                        onChange={e => setMessageInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        style={{ flex: 1 }}
+                      />
+                      
+                      {/* Emoji Picker */}
+                      {showEmojiPicker && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: '60px',
+                            left: '0',
+                            background: '#fff',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(5, 1fr)',
+                            gap: '8px',
+                            maxWidth: '280px',
+                          }}
+                        >
+                          <div style={{ gridColumn: '1 / -1', marginBottom: '8px', fontWeight: '600', color: '#374151', fontSize: '14px' }}>
+                            Emojis populaires
+                          </div>
+                          {popularEmojis.map((emoji, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => addEmoji(emoji)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                padding: '8px',
+                                borderRadius: '8px',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f3f4f6';
+                                e.currentTarget.style.transform = 'scale(1.2)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.transform = 'scale(1)';
+                              }}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
