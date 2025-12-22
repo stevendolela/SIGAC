@@ -80,6 +80,7 @@ export const UnifiedChatPanel: React.FC = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
+  const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -337,29 +338,15 @@ export const UnifiedChatPanel: React.FC = () => {
             { type: 'audio/webm' }
           );
           
-          try {
-            // Upload la note vocale
-            if (selectedChat.type === 'conversation') {
-              await chatAttachmentApi.uploadAttachment(
-                selectedChat.id, 
-                audioFile, 
-                true, 
-                durationSeconds
-              );
-              await refetchConversation();
-            } else {
-              await chatAttachmentApi.uploadGroupAttachment(
-                selectedChat.id, 
-                audioFile, 
-                true, 
-                durationSeconds
-              );
-              await refetchGroup();
-            }
-          } catch (error: any) {
-            console.error('Erreur upload note vocale:', error);
-            alert(error.response?.data?.message || 'Erreur lors de l\'envoi de la note vocale');
-          }
+          // Créer une URL de preview
+          const blobUrl = URL.createObjectURL(audioBlob);
+          
+          // Afficher le preview au lieu d'envoyer directement
+          setVoiceNotePreview({
+            file: audioFile,
+            duration: durationSeconds,
+            blobUrl: blobUrl
+          });
           
           // Arrêter le stream
           stream.getTracks().forEach(track => track.stop());
@@ -386,6 +373,46 @@ export const UnifiedChatPanel: React.FC = () => {
     if (!searchQuery) return true;
     return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  // Envoyer la note vocale après validation
+  const handleSendVoiceNote = async () => {
+    if (!voiceNotePreview || !selectedChat) return;
+
+    try {
+      if (selectedChat.type === 'conversation') {
+        await chatAttachmentApi.uploadAttachment(
+          selectedChat.id, 
+          voiceNotePreview.file, 
+          true, 
+          voiceNotePreview.duration
+        );
+        await refetchConversation();
+      } else {
+        await chatAttachmentApi.uploadGroupAttachment(
+          selectedChat.id, 
+          voiceNotePreview.file, 
+          true, 
+          voiceNotePreview.duration
+        );
+        await refetchGroup();
+      }
+      
+      // Nettoyer le preview
+      URL.revokeObjectURL(voiceNotePreview.blobUrl);
+      setVoiceNotePreview(null);
+    } catch (error: any) {
+      console.error('Erreur upload note vocale:', error);
+      alert(error.response?.data?.message || 'Erreur lors de l\'envoi de la note vocale');
+    }
+  };
+
+  // Supprimer le preview
+  const handleCancelVoiceNote = () => {
+    if (voiceNotePreview) {
+      URL.revokeObjectURL(voiceNotePreview.blobUrl);
+      setVoiceNotePreview(null);
+    }
+  };
 
   return (
     <div className="unified-chat-panel">
@@ -686,6 +713,116 @@ export const UnifiedChatPanel: React.FC = () => {
                     </>
                   )}
                 </div>
+
+                {/* Preview de la note vocale avant envoi */}
+                {voiceNotePreview && (
+                  <div style={{
+                    padding: '16px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderTop: '1px solid #e5e7eb',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                  }}>
+                    <div style={{ 
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      🎤 Prévisualisation de votre note vocale
+                    </div>
+                    
+                    {/* Player audio pour le preview */}
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <audio 
+                        controls 
+                        src={voiceNotePreview.blobUrl}
+                        style={{
+                          width: '100%',
+                          height: '40px',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </div>
+
+                    {/* Boutons d'action */}
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '8px',
+                      justifyContent: 'flex-end'
+                    }}>
+                      <button
+                        onClick={handleCancelVoiceNote}
+                        style={{
+                          padding: '10px 20px',
+                          background: 'rgba(239, 68, 68, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.9)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                        }}
+                      >
+                        🗑️ Supprimer
+                      </button>
+                      
+                      <button
+                        onClick={handleSendVoiceNote}
+                        style={{
+                          padding: '10px 20px',
+                          background: 'rgba(16, 185, 129, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(5, 150, 105, 0.9)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.9)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                        }}
+                      >
+                        ✅ Envoyer
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="message-input-area">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, position: 'relative' }}>
