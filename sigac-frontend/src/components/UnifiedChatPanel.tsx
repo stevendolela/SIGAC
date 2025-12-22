@@ -7,6 +7,7 @@ import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
 import StatusSelector from './StatusSelector';
 import { AudioPlayer } from './AudioPlayer';
+import { VoiceRecorder } from './VoiceRecorder';
 import '../styles/unified-chat.css';
 
 type ChatTab = 'conversations' | 'groups';
@@ -78,9 +79,7 @@ export const UnifiedChatPanel: React.FC = () => {
   const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
   const [searchQuery, setSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
-  const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -295,71 +294,47 @@ export const UnifiedChatPanel: React.FC = () => {
     }
   };
   
-  // Fonction pour démarrer/arrêter l'enregistrement audio
-  const toggleRecording = async () => {
+  // Ouvrir le composant VoiceRecorder
+  const handleStartVoiceRecording = () => {
     if (!selectedChat) {
       alert('Veuillez sélectionner une conversation');
       return;
     }
+    setShowVoiceRecorder(true);
+  };
 
-    if (isRecording) {
-      // Arrêter l'enregistrement
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+  // Envoyer la note vocale
+  const handleSendVoiceNote = async (audioFile: File, durationSeconds: number) => {
+    if (!selectedChat) return;
+
+    try {
+      if (selectedChat.type === 'conversation') {
+        await chatAttachmentApi.uploadAttachment(
+          selectedChat.id,
+          audioFile,
+          true,
+          durationSeconds
+        );
+        await refetchConversation();
+      } else {
+        await chatAttachmentApi.uploadGroupAttachment(
+          selectedChat.id,
+          audioFile,
+          true,
+          durationSeconds
+        );
+        await refetchGroup();
       }
-      setIsRecording(false);
-    } else {
-      // Démarrer l'enregistrement
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // Créer MediaRecorder avec format WebM
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'audio/webm;codecs=opus'
-        });
-        
-        audioChunksRef.current = [];
-        setRecordingStartTime(Date.now());
-        
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-        
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          const durationSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
-          
-          // Créer un File object
-          const audioFile = new File(
-            [audioBlob], 
-            `voice-note-${Date.now()}.webm`, 
-            { type: 'audio/webm' }
-          );
-          
-          // Créer une URL de preview
-          const blobUrl = URL.createObjectURL(audioBlob);
-          
-          // Afficher le preview au lieu d'envoyer directement
-          setVoiceNotePreview({
-            file: audioFile,
-            duration: durationSeconds,
-            blobUrl: blobUrl
-          });
-          
-          // Arrêter le stream
-          stream.getTracks().forEach(track => track.stop());
-        };
-        
-        mediaRecorderRef.current = mediaRecorder;
-        mediaRecorder.start();
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Erreur microphone:', error);
-        alert('Impossible d\'accéder au microphone. Vérifiez les permissions.');
-      }
+      setShowVoiceRecorder(false);
+    } catch (error: any) {
+      console.error('Erreur upload note vocale:', error);
+      alert(error.response?.data?.message || 'Erreur lors de l\'envoi de la note vocale');
     }
+  };
+
+  // Annuler l'enregistrement
+  const handleCancelVoiceNote = () => {
+    setShowVoiceRecorder(false);
   };
   
   // Filtrer les conversations selon la recherche
@@ -373,46 +348,6 @@ export const UnifiedChatPanel: React.FC = () => {
     if (!searchQuery) return true;
     return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
-
-  // Envoyer la note vocale après validation
-  const handleSendVoiceNote = async () => {
-    if (!voiceNotePreview || !selectedChat) return;
-
-    try {
-      if (selectedChat.type === 'conversation') {
-        await chatAttachmentApi.uploadAttachment(
-          selectedChat.id, 
-          voiceNotePreview.file, 
-          true, 
-          voiceNotePreview.duration
-        );
-        await refetchConversation();
-      } else {
-        await chatAttachmentApi.uploadGroupAttachment(
-          selectedChat.id, 
-          voiceNotePreview.file, 
-          true, 
-          voiceNotePreview.duration
-        );
-        await refetchGroup();
-      }
-      
-      // Nettoyer le preview
-      URL.revokeObjectURL(voiceNotePreview.blobUrl);
-      setVoiceNotePreview(null);
-    } catch (error: any) {
-      console.error('Erreur upload note vocale:', error);
-      alert(error.response?.data?.message || 'Erreur lors de l\'envoi de la note vocale');
-    }
-  };
-
-  // Supprimer le preview
-  const handleCancelVoiceNote = () => {
-    if (voiceNotePreview) {
-      URL.revokeObjectURL(voiceNotePreview.blobUrl);
-      setVoiceNotePreview(null);
-    }
-  };
 
   return (
     <div className="unified-chat-panel">
@@ -714,116 +649,6 @@ export const UnifiedChatPanel: React.FC = () => {
                   )}
                 </div>
 
-                {/* Preview de la note vocale avant envoi */}
-                {voiceNotePreview && (
-                  <div style={{
-                    padding: '16px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    borderTop: '1px solid #e5e7eb',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px'
-                  }}>
-                    <div style={{ 
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      🎤 Prévisualisation de votre note vocale
-                    </div>
-                    
-                    {/* Player audio pour le preview */}
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '12px',
-                      backdropFilter: 'blur(10px)'
-                    }}>
-                      <audio 
-                        controls 
-                        src={voiceNotePreview.blobUrl}
-                        style={{
-                          width: '100%',
-                          height: '40px',
-                          borderRadius: '8px'
-                        }}
-                      />
-                    </div>
-
-                    {/* Boutons d'action */}
-                    <div style={{ 
-                      display: 'flex', 
-                      gap: '8px',
-                      justifyContent: 'flex-end'
-                    }}>
-                      <button
-                        onClick={handleCancelVoiceNote}
-                        style={{
-                          padding: '10px 20px',
-                          background: 'rgba(239, 68, 68, 0.9)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          transition: 'all 0.2s ease',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(220, 38, 38, 0.9)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.9)';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-                        }}
-                      >
-                        🗑️ Supprimer
-                      </button>
-                      
-                      <button
-                        onClick={handleSendVoiceNote}
-                        style={{
-                          padding: '10px 20px',
-                          background: 'rgba(16, 185, 129, 0.9)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          transition: 'all 0.2s ease',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(5, 150, 105, 0.9)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.9)';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-                        }}
-                      >
-                        ✅ Envoyer
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="message-input-area">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, position: 'relative' }}>
                     {/* Bouton emoji */}
@@ -870,28 +695,22 @@ export const UnifiedChatPanel: React.FC = () => {
                       accept="image/*,.pdf,.doc,.docx,.txt"
                     />
                     
-                    {/* Bouton note vocale */}
+                    {/* Bouton note vocale - Style WhatsApp */}
                     <button
-                      onClick={toggleRecording}
+                      onClick={handleStartVoiceRecording}
                       style={{
-                        background: isRecording ? '#ef4444' : 'transparent',
-                        border: isRecording ? '2px solid #dc2626' : 'none',
-                        borderRadius: '50%',
+                        background: 'transparent',
+                        border: 'none',
                         fontSize: '22px',
                         cursor: 'pointer',
                         padding: '6px',
                         transition: 'all 0.2s ease',
-                        animation: isRecording ? 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
                       }}
-                      onMouseEnter={(e) => {
-                        if (!isRecording) e.currentTarget.style.transform = 'scale(1.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isRecording) e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                      title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer une note vocale"}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      title="Enregistrer une note vocale"
                     >
-                      🎤
+                      🎙️
                     </button>
                     
                     <input
@@ -979,6 +798,14 @@ export const UnifiedChatPanel: React.FC = () => {
         onClose={() => setIsCreateGroupModalOpen(false)}
         onGroupCreated={handleGroupCreated}
       />
+
+      {/* Composant d'enregistrement de note vocale */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onSend={handleSendVoiceNote}
+          onCancel={handleCancelVoiceNote}
+        />
+      )}
     </div>
   );
 };
