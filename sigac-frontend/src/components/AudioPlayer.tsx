@@ -5,7 +5,7 @@ interface AudioPlayerProps {
   attachment: ChatAttachmentDto;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api';
 
 /**
  * Composant de lecture audio pour notes vocales - Style moderne avec couleurs du site
@@ -22,9 +22,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
     const fetchAudio = async () => {
       try {
         const token = localStorage.getItem('token');
-        const url = attachment.downloadUrl.startsWith('http') 
-          ? attachment.downloadUrl 
-          : `${API_URL}${attachment.downloadUrl}`;
+        // Le downloadUrl du backend commence par /api/, donc on l'enlève pour éviter le double
+        const cleanDownloadUrl = attachment.downloadUrl.replace(/^\/api/, '');
+        const url = cleanDownloadUrl.startsWith('http') 
+          ? cleanDownloadUrl 
+          : `${API_URL}${cleanDownloadUrl}`;
 
         console.log('[AudioPlayer] Tentative téléchargement:', url);
         console.log('[AudioPlayer] Token présent:', !!token);
