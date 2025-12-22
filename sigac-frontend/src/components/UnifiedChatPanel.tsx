@@ -387,7 +387,15 @@ export const UnifiedChatPanel: React.FC = () => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      
+      // Essayer webm sans codec spécifique pour compatibilité backend
+      let mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        // Fallback sur ogg si webm non supporté
+        mimeType = 'audio/ogg';
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -396,7 +404,7 @@ export const UnifiedChatPanel: React.FC = () => {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(audioBlob);
         
         // Utiliser la ref pour avoir la durée correcte
@@ -471,8 +479,9 @@ export const UnifiedChatPanel: React.FC = () => {
         chatType: selectedChat.type
       });
 
+      // Créer le fichier avec le même MIME type que le blob
       const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { 
-        type: 'audio/webm;codecs=opus' 
+        type: audioBlob.type // Utiliser le type du blob (audio/webm ou audio/ogg)
       });
       
       console.log('File créé:', {
