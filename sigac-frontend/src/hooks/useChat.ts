@@ -16,7 +16,24 @@ export function useChatConversations() {
       }
       const data = await chatApi.getConversations();
       // S'assurer que data est un tableau
-      setConversations(Array.isArray(data) ? data : []);
+      const dataArray = Array.isArray(data) ? data : [];
+      
+      // Ne mettre à jour que si les données ont vraiment changé
+      setConversations(prev => {
+        if (prev.length !== dataArray.length) return dataArray;
+        
+        // Comparer les IDs et lastMessageTime pour détecter les vrais changements
+        const hasChanged = dataArray.some((conv, idx) => {
+          const prevConv = prev[idx];
+          return !prevConv || 
+                 prevConv.id !== conv.id || 
+                 prevConv.lastMessageTime !== conv.lastMessageTime ||
+                 prevConv.unreadCount !== conv.unreadCount;
+        });
+        
+        return hasChanged ? dataArray : prev;
+      });
+      
       setError(null);
       if (isInitialLoad) {
         setIsInitialLoad(false);
@@ -72,12 +89,22 @@ export function useChatConversation(conversationId: string | null) {
       
       // Comparer avec les données existantes pour éviter re-render inutile
       setConversation(prev => {
-        const prevJson = JSON.stringify(prev?.messages || []);
-        const newJson = JSON.stringify(data?.messages || []);
-        // Ne mettre à jour que si les messages ont vraiment changé
-        if (prevJson !== newJson) {
-          return data;
-        }
+        if (!prev) return data;
+        if (!data) return prev;
+        
+        // Comparer uniquement le nombre de messages et l'ID du dernier
+        const prevMessages = prev.messages || [];
+        const newMessages = data.messages || [];
+        
+        if (prevMessages.length !== newMessages.length) return data;
+        if (prevMessages.length === 0) return prev;
+        
+        const lastPrevMsg = prevMessages[prevMessages.length - 1];
+        const lastNewMsg = newMessages[newMessages.length - 1];
+        
+        // Si l'ID du dernier message est différent, il y a un nouveau message
+        if (lastPrevMsg?.id !== lastNewMsg?.id) return data;
+        
         return prev;
       });
       
@@ -147,7 +174,24 @@ export function useChatGroups() {
       }
       const data = await chatApi.getGroups();
       // S'assurer que data est un tableau
-      setGroups(Array.isArray(data) ? data : []);
+      const dataArray = Array.isArray(data) ? data : [];
+      
+      // Ne mettre à jour que si les données ont vraiment changé
+      setGroups(prev => {
+        if (prev.length !== dataArray.length) return dataArray;
+        
+        // Comparer les IDs et lastMessageTime
+        const hasChanged = dataArray.some((grp, idx) => {
+          const prevGrp = prev[idx];
+          return !prevGrp || 
+                 prevGrp.id !== grp.id || 
+                 prevGrp.lastMessageTime !== grp.lastMessageTime ||
+                 prevGrp.unreadCount !== grp.unreadCount;
+        });
+        
+        return hasChanged ? dataArray : prev;
+      });
+      
       setError(null);
       if (isInitialLoad) {
         setIsInitialLoad(false);
@@ -203,12 +247,22 @@ export function useChatGroup(groupId: string | null) {
       
       // Comparer avec les données existantes pour éviter re-render inutile
       setGroup(prev => {
-        const prevJson = JSON.stringify(prev?.messages || []);
-        const newJson = JSON.stringify(data?.messages || []);
-        // Ne mettre à jour que si les messages ont vraiment changé
-        if (prevJson !== newJson) {
-          return data;
-        }
+        if (!prev) return data;
+        if (!data) return prev;
+        
+        // Comparer uniquement le nombre de messages et l'ID du dernier
+        const prevMessages = prev.messages || [];
+        const newMessages = data.messages || [];
+        
+        if (prevMessages.length !== newMessages.length) return data;
+        if (prevMessages.length === 0) return prev;
+        
+        const lastPrevMsg = prevMessages[prevMessages.length - 1];
+        const lastNewMsg = newMessages[newMessages.length - 1];
+        
+        // Si l'ID du dernier message est différent, il y a un nouveau message
+        if (lastPrevMsg?.id !== lastNewMsg?.id) return data;
+        
         return prev;
       });
       

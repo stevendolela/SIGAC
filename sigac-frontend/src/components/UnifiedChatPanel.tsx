@@ -799,17 +799,21 @@ export const UnifiedChatPanel: React.FC = () => {
     }
   };
   
-  // Filtrer les conversations selon la recherche
-  const filteredConversations = conversations.filter(conv => {
-    if (!searchQuery) return true;
-    const otherUserName = getOtherUserName(conv).toLowerCase();
-    return otherUserName.includes(searchQuery.toLowerCase());
-  });
+  // Filtrer les conversations selon la recherche (mémorisé pour éviter recalcul)
+  const filteredConversations = useMemo(() => {
+    return conversations.filter(conv => {
+      if (!searchQuery) return true;
+      const otherUserName = getOtherUserName(conv).toLowerCase();
+      return otherUserName.includes(searchQuery.toLowerCase());
+    });
+  }, [conversations, searchQuery]);
   
-  const filteredGroups = groups.filter(grp => {
-    if (!searchQuery) return true;
-    return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredGroups = useMemo(() => {
+    return groups.filter(grp => {
+      if (!searchQuery) return true;
+      return grp.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [groups, searchQuery]);
 
   // Démarrer l'enregistrement
   const startRecording = async () => {
