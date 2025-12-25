@@ -537,6 +537,62 @@ export const UnifiedChatPanel: React.FC = () => {
     setBlobUrl('');
   };
 
+  // Télécharger une pièce jointe
+  const handleDownloadAttachment = async (attachmentId: string, fileName: string) => {
+    try {
+      const blob = await chatAttachmentApi.downloadAttachment(attachmentId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur téléchargement:', error);
+      alert('Erreur lors du téléchargement du fichier');
+    }
+  };
+
+  // Obtenir l'icône selon l'extension du fichier
+  const getFileIcon = (fileName: string, mimeType: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    
+    // Images
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) return '🖼️';
+    
+    // Documents PDF
+    if (ext === 'pdf') return '📕';
+    
+    // Word
+    if (['doc', 'docx'].includes(ext || '')) return '📘';
+    
+    // Excel
+    if (['xls', 'xlsx', 'csv'].includes(ext || '')) return '📊';
+    
+    // PowerPoint
+    if (['ppt', 'pptx'].includes(ext || '')) return '📙';
+    
+    // Archives
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext || '')) return '🗜️';
+    
+    // Code
+    if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'cs', 'php', 'html', 'css'].includes(ext || '')) return '💻';
+    
+    // Audio
+    if (['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext || '') || mimeType.startsWith('audio/')) return '🎵';
+    
+    // Vidéo
+    if (['mp4', 'avi', 'mkv', 'mov', 'webm'].includes(ext || '') || mimeType.startsWith('video/')) return '🎬';
+    
+    // Texte
+    if (['txt', 'md', 'log'].includes(ext || '')) return '📝';
+    
+    // Par défaut
+    return '📎';
+  };
+
   // Envoyer la note vocale après validation (ancien système popup)
   const handleSendVoiceNote = async () => {
     if (!voiceNotePreview || !selectedChat) return;
@@ -827,7 +883,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                       background: '#fff'
                                     }}>
                                       <img 
-                                        src={attachment.downloadUrl} 
+                                        src={chatAttachmentApi.getDownloadUrl(attachment.id)} 
                                         alt={attachment.fileName}
                                         style={{
                                           width: '100%',
@@ -835,7 +891,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                           display: 'block',
                                           cursor: 'pointer'
                                         }}
-                                        onClick={() => window.open(attachment.downloadUrl, '_blank')}
+                                        onClick={() => window.open(chatAttachmentApi.getDownloadUrl(attachment.id), '_blank')}
                                         title="Cliquer pour agrandir"
                                       />
                                       <div style={{
@@ -852,26 +908,32 @@ export const UnifiedChatPanel: React.FC = () => {
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis',
                                           whiteSpace: 'nowrap',
-                                          flex: 1
+                                          flex: 1,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '4px'
                                         }}>
-                                          {attachment.fileName}
+                                          <span>{getFileIcon(attachment.fileName, attachment.mimeType)}</span>
+                                          <span>{attachment.fileName}</span>
                                         </div>
-                                        <a
-                                          href={attachment.downloadUrl}
-                                          download={attachment.fileName}
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadAttachment(attachment.id, attachment.fileName);
+                                          }}
                                           style={{
                                             padding: '4px 8px',
                                             background: '#3b82f6',
                                             color: 'white',
                                             borderRadius: '4px',
-                                            textDecoration: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
                                             fontSize: '12px',
                                             marginLeft: '8px'
                                           }}
-                                          onClick={(e) => e.stopPropagation()}
                                         >
                                           ⬇️
-                                        </a>
+                                        </button>
                                       </div>
                                     </div>
                                   ) : (
@@ -899,22 +961,20 @@ export const UnifiedChatPanel: React.FC = () => {
                                       }}
                                     >
                                       <div style={{
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '44px',
+                                        height: '44px',
                                         borderRadius: '8px',
                                         background: 
-                                          attachment.fileType === 'Document' ? '#ef4444' :
-                                          attachment.fileType === 'Audio' ? '#8b5cf6' :
-                                          attachment.fileType === 'Video' ? '#f59e0b' : '#6b7280',
+                                          attachment.fileType === 'Document' ? '#fee2e2' :
+                                          attachment.fileType === 'Audio' ? '#ede9fe' :
+                                          attachment.fileType === 'Video' ? '#fef3c7' : '#f3f4f6',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        fontSize: '20px',
+                                        fontSize: '24px',
                                         flexShrink: 0
                                       }}>
-                                        {attachment.fileType === 'Document' ? '📄' : 
-                                         attachment.fileType === 'Audio' ? '🎵' : 
-                                         attachment.fileType === 'Video' ? '🎬' : '📎'}
+                                        {getFileIcon(attachment.fileName, attachment.mimeType)}
                                       </div>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ 
@@ -943,21 +1003,26 @@ export const UnifiedChatPanel: React.FC = () => {
                                           )}
                                         </div>
                                       </div>
-                                      <a
-                                        href={attachment.downloadUrl}
-                                        download={attachment.fileName}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDownloadAttachment(attachment.id, attachment.fileName);
+                                        }}
                                         style={{
-                                          padding: '8px 12px',
+                                          padding: '8px 14px',
                                           background: '#3b82f6',
                                           color: 'white',
                                           borderRadius: '6px',
-                                          textDecoration: 'none',
+                                          border: 'none',
+                                          cursor: 'pointer',
                                           fontSize: '12px',
                                           fontWeight: '500',
                                           flexShrink: 0,
-                                          transition: 'all 0.2s ease'
+                                          transition: 'all 0.2s ease',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '4px'
                                         }}
-                                        onClick={(e) => e.stopPropagation()}
                                         onMouseEnter={(e) => {
                                           e.currentTarget.style.background = '#2563eb';
                                           e.currentTarget.style.transform = 'scale(1.05)';
@@ -968,7 +1033,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                         }}
                                       >
                                         ⬇️ Télécharger
-                                      </a>
+                                      </button>
                                     </div>
                                   )}
                                 </div>
