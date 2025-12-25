@@ -82,6 +82,7 @@ export const UnifiedChatPanel: React.FC = () => {
   }> = ({ attachmentId, fileName, onImageClick, onDownload, onDelete, getFileIcon, mimeType }) => {
     const [imgSrc, setImgSrc] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
       let mounted = true;
@@ -125,13 +126,18 @@ export const UnifiedChatPanel: React.FC = () => {
     }
 
     return (
-      <div style={{
-        maxWidth: '300px',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        background: '#fff'
-      }}>
+      <div 
+        style={{
+          maxWidth: '300px',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          background: '#fff',
+          position: 'relative'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {imgSrc && (
           <img 
             src={imgSrc} 
@@ -148,15 +154,21 @@ export const UnifiedChatPanel: React.FC = () => {
         )}
         <div style={{
           padding: '8px 12px',
-          background: '#f9fafb',
+          background: 'rgba(0, 0, 0, 0.7)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderTop: '1px solid #e5e7eb'
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          pointerEvents: isHovered ? 'auto' : 'none'
         }}>
           <div style={{ 
             fontSize: '12px', 
-            color: '#6b7280',
+            color: '#fff',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -1090,30 +1102,36 @@ export const UnifiedChatPanel: React.FC = () => {
                                     />
                                   ) : (
                                     /* Documents et autres fichiers */
-                                    <div
-                                      onClick={() => openFilePreview(attachment)}
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '12px',
-                                        background: '#f9fafb',
-                                        border: '1px solid #e5e7eb',
-                                        borderRadius: '10px',
-                                        maxWidth: '320px',
-                                        transition: 'all 0.2s ease',
-                                        cursor: 'pointer'
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = '#f3f4f6';
-                                        e.currentTarget.style.borderColor = '#d1d5db';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = '#f9fafb';
-                                        e.currentTarget.style.borderColor = '#e5e7eb';
-                                      }}
-                                      title="Cliquer pour visualiser"
-                                    >
+                                    (() => {
+                                      const [docHovered, setDocHovered] = React.useState(false);
+                                      return (
+                                        <div
+                                          onClick={() => openFilePreview(attachment)}
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '12px',
+                                            background: '#f9fafb',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '10px',
+                                            maxWidth: '320px',
+                                            transition: 'all 0.2s ease',
+                                            cursor: 'pointer',
+                                            position: 'relative'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = '#f3f4f6';
+                                            e.currentTarget.style.borderColor = '#d1d5db';
+                                            setDocHovered(true);
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = '#f9fafb';
+                                            e.currentTarget.style.borderColor = '#e5e7eb';
+                                            setDocHovered(false);
+                                          }}
+                                          title="Cliquer pour visualiser"
+                                        >
                                       <div style={{
                                         width: '44px',
                                         height: '44px',
@@ -1157,6 +1175,13 @@ export const UnifiedChatPanel: React.FC = () => {
                                           )}
                                         </div>
                                       </div>
+                                      <div style={{
+                                        display: 'flex',
+                                        gap: '8px',
+                                        opacity: docHovered ? 1 : 0,
+                                        transition: 'opacity 0.2s ease-in-out',
+                                        pointerEvents: docHovered ? 'auto' : 'none'
+                                      }}>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1217,7 +1242,10 @@ export const UnifiedChatPanel: React.FC = () => {
                                       >
                                         🗑️
                                       </button>
+                                      </div>
                                     </div>
+                                      );
+                                    })()
                                   )}
                                 </div>
                               ))}
