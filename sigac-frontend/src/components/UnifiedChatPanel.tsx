@@ -452,6 +452,12 @@ export const UnifiedChatPanel: React.FC = () => {
     );
   };
 
+// Composant isolé pour le badge unread (évite re-render du panel principal)
+const UnreadBadge: React.FC = React.memo(() => {
+  const { unreadCount } = useUnreadCount();
+  return unreadCount > 0 ? <span className="unread-badge">{unreadCount}</span> : null;
+});
+
   const [activeTab, setActiveTab] = useState<ChatTab>('conversations');
   const [selectedChat, setSelectedChat] = useState<SelectedChat | null>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -471,7 +477,7 @@ export const UnifiedChatPanel: React.FC = () => {
   const [blobUrl, setBlobUrl] = useState<string>('');
   const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
   const [filePreviewModal, setFilePreviewModal] = useState<{ isOpen: boolean; attachment: any | null; blobUrl: string | null }>({ isOpen: false, attachment: null, blobUrl: null });
-  const [imageBlobUrls, setImageBlobUrls] = useState<{ [key: string]: string }>({});
+  const imageBlobUrls = useRef<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -499,8 +505,6 @@ export const UnifiedChatPanel: React.FC = () => {
   const { group, loading: groupDetailLoading, refetch: refetchGroup } = useChatGroup(
     selectedChat?.type === 'group' ? selectedChat.id : null
   );
-
-  const { unreadCount } = useUnreadCount();
 
   // Refs pour le scroll
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1087,12 +1091,12 @@ export const UnifiedChatPanel: React.FC = () => {
 
   // Charger l'image en blob pour l'affichage avec authentification
   const loadImageBlob = async (attachmentId: string) => {
-    if (imageBlobUrls[attachmentId]) return imageBlobUrls[attachmentId];
+    if (imageBlobUrls.current[attachmentId]) return imageBlobUrls.current[attachmentId];
     
     try {
       const blob = await chatAttachmentApi.downloadAttachment(attachmentId);
       const url = URL.createObjectURL(blob);
-      setImageBlobUrls(prev => ({ ...prev, [attachmentId]: url }));
+      imageBlobUrls.current[attachmentId] = url;
       return url;
     } catch (error) {
       console.error('Erreur chargement image:', error);
@@ -1196,7 +1200,7 @@ export const UnifiedChatPanel: React.FC = () => {
         title="Ouvrir/Fermer le chat"
       >
         💬
-        {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
+        <UnreadBadge />
       </button>
 
       {/* Panel principal */}
