@@ -7,6 +7,9 @@ interface AudioPlayerProps {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://sigac-api.onrender.com/api';
 
+// Cache global pour les blobs audio (évite les re-téléchargements)
+const audioBlobCache = new Map<string, string>();
+
 /**
  * Composant de lecture audio pour notes vocales - Style moderne avec couleurs du site
  */
@@ -17,8 +20,15 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
   const [blobUrl, setBlobUrl] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Télécharger le fichier audio avec authentification
+  // Télécharger le fichier audio avec authentification (avec cache)
   useEffect(() => {
+    // Vérifier si déjà en cache
+    const cachedUrl = audioBlobCache.get(attachment.id);
+    if (cachedUrl) {
+      setBlobUrl(cachedUrl);
+      return;
+    }
+
     const fetchAudio = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -28,27 +38,22 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
           ? cleanDownloadUrl 
           : `${API_URL}${cleanDownloadUrl}`;
 
-        console.log('[AudioPlayer] Tentative téléchargement:', url);
-        console.log('[AudioPlayer] Token présent:', !!token);
-        console.log('[AudioPlayer] Attachment ID:', attachment.id);
-
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
-        console.log('[AudioPlayer] Response status:', response.status);
-        console.log('[AudioPlayer] Response headers:', Object.fromEntries(response.headers.entries()));
-
         if (!response.ok) {
           console.error('Erreur téléchargement audio:', response.status);
-          console.error('Response text:', await response.text());
           return;
         }
 
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
+        
+        // Mettre en cache
+        audioBlobCache.set(attachment.id, objectUrl);
         setBlobUrl(objectUrl);
       } catch (err) {
         console.error('Erreur fetch audio:', err);
@@ -57,12 +62,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
 
     fetchAudio();
 
-    return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-  }, [attachment.downloadUrl]);
+    // Ne pas révoquer le blob URL car il est en cache
+  }, [attachment.id]);
 
   useEffect(() => {
     const audio = audioRef.current;
