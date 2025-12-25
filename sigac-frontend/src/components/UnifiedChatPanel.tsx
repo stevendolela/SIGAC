@@ -547,6 +547,61 @@ export const UnifiedChatPanel: React.FC = () => {
     }
   }, [conversation?.messages.length, group?.messages.length, lastMessageCount, selectedChat]);
 
+  // Composant Message mémorisé pour éviter les re-renders
+  const MessageItem = React.memo<{ msg: any }>(({ msg }) => (
+    <div className="message" style={{ willChange: 'auto' }}>
+      <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <StatusIndicator status={msg.senderStatus} />
+        <span>{msg.senderNomComplet || msg.senderUsername}</span>
+      </div>
+      
+      {/* Afficher les pièces jointes */}
+      {msg.attachments && msg.attachments.length > 0 ? (
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {msg.attachments.map((attachment: any) => (
+            <div key={attachment.id}>
+              {attachment.isVoiceNote ? (
+                <VoiceNoteCard 
+                  attachment={attachment}
+                  onDelete={() => handleDeleteAttachment(attachment.id)}
+                />
+              ) : attachment.fileType === 'Image' ? (
+                <ImageWithAuth 
+                  attachmentId={attachment.id}
+                  fileName={attachment.fileName}
+                  onImageClick={() => openFilePreview(attachment)}
+                  onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                  onDelete={() => handleDeleteAttachment(attachment.id)}
+                  getFileIcon={getFileIcon}
+                  mimeType={attachment.mimeType}
+                />
+              ) : (
+                <DocumentCard
+                  attachment={attachment}
+                  onPreview={() => openFilePreview(attachment)}
+                  onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                  onDelete={() => handleDeleteAttachment(attachment.id)}
+                  getFileIcon={getFileIcon}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : msg.content ? (
+        <div className="message-content">{msg.content}</div>
+      ) : null}
+      
+      <div className="message-time">
+        {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
+      </div>
+    </div>
+  ), (prevProps, nextProps) => {
+    // Ne re-render que si le message a réellement changé
+    return prevProps.msg.id === nextProps.msg.id && 
+           prevProps.msg.attachments?.length === nextProps.msg.attachments?.length &&
+           prevProps.msg.content === nextProps.msg.content;
+  });
+
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return;
 
@@ -1295,54 +1350,7 @@ export const UnifiedChatPanel: React.FC = () => {
                   ) : (
                     <>
                       {(selectedChat.type === 'conversation' ? conversation?.messages : group?.messages)?.map(msg => (
-                        <div key={`${msg.id}-${msg.attachments?.length || 0}`} className="message" style={{ willChange: 'auto' }}>
-                          <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <StatusIndicator status={msg.senderStatus} />
-                            <span>{msg.senderNomComplet || msg.senderUsername}</span>
-                          </div>
-                          
-                          {/* Afficher les pièces jointes */}
-                          {msg.attachments && msg.attachments.length > 0 ? (
-                            <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              {msg.attachments.map(attachment => (
-                                <div key={attachment.id}>
-                                  {attachment.isVoiceNote ? (
-                                    <VoiceNoteCard 
-                                      attachment={attachment}
-                                      onDelete={() => handleDeleteAttachment(attachment.id)}
-                                    />
-                                  ) : attachment.fileType === 'Image' ? (
-                                    /* Prévisualisation d'image */
-                                    <ImageWithAuth 
-                                      attachmentId={attachment.id}
-                                      fileName={attachment.fileName}
-                                      onImageClick={() => openFilePreview(attachment)}
-                                      onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
-                                      onDelete={() => handleDeleteAttachment(attachment.id)}
-                                      getFileIcon={getFileIcon}
-                                      mimeType={attachment.mimeType}
-                                    />
-                                  ) : (
-                                    /* Documents et autres fichiers */
-                                    <DocumentCard
-                                      attachment={attachment}
-                                      onPreview={() => openFilePreview(attachment)}
-                                      onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
-                                      onDelete={() => handleDeleteAttachment(attachment.id)}
-                                      getFileIcon={getFileIcon}
-                                    />
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : msg.content ? (
-                            <div className="message-content">{msg.content}</div>
-                          ) : null}
-                          
-                          <div className="message-time">
-                            {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
-                          </div>
-                        </div>
+                        <MessageItem key={msg.id} msg={msg} />
                       ))}
                       <div ref={messagesEndRef} />
                     </>
