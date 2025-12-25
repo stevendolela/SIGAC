@@ -228,12 +228,11 @@ export const UnifiedChatPanel: React.FC = () => {
     );
   };
 
-  // Composant pour afficher une note vocale avec boutons au hover
+  // Composant pour afficher une note vocale avec bouton suppression au hover
   const VoiceNoteCard: React.FC<{
     attachment: any;
-    onDownload: () => void;
     onDelete: () => void;
-  }> = ({ attachment, onDownload, onDelete }) => {
+  }> = ({ attachment, onDelete }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -247,85 +246,46 @@ export const UnifiedChatPanel: React.FC = () => {
       >
         <AudioPlayer attachment={attachment} />
         
-        {/* Boutons overlay au hover */}
-        <div style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          display: 'flex',
-          gap: '6px',
-          opacity: isHovered ? 1 : 0,
-          transition: 'opacity 0.2s ease-in-out',
-          pointerEvents: isHovered ? 'auto' : 'none'
-        }}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload();
-            }}
-            style={{
-              padding: '6px',
-              background: 'rgba(59, 130, 246, 0.95)',
-              color: 'white',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(37, 99, 235, 0.95)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.95)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            style={{
-              padding: '6px',
-              background: 'rgba(239, 68, 68, 0.95)',
-              color: 'white',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.95)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.95)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-              <line x1="10" y1="11" x2="10" y2="17"/>
-              <line x1="14" y1="11" x2="14" y2="17"/>
-            </svg>
-          </button>
-        </div>
+        {/* Bouton suppression overlay au hover */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            padding: '6px',
+            background: 'rgba(239, 68, 68, 0.95)',
+            color: 'white',
+            borderRadius: '6px',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 0.2s ease-in-out',
+            pointerEvents: isHovered ? 'auto' : 'none'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(220, 38, 38, 0.95)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.95)';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
       </div>
     );
   };
@@ -593,7 +553,7 @@ export const UnifiedChatPanel: React.FC = () => {
     
     if (messageCount > lastMessageCount && !isUserScrolledRef.current) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 0);
       setLastMessageCount(messageCount);
     }
@@ -1361,7 +1321,6 @@ export const UnifiedChatPanel: React.FC = () => {
                                   {attachment.isVoiceNote ? (
                                     <VoiceNoteCard 
                                       attachment={attachment}
-                                      onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
                                       onDelete={() => handleDeleteAttachment(attachment.id)}
                                     />
                                   ) : attachment.fileType === 'Image' ? (
