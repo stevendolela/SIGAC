@@ -87,6 +87,7 @@ export const UnifiedChatPanel: React.FC = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [blobUrl, setBlobUrl] = useState<string>('');
   const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
+  const [filePreviewModal, setFilePreviewModal] = useState<{ isOpen: boolean; attachment: any | null }>({ isOpen: false, attachment: null });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -593,6 +594,16 @@ export const UnifiedChatPanel: React.FC = () => {
     return '📎';
   };
 
+  // Ouvrir la modal de prévisualisation
+  const openFilePreview = (attachment: any) => {
+    setFilePreviewModal({ isOpen: true, attachment });
+  };
+
+  // Fermer la modal de prévisualisation
+  const closeFilePreview = () => {
+    setFilePreviewModal({ isOpen: false, attachment: null });
+  };
+
   // Envoyer la note vocale après validation (ancien système popup)
   const handleSendVoiceNote = async () => {
     if (!voiceNotePreview || !selectedChat) return;
@@ -891,7 +902,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                           display: 'block',
                                           cursor: 'pointer'
                                         }}
-                                        onClick={() => window.open(chatAttachmentApi.getDownloadUrl(attachment.id), '_blank')}
+                                        onClick={() => openFilePreview(attachment)}
                                         title="Cliquer pour agrandir"
                                       />
                                       <div style={{
@@ -939,6 +950,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                   ) : (
                                     /* Documents et autres fichiers */
                                     <div
+                                      onClick={() => openFilePreview(attachment)}
                                       style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -959,6 +971,7 @@ export const UnifiedChatPanel: React.FC = () => {
                                         e.currentTarget.style.background = '#f9fafb';
                                         e.currentTarget.style.borderColor = '#e5e7eb';
                                       }}
+                                      title="Cliquer pour visualiser"
                                     >
                                       <div style={{
                                         width: '44px',
@@ -1475,6 +1488,192 @@ export const UnifiedChatPanel: React.FC = () => {
         onClose={() => setIsCreateGroupModalOpen(false)}
         onGroupCreated={handleGroupCreated}
       />
+
+      {/* Modal de prévisualisation des fichiers */}
+      {filePreviewModal.isOpen && filePreviewModal.attachment && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={closeFilePreview}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              background: '#fff',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '16px 20px',
+              background: '#f9fafb',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flex: 1,
+                minWidth: 0
+              }}>
+                <span style={{ fontSize: '24px' }}>
+                  {getFileIcon(filePreviewModal.attachment.fileName, filePreviewModal.attachment.mimeType)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#111827',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {filePreviewModal.attachment.fileName}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                    {(filePreviewModal.attachment.fileSize / 1024).toFixed(0)} KB
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => handleDownloadAttachment(filePreviewModal.attachment.id, filePreviewModal.attachment.fileName)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  ⬇️ Télécharger
+                </button>
+                <button
+                  onClick={closeFilePreview}
+                  style={{
+                    padding: '8px 12px',
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{
+              maxWidth: '90vw',
+              maxHeight: 'calc(90vh - 80px)',
+              overflow: 'auto',
+              background: '#f3f4f6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {filePreviewModal.attachment.fileType === 'Image' ? (
+                <img
+                  src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)}
+                  alt={filePreviewModal.attachment.fileName}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: 'calc(90vh - 80px)',
+                    width: 'auto',
+                    height: 'auto',
+                    display: 'block'
+                  }}
+                />
+              ) : filePreviewModal.attachment.mimeType === 'application/pdf' ? (
+                <iframe
+                  src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)}
+                  style={{
+                    width: '90vw',
+                    height: 'calc(90vh - 80px)',
+                    border: 'none'
+                  }}
+                  title={filePreviewModal.attachment.fileName}
+                />
+              ) : filePreviewModal.attachment.fileType === 'Video' ? (
+                <video
+                  controls
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: 'calc(90vh - 80px)'
+                  }}
+                >
+                  <source src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)} type={filePreviewModal.attachment.mimeType} />
+                  Votre navigateur ne supporte pas la lecture vidéo.
+                </video>
+              ) : filePreviewModal.attachment.fileType === 'Audio' ? (
+                <div style={{ padding: '40px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎵</div>
+                  <audio
+                    controls
+                    style={{ width: '100%', maxWidth: '500px' }}
+                  >
+                    <source src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)} type={filePreviewModal.attachment.mimeType} />
+                  </audio>
+                </div>
+              ) : (
+                <div style={{
+                  padding: '60px',
+                  textAlign: 'center',
+                  color: '#6b7280'
+                }}>
+                  <div style={{ fontSize: '64px', marginBottom: '20px' }}>
+                    {getFileIcon(filePreviewModal.attachment.fileName, filePreviewModal.attachment.mimeType)}
+                  </div>
+                  <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+                    Aperçu non disponible pour ce type de fichier
+                  </p>
+                  <button
+                    onClick={() => handleDownloadAttachment(filePreviewModal.attachment.id, filePreviewModal.attachment.fileName)}
+                    style={{
+                      padding: '12px 24px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    ⬇️ Télécharger le fichier
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
