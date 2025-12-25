@@ -69,7 +69,18 @@ export function useChatConversation(conversationId: string | null) {
         setLoading(true);
       }
       const data = await chatApi.getConversation(conversationId);
-      setConversation(data);
+      
+      // Comparer avec les données existantes pour éviter re-render inutile
+      setConversation(prev => {
+        const prevJson = JSON.stringify(prev?.messages || []);
+        const newJson = JSON.stringify(data?.messages || []);
+        // Ne mettre à jour que si les messages ont vraiment changé
+        if (prevJson !== newJson) {
+          return data;
+        }
+        return prev;
+      });
+      
       setError(null);
       if (isInitialLoad) {
         setIsInitialLoad(false);
@@ -189,7 +200,18 @@ export function useChatGroup(groupId: string | null) {
         setLoading(true);
       }
       const data = await chatApi.getGroupDetail(groupId);
-      setGroup(data);
+      
+      // Comparer avec les données existantes pour éviter re-render inutile
+      setGroup(prev => {
+        const prevJson = JSON.stringify(prev?.messages || []);
+        const newJson = JSON.stringify(data?.messages || []);
+        // Ne mettre à jour que si les messages ont vraiment changé
+        if (prevJson !== newJson) {
+          return data;
+        }
+        return prev;
+      });
+      
       setError(null);
       if (isInitialLoad) {
         setIsInitialLoad(false);
