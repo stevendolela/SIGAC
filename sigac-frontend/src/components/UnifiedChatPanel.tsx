@@ -602,6 +602,66 @@ export const UnifiedChatPanel: React.FC = () => {
            prevProps.msg.content === nextProps.msg.content;
   });
 
+  // Composant ConversationItem mémorisé
+  const ConversationItem = React.memo<{ 
+    conv: any; 
+    isSelected: boolean;
+    onSelect: () => void;
+  }>(({ conv, isSelected, onSelect }) => (
+    <div
+      className={`chat-item ${isSelected ? 'active' : ''}`}
+      onClick={onSelect}
+    >
+      <div className="chat-item-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <StatusIndicator status={getOtherUserStatus(conv)} size={12} showPulse={true} />
+          <span className="chat-name">{getOtherUserName(conv)}</span>
+        </div>
+        {conv.unreadCount > 0 && (
+          <span className="unread-count">{conv.unreadCount}</span>
+        )}
+      </div>
+      <div className="chat-item-date">
+        {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleDateString('fr-FR') : new Date(conv.createdAt).toLocaleDateString('fr-FR')}
+      </div>
+    </div>
+  ), (prevProps, nextProps) => {
+    return prevProps.conv.id === nextProps.conv.id &&
+           prevProps.conv.unreadCount === nextProps.conv.unreadCount &&
+           prevProps.conv.lastMessageAt === nextProps.conv.lastMessageAt &&
+           prevProps.isSelected === nextProps.isSelected;
+  });
+
+  // Composant GroupItem mémorisé
+  const GroupItem = React.memo<{ 
+    grp: any; 
+    isSelected: boolean;
+    onSelect: () => void;
+  }>(({ grp, isSelected, onSelect }) => (
+    <div
+      className={`chat-item ${isSelected ? 'active' : ''}`}
+      onClick={onSelect}
+    >
+      <div className="chat-item-header">
+        <span className="chat-name">{grp.name}</span>
+        {grp.unreadCount > 0 ? (
+          <span className="unread-count">{grp.unreadCount}</span>
+        ) : (
+          <span className="member-badge">{grp.memberCount}</span>
+        )}
+      </div>
+      <div className="chat-item-date">
+        {grp.lastMessageAt ? new Date(grp.lastMessageAt).toLocaleDateString('fr-FR') : new Date(grp.createdAt).toLocaleDateString('fr-FR')}
+      </div>
+    </div>
+  ), (prevProps, nextProps) => {
+    return prevProps.grp.id === nextProps.grp.id &&
+           prevProps.grp.unreadCount === nextProps.grp.unreadCount &&
+           prevProps.grp.lastMessageAt === nextProps.grp.lastMessageAt &&
+           prevProps.grp.memberCount === nextProps.grp.memberCount &&
+           prevProps.isSelected === nextProps.isSelected;
+  });
+
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return;
 
@@ -1229,24 +1289,12 @@ export const UnifiedChatPanel: React.FC = () => {
                     </div>
                   ) : (
                     filteredConversations.map(conv => (
-                      <div
+                      <ConversationItem
                         key={conv.id}
-                        className={`chat-item ${selectedChat?.id === conv.id && selectedChat?.type === 'conversation' ? 'active' : ''}`}
-                        onClick={() => setSelectedChat({ type: 'conversation', id: conv.id })}
-                      >
-                        <div className="chat-item-header">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <StatusIndicator status={getOtherUserStatus(conv)} size={12} showPulse={true} />
-                            <span className="chat-name">{getOtherUserName(conv)}</span>
-                          </div>
-                          {conv.unreadCount > 0 && (
-                            <span className="unread-count">{conv.unreadCount}</span>
-                          )}
-                        </div>
-                        <div className="chat-item-date">
-                          {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleDateString('fr-FR') : new Date(conv.createdAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
+                        conv={conv}
+                        isSelected={selectedChat?.id === conv.id && selectedChat?.type === 'conversation'}
+                        onSelect={() => setSelectedChat({ type: 'conversation', id: conv.id })}
+                      />
                     ))
                   )}
                 </>
@@ -1301,19 +1349,12 @@ export const UnifiedChatPanel: React.FC = () => {
                     </div>
                   ) : (
                     filteredGroups.map(grp => (
-                      <div
+                      <GroupItem
                         key={grp.id}
-                        className={`chat-item ${selectedChat?.id === grp.id && selectedChat?.type === 'group' ? 'active' : ''}`}
-                        onClick={() => setSelectedChat({ type: 'group', id: grp.id })}
-                      >
-                        <div className="chat-item-header">
-                          <span className="chat-name">{grp.name}</span>
-                          <span className="member-badge">{grp.memberCount}</span>
-                        </div>
-                        <div className="chat-item-date">
-                          {grp.lastMessageAt ? new Date(grp.lastMessageAt).toLocaleDateString('fr-FR') : new Date(grp.createdAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
+                        grp={grp}
+                        isSelected={selectedChat?.id === grp.id && selectedChat?.type === 'group'}
+                        onSelect={() => setSelectedChat({ type: 'group', id: grp.id })}
+                      />
                     ))
                   )}
                 </>
