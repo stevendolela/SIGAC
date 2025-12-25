@@ -69,6 +69,146 @@ const StatusIndicator: React.FC<{ status?: UserStatus; size?: number; showPulse?
 
 export const UnifiedChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Composant pour afficher une image avec authentification
+  const ImageWithAuth: React.FC<{
+    attachmentId: string;
+    fileName: string;
+    onImageClick: () => void;
+    onDownload: () => void;
+    onDelete: () => void;
+    getFileIcon: (fileName: string, mimeType: string) => string;
+    mimeType: string;
+  }> = ({ attachmentId, fileName, onImageClick, onDownload, onDelete, getFileIcon, mimeType }) => {
+    const [imgSrc, setImgSrc] = useState<string>('');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      let mounted = true;
+      
+      const loadImage = async () => {
+        try {
+          const blob = await chatAttachmentApi.downloadAttachment(attachmentId);
+          const url = URL.createObjectURL(blob);
+          if (mounted) {
+            setImgSrc(url);
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('Erreur chargement image:', error);
+          if (mounted) setLoading(false);
+        }
+      };
+
+      loadImage();
+
+      return () => {
+        mounted = false;
+        if (imgSrc) URL.revokeObjectURL(imgSrc);
+      };
+    }, [attachmentId]);
+
+    if (loading) {
+      return (
+        <div style={{
+          maxWidth: '300px',
+          height: '200px',
+          borderRadius: '12px',
+          background: '#f3f4f6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          Chargement...
+        </div>
+      );
+    }
+
+    return (
+      <div style={{
+        maxWidth: '300px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        background: '#fff'
+      }}>
+        {imgSrc && (
+          <img 
+            src={imgSrc} 
+            alt={fileName}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              cursor: 'pointer'
+            }}
+            onClick={onImageClick}
+            title="Cliquer pour agrandir"
+          />
+        )}
+        <div style={{
+          padding: '8px 12px',
+          background: '#f9fafb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderTop: '1px solid #e5e7eb'
+        }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#6b7280',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <span>{getFileIcon(fileName, mimeType)}</span>
+            <span>{fileName}</span>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
+            style={{
+              padding: '4px 8px',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              marginLeft: '8px'
+            }}
+          >
+            ⬇️
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            style={{
+              padding: '4px 8px',
+              background: '#ef4444',
+              color: 'white',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              marginLeft: '4px'
+            }}
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const [activeTab, setActiveTab] = useState<ChatTab>('conversations');
   const [selectedChat, setSelectedChat] = useState<SelectedChat | null>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -87,7 +227,8 @@ export const UnifiedChatPanel: React.FC = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [blobUrl, setBlobUrl] = useState<string>('');
   const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
-  const [filePreviewModal, setFilePreviewModal] = useState<{ isOpen: boolean; attachment: any | null }>({ isOpen: false, attachment: null });
+  const [filePreviewModal, setFilePreviewModal] = useState<{ isOpen: boolean; attachment: any | null; blobUrl: string | null }>({ isOpen: false, attachment: null, blobUrl: null });
+  const [imageBlobUrls, setImageBlobUrls] = useState<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -594,14 +735,66 @@ export const UnifiedChatPanel: React.FC = () => {
     return '📎';
   };
 
+  // Charger l'image en blob pour l'affichage avec authentification
+  const loadImageBlob = async (attachmentId: string) => {
+    if (imageBlobUrls[attachmentId]) return imageBlobUrls[attachmentId];
+    
+    try {
+      const blob = await chatAttachmentApi.downloadAttachment(attachmentId);
+      const url = URL.createObjectURL(blob);
+      setImageBlobUrls(prev => ({ ...prev, [attachmentId]: url }));
+      return url;
+    } catch (error) {
+      console.error('Erreur chargement image:', error);
+      return '';
+    }
+  };
+
   // Ouvrir la modal de prévisualisation
-  const openFilePreview = (attachment: any) => {
-    setFilePreviewModal({ isOpen: true, attachment });
+  const openFilePreview = async (attachment: any) => {
+    try {
+      // Télécharger le fichier en blob pour l'afficher
+      const blob = await chatAttachmentApi.downloadAttachment(attachment.id);
+      const blobUrl = URL.createObjectURL(blob);
+      setFilePreviewModal({ isOpen: true, attachment, blobUrl });
+    } catch (error) {
+      console.error('Erreur chargement fichier:', error);
+      alert('Impossible de charger le fichier');
+    }
   };
 
   // Fermer la modal de prévisualisation
   const closeFilePreview = () => {
-    setFilePreviewModal({ isOpen: false, attachment: null });
+    if (filePreviewModal.blobUrl) {
+      URL.revokeObjectURL(filePreviewModal.blobUrl);
+    }
+    setFilePreviewModal({ isOpen: false, attachment: null, blobUrl: null });
+  };
+
+  // Supprimer une pièce jointe
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!confirm('Voulez-vous vraiment supprimer cette pièce jointe ?')) return;
+
+    try {
+      await chatAttachmentApi.deleteAttachment(attachmentId);
+      
+      // Rafraîchir les messages
+      if (selectedChat?.type === 'conversation') {
+        await refetchConversation();
+      } else if (selectedChat?.type === 'group') {
+        await refetchGroup();
+      }
+
+      // Fermer la modal si elle est ouverte
+      if (filePreviewModal.isOpen && filePreviewModal.attachment?.id === attachmentId) {
+        closeFilePreview();
+      }
+
+      alert('Pièce jointe supprimée avec succès');
+    } catch (error: any) {
+      console.error('Erreur suppression:', error);
+      alert(error.response?.data?.message || 'Erreur lors de la suppression');
+    }
   };
 
   // Envoyer la note vocale après validation (ancien système popup)
@@ -886,67 +1079,15 @@ export const UnifiedChatPanel: React.FC = () => {
                                     <AudioPlayer attachment={attachment} />
                                   ) : attachment.fileType === 'Image' ? (
                                     /* Prévisualisation d'image */
-                                    <div style={{
-                                      maxWidth: '300px',
-                                      borderRadius: '12px',
-                                      overflow: 'hidden',
-                                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                      background: '#fff'
-                                    }}>
-                                      <img 
-                                        src={chatAttachmentApi.getDownloadUrl(attachment.id)} 
-                                        alt={attachment.fileName}
-                                        style={{
-                                          width: '100%',
-                                          height: 'auto',
-                                          display: 'block',
-                                          cursor: 'pointer'
-                                        }}
-                                        onClick={() => openFilePreview(attachment)}
-                                        title="Cliquer pour agrandir"
-                                      />
-                                      <div style={{
-                                        padding: '8px 12px',
-                                        background: '#f9fafb',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        borderTop: '1px solid #e5e7eb'
-                                      }}>
-                                        <div style={{ 
-                                          fontSize: '12px', 
-                                          color: '#6b7280',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap',
-                                          flex: 1,
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '4px'
-                                        }}>
-                                          <span>{getFileIcon(attachment.fileName, attachment.mimeType)}</span>
-                                          <span>{attachment.fileName}</span>
-                                        </div>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownloadAttachment(attachment.id, attachment.fileName);
-                                          }}
-                                          style={{
-                                            padding: '4px 8px',
-                                            background: '#3b82f6',
-                                            color: 'white',
-                                            borderRadius: '4px',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            fontSize: '12px',
-                                            marginLeft: '8px'
-                                          }}
-                                        >
-                                          ⬇️
-                                        </button>
-                                      </div>
-                                    </div>
+                                    <ImageWithAuth 
+                                      attachmentId={attachment.id}
+                                      fileName={attachment.fileName}
+                                      onImageClick={() => openFilePreview(attachment)}
+                                      onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                                      onDelete={() => handleDeleteAttachment(attachment.id)}
+                                      getFileIcon={getFileIcon}
+                                      mimeType={attachment.mimeType}
+                                    />
                                   ) : (
                                     /* Documents et autres fichiers */
                                     <div
@@ -1045,7 +1186,36 @@ export const UnifiedChatPanel: React.FC = () => {
                                           e.currentTarget.style.transform = 'scale(1)';
                                         }}
                                       >
-                                        ⬇️ Télécharger
+                                        ⬇️
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteAttachment(attachment.id);
+                                        }}
+                                        style={{
+                                          padding: '8px 12px',
+                                          background: '#ef4444',
+                                          color: 'white',
+                                          borderRadius: '6px',
+                                          border: 'none',
+                                          cursor: 'pointer',
+                                          fontSize: '12px',
+                                          fontWeight: '500',
+                                          flexShrink: 0,
+                                          transition: 'all 0.2s ease',
+                                          marginLeft: '4px'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background = '#dc2626';
+                                          e.currentTarget.style.transform = 'scale(1.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background = '#ef4444';
+                                          e.currentTarget.style.transform = 'scale(1)';
+                                        }}
+                                      >
+                                        🗑️
                                       </button>
                                     </div>
                                   )}
@@ -1571,6 +1741,21 @@ export const UnifiedChatPanel: React.FC = () => {
                   ⬇️ Télécharger
                 </button>
                 <button
+                  onClick={() => handleDeleteAttachment(filePreviewModal.attachment.id)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  🗑️ Supprimer
+                </button>
+                <button
                   onClick={closeFilePreview}
                   style={{
                     padding: '8px 12px',
@@ -1600,7 +1785,7 @@ export const UnifiedChatPanel: React.FC = () => {
             }}>
               {filePreviewModal.attachment.fileType === 'Image' ? (
                 <img
-                  src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)}
+                  src={filePreviewModal.blobUrl || ''}
                   alt={filePreviewModal.attachment.fileName}
                   style={{
                     maxWidth: '100%',
@@ -1612,7 +1797,7 @@ export const UnifiedChatPanel: React.FC = () => {
                 />
               ) : filePreviewModal.attachment.mimeType === 'application/pdf' ? (
                 <iframe
-                  src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)}
+                  src={filePreviewModal.blobUrl || ''}
                   style={{
                     width: '90vw',
                     height: 'calc(90vh - 80px)',
@@ -1628,7 +1813,7 @@ export const UnifiedChatPanel: React.FC = () => {
                     maxHeight: 'calc(90vh - 80px)'
                   }}
                 >
-                  <source src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)} type={filePreviewModal.attachment.mimeType} />
+                  <source src={filePreviewModal.blobUrl || ''} type={filePreviewModal.attachment.mimeType} />
                   Votre navigateur ne supporte pas la lecture vidéo.
                 </video>
               ) : filePreviewModal.attachment.fileType === 'Audio' ? (
@@ -1638,7 +1823,7 @@ export const UnifiedChatPanel: React.FC = () => {
                     controls
                     style={{ width: '100%', maxWidth: '500px' }}
                   >
-                    <source src={chatAttachmentApi.getDownloadUrl(filePreviewModal.attachment.id)} type={filePreviewModal.attachment.mimeType} />
+                    <source src={filePreviewModal.blobUrl || ''} type={filePreviewModal.attachment.mimeType} />
                   </audio>
                 </div>
               ) : (
