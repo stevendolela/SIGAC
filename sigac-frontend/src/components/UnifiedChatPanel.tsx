@@ -507,16 +507,6 @@ export const UnifiedChatPanel: React.FC = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isUserScrolledRef = useRef(false);
 
-  // Checksums pour détecter les changements
-  const messagesChecksum = useMemo(() => {
-    if (selectedChat?.type === 'conversation' && conversation) {
-      return JSON.stringify(conversation.messages);
-    } else if (selectedChat?.type === 'group' && group) {
-      return JSON.stringify(group.messages);
-    }
-    return null;
-  }, [selectedChat, conversation?.messages, group?.messages]);
-
   // Détection scroll utilisateur
   useEffect(() => {
     const messagesContainer = messagesContainerRef.current;
@@ -543,10 +533,8 @@ export const UnifiedChatPanel: React.FC = () => {
     }
   }, [selectedChat?.id, selectedChat?.type]);
 
-  // Auto-scroll
+  // Auto-scroll uniquement sur nouveau message
   useEffect(() => {
-    if (!messagesChecksum) return;
-
     const messageCount = selectedChat?.type === 'conversation' 
       ? conversation?.messages.length || 0 
       : group?.messages.length || 0;
@@ -554,10 +542,10 @@ export const UnifiedChatPanel: React.FC = () => {
     if (messageCount > lastMessageCount && !isUserScrolledRef.current) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      }, 0);
+      }, 50);
       setLastMessageCount(messageCount);
     }
-  }, [messagesChecksum, lastMessageCount, selectedChat, conversation?.messages.length, group?.messages.length]);
+  }, [conversation?.messages.length, group?.messages.length, lastMessageCount, selectedChat]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return;
