@@ -1295,7 +1295,7 @@ export const UnifiedChatPanel: React.FC = () => {
                   ) : (
                     <>
                       {(selectedChat.type === 'conversation' ? conversation?.messages : group?.messages)?.map(msg => (
-                        <div key={msg.id} className="message">
+                        <div key={`${msg.id}-${msg.attachments?.length || 0}`} className="message" style={{ willChange: 'auto' }}>
                           <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <StatusIndicator status={msg.senderStatus} />
                             <span>{msg.senderNomComplet || msg.senderUsername}</span>
