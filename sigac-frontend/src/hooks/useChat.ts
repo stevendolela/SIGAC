@@ -22,11 +22,11 @@ export function useChatConversations() {
       setConversations(prev => {
         if (prev.length !== dataArray.length) return dataArray;
         
-        // Comparer les IDs et lastMessageTime pour détecter les vrais changements
-        const hasChanged = dataArray.some((conv, idx) => {
-          const prevConv = prev[idx];
+        // Comparer par ID plutôt que par index (l'ordre peut changer avec le tri)
+        const prevMap = new Map(prev.map(c => [c.id, c]));
+        const hasChanged = dataArray.some(conv => {
+          const prevConv = prevMap.get(conv.id);
           return !prevConv || 
-                 prevConv.id !== conv.id || 
                  prevConv.lastMessageTime !== conv.lastMessageTime ||
                  prevConv.unreadCount !== conv.unreadCount;
         });
@@ -180,11 +180,11 @@ export function useChatGroups() {
       setGroups(prev => {
         if (prev.length !== dataArray.length) return dataArray;
         
-        // Comparer les IDs et lastMessageTime
-        const hasChanged = dataArray.some((grp, idx) => {
-          const prevGrp = prev[idx];
+        // Comparer par ID plutôt que par index
+        const prevMap = new Map(prev.map(g => [g.id, g]));
+        const hasChanged = dataArray.some(grp => {
+          const prevGrp = prevMap.get(grp.id);
           return !prevGrp || 
-                 prevGrp.id !== grp.id || 
                  prevGrp.lastMessageTime !== grp.lastMessageTime ||
                  prevGrp.unreadCount !== grp.unreadCount;
         });
