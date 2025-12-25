@@ -69,6 +69,13 @@ const StatusIndicator: React.FC<{ status?: UserStatus; size?: number; showPulse?
 
 export const UnifiedChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Debug: Tracer les re-renders
+  const renderCountRef = useRef(0);
+  useEffect(() => {
+    renderCountRef.current++;
+    console.log(`[UnifiedChatPanel] Re-render #${renderCountRef.current}`, new Date().toLocaleTimeString());
+  });
 
   // Composant pour afficher une image avec authentification
   // Composant pour afficher un document avec boutons au hover
@@ -496,12 +503,24 @@ const UnreadBadge: React.FC = React.memo(() => {
 
   // Conversations
   const { conversations, loading: convLoading, refetch: refetchConversations } = useChatConversations();
+  
+  // Debug: tracer les changements de conversations
+  useEffect(() => {
+    console.log('[UnifiedChatPanel] conversations changed:', conversations.length, 'items');
+  }, [conversations]);
+  
   const { conversation, loading: convDetailLoading, refetch: refetchConversation } = useChatConversation(
     selectedChat?.type === 'conversation' ? selectedChat.id : null
   );
 
   // Groups
   const { groups, loading: groupsLoading, refetch: refetchGroups } = useChatGroups();
+  
+  // Debug: tracer les changements de groupes
+  useEffect(() => {
+    console.log('[UnifiedChatPanel] groups changed:', groups.length, 'items');
+  }, [groups]);
+  
   const { group, loading: groupDetailLoading, refetch: refetchGroup } = useChatGroup(
     selectedChat?.type === 'group' ? selectedChat.id : null
   );
