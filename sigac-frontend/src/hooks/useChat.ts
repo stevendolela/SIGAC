@@ -18,13 +18,17 @@ export function useChatConversations() {
       // S'assurer que data est un tableau
       setConversations(Array.isArray(data) ? data : []);
       setError(null);
-      setIsInitialLoad(false);
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     } catch (err: any) {
       // Si 404, l'endpoint n'existe pas encore (déploiement en cours)
       if (err.response?.status === 404) {
         setConversations([]);
         setError(null);
-        setIsInitialLoad(false);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
       } else {
         setError(err.message || 'Erreur lors du chargement des conversations');
         setConversations([]); // Tableau vide en cas d'erreur
@@ -45,7 +49,7 @@ export function useChatConversations() {
     // Rafraîchir les conversations toutes les 3 secondes en temps réel
     const interval = setInterval(fetchConversations, 3000);
     return () => clearInterval(interval);
-  }, [fetchConversations]);
+  }, []);
 
   return { conversations, loading, error, refetch: fetchConversations };
 }
@@ -67,7 +71,9 @@ export function useChatConversation(conversationId: string | null) {
       const data = await chatApi.getConversation(conversationId);
       setConversation(data);
       setError(null);
-      setIsInitialLoad(false);
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement de la conversation');
       setLoading(false);
@@ -79,13 +85,18 @@ export function useChatConversation(conversationId: string | null) {
   }, [conversationId, isInitialLoad]);
 
   useEffect(() => {
+    if (!conversationId) return;
+    
+    // Reset lors du changement de conversation
+    setIsInitialLoad(true);
+    
     // Charger la conversation immédiatement
     fetchConversation();
     
     // Rafraîchir les messages toutes les 2 secondes en temps réel
     const interval = setInterval(fetchConversation, 2000);
     return () => clearInterval(interval);
-  }, [fetchConversation]);
+  }, [conversationId]);
 
   return { conversation, loading, error, refetch: fetchConversation };
 }
@@ -107,7 +118,7 @@ export function useUnreadCount() {
     // Rafraîchir le nombre de messages non lus toutes les 5 secondes
     const interval = setInterval(fetchUnreadCount, 5000);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+  }, []);
 
   return { unreadCount, refetch: fetchUnreadCount };
 }
@@ -127,14 +138,18 @@ export function useChatGroups() {
       // S'assurer que data est un tableau
       setGroups(Array.isArray(data) ? data : []);
       setError(null);
-      setIsInitialLoad(false);
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     } catch (err: any) {
       // Si 404, l'endpoint n'existe pas encore (déploiement en cours)
       // Ne pas afficher d'erreur, juste retourner tableau vide silencieusement
       if (err.response?.status === 404) {
         setGroups([]);
         setError(null); // Pas d'erreur visible pour l'utilisateur
-        setIsInitialLoad(false);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
       } else {
         setError(err.message || 'Erreur lors du chargement des groupes');
         setGroups([]); // Tableau vide en cas d'erreur
@@ -155,7 +170,7 @@ export function useChatGroups() {
     // Rafraîchir les groupes toutes les 3 secondes
     const interval = setInterval(fetchGroups, 3000);
     return () => clearInterval(interval);
-  }, [fetchGroups]);
+  }, []);
 
   return { groups, loading, error, refetch: fetchGroups };
 }
@@ -176,7 +191,9 @@ export function useChatGroup(groupId: string | null) {
       const data = await chatApi.getGroupDetail(groupId);
       setGroup(data);
       setError(null);
-      setIsInitialLoad(false);
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement du groupe');
       setLoading(false);
@@ -188,12 +205,17 @@ export function useChatGroup(groupId: string | null) {
   }, [groupId, isInitialLoad]);
 
   useEffect(() => {
+    if (!groupId) return;
+    
+    // Reset lors du changement de groupe
+    setIsInitialLoad(true);
+    
     fetchGroup();
     
     // Rafraîchir les messages du groupe toutes les 2 secondes
     const interval = setInterval(fetchGroup, 2000);
     return () => clearInterval(interval);
-  }, [fetchGroup]);
+  }, [groupId]);
 
   return { group, loading, error, refetch: fetchGroup };
 }
