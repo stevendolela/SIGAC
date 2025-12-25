@@ -69,9 +69,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
     const audio = audioRef.current;
     if (!audio || !blobUrl) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateTime = () => {
+      if (audio && !isNaN(audio.currentTime)) {
+        setCurrentTime(audio.currentTime);
+      }
+    };
     const updateDuration = () => {
-      if (!isNaN(audio.duration) && audio.duration > 0) {
+      if (audio && !isNaN(audio.duration) && audio.duration > 0) {
         setDuration(audio.duration);
       }
     };
@@ -90,11 +94,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ attachment }) => {
     audio.addEventListener('error', handleError);
 
     return () => {
-      audio.removeEventListener('timeupdate', updateTime);
-      audio.removeEventListener('loadedmetadata', updateDuration);
-      audio.removeEventListener('canplay', updateDuration);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
+      if (audio) {
+        audio.removeEventListener('timeupdate', updateTime);
+        audio.removeEventListener('loadedmetadata', updateDuration);
+        audio.removeEventListener('canplay', updateDuration);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+      }
     };
   }, [blobUrl]);
 
