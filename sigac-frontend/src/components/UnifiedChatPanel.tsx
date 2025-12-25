@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useChatConversations, useChatConversation, useChatGroups, useChatGroup, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
 import { chatAttachmentApi } from '../api/chatAttachmentApi';
@@ -720,7 +720,7 @@ export const UnifiedChatPanel: React.FC = () => {
     refetchGroups();
   };
 
-  const getOtherUserName = (conv: ChatConversationDto): string => {
+  const getOtherUserName = useCallback((conv: ChatConversationDto): string => {
     // Utilise le nom complet si disponible, sinon le username
     const userStr = localStorage.getItem('user');
     if (!userStr) return conv.user1NomComplet || conv.user1Username;
@@ -732,9 +732,9 @@ export const UnifiedChatPanel: React.FC = () => {
       return conv.user2NomComplet || conv.user2Username;
     }
     return conv.user1NomComplet || conv.user1Username;
-  };
+  }, []);
 
-  const getOtherUserStatus = (conv: ChatConversationDto): UserStatus | undefined => {
+  const getOtherUserStatus = useCallback((conv: ChatConversationDto): UserStatus | undefined => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return undefined;
     
@@ -745,7 +745,7 @@ export const UnifiedChatPanel: React.FC = () => {
       return conv.user2Status;
     }
     return conv.user1Status;
-  };
+  }, []);
 
   const isLoading = selectedChat?.type === 'conversation' ? convDetailLoading : groupDetailLoading;
   
@@ -1030,7 +1030,7 @@ export const UnifiedChatPanel: React.FC = () => {
   };
 
   // Télécharger une pièce jointe
-  const handleDownloadAttachment = async (attachmentId: string, fileName: string) => {
+  const handleDownloadAttachment = useCallback(async (attachmentId: string, fileName: string) => {
     try {
       const blob = await chatAttachmentApi.downloadAttachment(attachmentId);
       const url = window.URL.createObjectURL(blob);
@@ -1045,10 +1045,10 @@ export const UnifiedChatPanel: React.FC = () => {
       console.error('Erreur téléchargement:', error);
       alert('Erreur lors du téléchargement du fichier');
     }
-  };
+  }, []);
 
   // Obtenir l'icône selon l'extension du fichier
-  const getFileIcon = (fileName: string, mimeType: string) => {
+  const getFileIcon = useCallback((fileName: string, mimeType: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     
     // Images
@@ -1083,7 +1083,7 @@ export const UnifiedChatPanel: React.FC = () => {
     
     // Par défaut
     return '📎';
-  };
+  }, []);
 
   // Charger l'image en blob pour l'affichage avec authentification
   const loadImageBlob = async (attachmentId: string) => {
@@ -1101,7 +1101,7 @@ export const UnifiedChatPanel: React.FC = () => {
   };
 
   // Ouvrir la modal de prévisualisation
-  const openFilePreview = async (attachment: any) => {
+  const openFilePreview = useCallback(async (attachment: any) => {
     try {
       // Télécharger le fichier en blob pour l'afficher
       const blob = await chatAttachmentApi.downloadAttachment(attachment.id);
@@ -1111,18 +1111,18 @@ export const UnifiedChatPanel: React.FC = () => {
       console.error('Erreur chargement fichier:', error);
       alert('Impossible de charger le fichier');
     }
-  };
+  }, []);
 
   // Fermer la modal de prévisualisation
-  const closeFilePreview = () => {
+  const closeFilePreview = useCallback(() => {
     if (filePreviewModal.blobUrl) {
       URL.revokeObjectURL(filePreviewModal.blobUrl);
     }
     setFilePreviewModal({ isOpen: false, attachment: null, blobUrl: null });
-  };
+  }, [filePreviewModal.blobUrl]);
 
   // Supprimer une pièce jointe
-  const handleDeleteAttachment = async (attachmentId: string) => {
+  const handleDeleteAttachment = useCallback(async (attachmentId: string) => {
     if (!confirm('Voulez-vous vraiment supprimer cette pièce jointe ?')) return;
 
     try {
@@ -1145,7 +1145,7 @@ export const UnifiedChatPanel: React.FC = () => {
       console.error('Erreur suppression:', error);
       alert(error.response?.data?.message || 'Erreur lors de la suppression');
     }
-  };
+  }, [selectedChat, refetchConversation, refetchGroup, filePreviewModal.isOpen, filePreviewModal.attachment, closeFilePreview]);
 
   // Envoyer la note vocale après validation (ancien système popup)
   const handleSendVoiceNote = async () => {
