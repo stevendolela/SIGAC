@@ -71,6 +71,159 @@ export const UnifiedChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Composant pour afficher une image avec authentification
+  // Composant pour afficher un document avec boutons au hover
+  const DocumentCard: React.FC<{
+    attachment: any;
+    onPreview: () => void;
+    onDownload: () => void;
+    onDelete: () => void;
+    getFileIcon: (fileName: string, mimeType: string) => string;
+  }> = ({ attachment, onPreview, onDownload, onDelete, getFileIcon }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+      <div
+        onClick={onPreview}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          background: '#f9fafb',
+          border: '1px solid #e5e7eb',
+          borderRadius: '10px',
+          maxWidth: '320px',
+          transition: 'all 0.2s ease',
+          cursor: 'pointer',
+          position: 'relative'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#f3f4f6';
+          e.currentTarget.style.borderColor = '#d1d5db';
+          setIsHovered(true);
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = '#f9fafb';
+          e.currentTarget.style.borderColor = '#e5e7eb';
+          setIsHovered(false);
+        }}
+        title="Cliquer pour visualiser"
+      >
+        <div style={{
+          width: '44px',
+          height: '44px',
+          borderRadius: '8px',
+          background: 
+            attachment.fileType === 'Document' ? '#fee2e2' :
+            attachment.fileType === 'Audio' ? '#ede9fe' :
+            attachment.fileType === 'Video' ? '#fef3c7' : '#f3f4f6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          flexShrink: 0
+        }}>
+          {getFileIcon(attachment.fileName, attachment.mimeType)}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ 
+            fontWeight: '500', 
+            fontSize: '14px', 
+            color: '#111827',
+            whiteSpace: 'nowrap', 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis',
+            marginBottom: '2px'
+          }}>
+            {attachment.fileName}
+          </div>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#6b7280',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>{(attachment.fileSize / 1024).toFixed(0)} KB</span>
+            {attachment.fileType === 'Document' && (
+              <span>• {attachment.mimeType.includes('pdf') ? 'PDF' : 
+                       attachment.mimeType.includes('word') ? 'Word' : 
+                       attachment.mimeType.includes('excel') ? 'Excel' : 'Doc'}</span>
+            )}
+          </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+          pointerEvents: isHovered ? 'auto' : 'none'
+        }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
+            style={{
+              padding: '8px 14px',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '500',
+              flexShrink: 0,
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#2563eb';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#3b82f6';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ⬇️
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            style={{
+              padding: '8px 12px',
+              background: '#ef4444',
+              color: 'white',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '500',
+              flexShrink: 0,
+              transition: 'all 0.2s ease',
+              marginLeft: '4px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#dc2626';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#ef4444';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const ImageWithAuth: React.FC<{
     attachmentId: string;
     fileName: string;
@@ -1102,150 +1255,13 @@ export const UnifiedChatPanel: React.FC = () => {
                                     />
                                   ) : (
                                     /* Documents et autres fichiers */
-                                    (() => {
-                                      const [docHovered, setDocHovered] = React.useState(false);
-                                      return (
-                                        <div
-                                          onClick={() => openFilePreview(attachment)}
-                                          style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            padding: '12px',
-                                            background: '#f9fafb',
-                                            border: '1px solid #e5e7eb',
-                                            borderRadius: '10px',
-                                            maxWidth: '320px',
-                                            transition: 'all 0.2s ease',
-                                            cursor: 'pointer',
-                                            position: 'relative'
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = '#f3f4f6';
-                                            e.currentTarget.style.borderColor = '#d1d5db';
-                                            setDocHovered(true);
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = '#f9fafb';
-                                            e.currentTarget.style.borderColor = '#e5e7eb';
-                                            setDocHovered(false);
-                                          }}
-                                          title="Cliquer pour visualiser"
-                                        >
-                                      <div style={{
-                                        width: '44px',
-                                        height: '44px',
-                                        borderRadius: '8px',
-                                        background: 
-                                          attachment.fileType === 'Document' ? '#fee2e2' :
-                                          attachment.fileType === 'Audio' ? '#ede9fe' :
-                                          attachment.fileType === 'Video' ? '#fef3c7' : '#f3f4f6',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '24px',
-                                        flexShrink: 0
-                                      }}>
-                                        {getFileIcon(attachment.fileName, attachment.mimeType)}
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ 
-                                          fontWeight: '500', 
-                                          fontSize: '14px', 
-                                          color: '#111827',
-                                          whiteSpace: 'nowrap', 
-                                          overflow: 'hidden', 
-                                          textOverflow: 'ellipsis',
-                                          marginBottom: '2px'
-                                        }}>
-                                          {attachment.fileName}
-                                        </div>
-                                        <div style={{ 
-                                          fontSize: '12px', 
-                                          color: '#6b7280',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '8px'
-                                        }}>
-                                          <span>{(attachment.fileSize / 1024).toFixed(0)} KB</span>
-                                          {attachment.fileType === 'Document' && (
-                                            <span>• {attachment.mimeType.includes('pdf') ? 'PDF' : 
-                                                     attachment.mimeType.includes('word') ? 'Word' : 
-                                                     attachment.mimeType.includes('excel') ? 'Excel' : 'Doc'}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div style={{
-                                        display: 'flex',
-                                        gap: '8px',
-                                        opacity: docHovered ? 1 : 0,
-                                        transition: 'opacity 0.2s ease-in-out',
-                                        pointerEvents: docHovered ? 'auto' : 'none'
-                                      }}>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDownloadAttachment(attachment.id, attachment.fileName);
-                                        }}
-                                        style={{
-                                          padding: '8px 14px',
-                                          background: '#3b82f6',
-                                          color: 'white',
-                                          borderRadius: '6px',
-                                          border: 'none',
-                                          cursor: 'pointer',
-                                          fontSize: '12px',
-                                          fontWeight: '500',
-                                          flexShrink: 0,
-                                          transition: 'all 0.2s ease',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '4px'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.background = '#2563eb';
-                                          e.currentTarget.style.transform = 'scale(1.05)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.background = '#3b82f6';
-                                          e.currentTarget.style.transform = 'scale(1)';
-                                        }}
-                                      >
-                                        ⬇️
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteAttachment(attachment.id);
-                                        }}
-                                        style={{
-                                          padding: '8px 12px',
-                                          background: '#ef4444',
-                                          color: 'white',
-                                          borderRadius: '6px',
-                                          border: 'none',
-                                          cursor: 'pointer',
-                                          fontSize: '12px',
-                                          fontWeight: '500',
-                                          flexShrink: 0,
-                                          transition: 'all 0.2s ease',
-                                          marginLeft: '4px'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.background = '#dc2626';
-                                          e.currentTarget.style.transform = 'scale(1.05)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.background = '#ef4444';
-                                          e.currentTarget.style.transform = 'scale(1)';
-                                        }}
-                                      >
-                                        🗑️
-                                      </button>
-                                      </div>
-                                    </div>
-                                      );
-                                    })()
+                                    <DocumentCard
+                                      attachment={attachment}
+                                      onPreview={() => openFilePreview(attachment)}
+                                      onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                                      onDelete={() => handleDeleteAttachment(attachment.id)}
+                                      getFileIcon={getFileIcon}
+                                    />
                                   )}
                                 </div>
                               ))}
