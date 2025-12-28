@@ -262,10 +262,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
               </div>
 
               <div className="form-group">
-                <label>Défendeur</label>
+                <label>Tiers concerné</label>
                 <input
                   type="text"
-                  placeholder="Nom du défendeur"
+                  placeholder="Nom du tiers concerné"
                   value={defendeur}
                   onChange={(e) => setDefendeur(e.target.value)}
                 />
