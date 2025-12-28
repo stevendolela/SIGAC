@@ -63,12 +63,12 @@ export interface UpdateAudienceDto {
 }
 
 export const typeAudienceLabels: Record<TypeAudience, string> = {
-  [TypeAudience.Preliminaire]: 'Préliminaire',
-  [TypeAudience.Plaidoirie]: 'Plaidoirie',
-  [TypeAudience.Delibere]: 'Délibéré',
-  [TypeAudience.Prononce]: 'Prononcé',
-  [TypeAudience.Instruction]: 'Instruction',
-  [TypeAudience.MiseEnEtat]: 'Mise en état'
+  [TypeAudience.Preliminaire]: 'Initiale',
+  [TypeAudience.Plaidoirie]: 'Présentation',
+  [TypeAudience.Delibere]: 'Délibération',
+  [TypeAudience.Prononce]: 'Décision',
+  [TypeAudience.Instruction]: 'Suivi',
+  [TypeAudience.MiseEnEtat]: 'Préparation'
 }
 
 export const statutAudienceLabels: Record<StatutAudience, string> = {
