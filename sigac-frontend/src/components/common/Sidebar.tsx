@@ -91,14 +91,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           view: 'dossiers' as ViewType,
-          label: 'Projets',
+          label: 'Dossiers',
           icon: FolderOpen,
           color: '#10b981',
           badge: currentWorkspace?.currentProjectCount
         },
         {
           view: 'create-dossier' as ViewType,
-          label: 'Nouveau Projet',
+          label: 'Nouveau Dossier',
           icon: FilePlus,
           color: '#f59e0b'
         },
