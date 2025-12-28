@@ -806,7 +806,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
                       }}
                     >
-                      📅 Planifier un événement
+                      📅 Planifier une réunion
                     </button>
                   </div>
                   <AudienceList
@@ -1069,7 +1069,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
           setShowAudienceModal(false)
           setSelectedAudienceId(undefined)
         }}
-        title={selectedAudienceId ? 'Modifier l\'événement' : 'Planifier un événement'}
+        title={selectedAudienceId ? 'Modifier la réunion' : 'Planifier une réunion'}
         size="lg"
       >
         <AudienceForm

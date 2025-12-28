@@ -37,7 +37,7 @@ export default function AudienceList({ dossierId, onSelectAudience, onRefresh }:
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette réunion ?')) {
       return
     }
 
@@ -96,7 +96,7 @@ export default function AudienceList({ dossierId, onSelectAudience, onRefresh }:
         border: '2px dashed #cbd5e1'
       }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>📅</div>
-        <p style={{ fontSize: 16, fontWeight: 500 }}>Aucun événement planifié</p>
+        <p style={{ fontSize: 16, fontWeight: 500 }}>Aucune réunion planifiée</p>
       </div>
     )
   }

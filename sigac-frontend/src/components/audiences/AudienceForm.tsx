@@ -299,7 +299,7 @@ export default function AudienceForm({ audienceId, dossierId, onSuccess, onCance
 
       <div>
         <label htmlFor="typeAudience" className="block text-sm font-medium text-gray-700">
-          Type d'événement <span className="text-red-500">*</span>
+          Type de réunion <span className="text-red-500">*</span>
         </label>
         <select
           id="typeAudience"
