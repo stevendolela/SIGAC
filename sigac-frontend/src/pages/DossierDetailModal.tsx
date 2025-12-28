@@ -402,8 +402,8 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                 {detail.defendeur && <InfoRow label="Tiers concerné" value={detail.defendeur} />}
               </InfoCard>
 
-              {/* Juge assigné */}
-              <InfoCard title="Juge rapporteur" icon="👨‍⚖️">
+              {/* Responsable assigné */}
+              <InfoCard title="Responsable assigné" icon="👤">
                 {detail.rapporteur ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ 
@@ -436,7 +436,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     padding: '16px 0',
                     textAlign: 'center'
                   }}>
-                    Aucun juge assigné
+                    Aucun responsable assigné
                   </div>
                 )}
               </InfoCard>
@@ -828,8 +828,8 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     padding: 24
                   }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#1e293b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>👨‍⚖️</span>
-                      <span>Affecter un juge rapporteur</span>
+                      <span>�</span>
+                      <span>Affecter un responsable</span>
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                       <select

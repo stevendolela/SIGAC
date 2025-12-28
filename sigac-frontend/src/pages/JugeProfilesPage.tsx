@@ -167,7 +167,7 @@ export default function JugeProfilesPage() {
 
   return (
     <div className="panel" ref={focusRef} tabIndex={-1} aria-labelledby="juges-heading">
-      <div className="panel-title" id="juges-heading">👩‍⚖️ Profils des Juges</div>
+      <div className="panel-title" id="juges-heading">� Profils des Responsables</div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           className="focus-outline"
@@ -295,7 +295,7 @@ export default function JugeProfilesPage() {
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
               <p style={{ margin: 0, color: '#64748b' }}>
-                Aucun juge ne correspond à la recherche "{search}".
+                Aucun responsable ne correspond à la recherche "{search}".
               </p>
             </div>
           )}
@@ -521,7 +521,7 @@ export default function JugeProfilesPage() {
               {filtered.length === 0 && items.length > 0 && (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 24, color: '#64748b' }}>
-                    🔍 Aucun juge ne correspond à la recherche "{search}".
+                    🔍 Aucun responsable ne correspond à la recherche "{search}".
                   </td>
                 </tr>
               )}
