@@ -115,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           view: 'audiences' as ViewType,
-          label: 'Événements',
+          label: 'Réunions',
           icon: Calendar,
           color: '#ec4899'
         },
