@@ -574,7 +574,7 @@ export default function WorkspaceSettings() {
               
               <ul style={{ marginLeft: '20px', marginBottom: '16px', color: '#7f1d1d', fontSize: '14px' }}>
                 <li>Tous les dossiers et documents</li>
-                <li>Toutes les formations et audiences</li>
+                <li>Toutes les formations et réunions</li>
                 <li>Tous les membres du workspace</li>
                 <li>L'historique complet</li>
               </ul>
