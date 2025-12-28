@@ -21,6 +21,7 @@ public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
     private readonly IDossierRepository _dossierRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
     private readonly ILogger<DocumentsController> _logger;
     private readonly IConfiguration _configuration;
     private readonly ApplicationDbContext _context;
@@ -44,12 +45,14 @@ public class DocumentsController : ControllerBase
     public DocumentsController(
         IDocumentService documentService,
         IDossierRepository dossierRepository,
+        IAuditLogRepository auditLogRepository,
         ILogger<DocumentsController> logger,
         IConfiguration configuration,
         ApplicationDbContext context)
     {
         _documentService = documentService;
         _dossierRepository = dossierRepository;
+        _auditLogRepository = auditLogRepository;
         _logger = logger;
         _configuration = configuration;
         _context = context;
@@ -531,9 +534,10 @@ public class DocumentsController : ControllerBase
         try
         {
             var userId = GetCurrentUserId();
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
             var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
 
+            // 1. Log spécifique aux visualisations de documents
             var log = new DocumentVisualisationLog
             {
                 Id = Guid.NewGuid(),
@@ -547,6 +551,32 @@ public class DocumentsController : ControllerBase
 
             _context.DocumentVisualisationLogs.Add(log);
             await _context.SaveChangesAsync();
+
+            // 2. Log dans AuditLog pour traçabilité centralisée
+            var document = await _documentService.GetByIdAsync(documentId);
+            var logDetails = new
+            {
+                DocumentId = documentId,
+                DocumentNom = document?.NomFichier ?? "Unknown",
+                TypeVisualisation = typeVisualisation,
+                IpAddress = ipAddress,
+                DateVisualisation = DateTime.UtcNow
+            };
+
+            await _auditLogRepository.LogActionAsync(
+                userId,
+                typeVisualisation == "download" ? "DOWNLOAD_DOCUMENT" : "VIEW_DOCUMENT",
+                "Document",
+                documentId.ToString(),
+                null, // oldValues
+                System.Text.Json.JsonSerializer.Serialize(logDetails),
+                ipAddress,
+                userAgent
+            );
+
+            _logger.LogInformation(
+                "Document {DocumentId} ({TypeVisualisation}) consulté par utilisateur {UserId} depuis {IpAddress}",
+                documentId, typeVisualisation, userId, ipAddress);
         }
         catch (Exception ex)
         {
