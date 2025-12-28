@@ -87,8 +87,22 @@ export default function DashboardPage() {
     <div className="dashboard-container">
       <div className="panel">
         <div className="dashboard-header">
-          <div className="dashboard-title">📊 Tableau de Bord - Vue d'Ensemble</div>
+          <div className="dashboard-title">
+            📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
+          </div>
           <div className="dashboard-actions">
+            {!isAdmin && (
+              <span className="badge" style={{ 
+                background: 'rgba(59, 130, 246, 0.1)', 
+                color: '#3b82f6',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '0.85rem',
+                marginRight: '12px'
+              }}>
+                👤 Mes statistiques
+              </span>
+            )}
             <span className="last-update">
               Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
             </span>
@@ -110,42 +124,45 @@ export default function DashboardPage() {
             {/* KPI Cards */}
             <div className="kpi-grid">
               <div className="kpi-card" style={{ '--accent-color': '#3b82f6' } as React.CSSProperties}>
-                <div className="kpi-label">Total des Dossiers</div>
+                <div className="kpi-label">{isAdmin ? 'Total des Dossiers' : 'Mes Dossiers'}</div>
                 <div className="kpi-value">
                   {dossierStats?.totalDossiers ?? 0}
                 </div>
-                <div className="kpi-description">📁 Tous les dossiers</div>
+                <div className="kpi-description">📁 {isAdmin ? 'Tous les dossiers' : 'Dossiers assignés'}</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
-                <div className="kpi-label">Dossiers Validés</div>
+                <div className="kpi-label">{isAdmin ? 'Dossiers Validés' : 'Mes Validés'}</div>
                 <div className="kpi-value">
                   {dossierStats?.valides ?? 0}
                 </div>
-                <div className="kpi-description">✅ Dossiers validés</div>
+                <div className="kpi-description">✅ {isAdmin ? 'Dossiers validés' : 'Mes dossiers validés'}</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
-                <div className="kpi-label">En Cours</div>
+                <div className="kpi-label">{isAdmin ? 'En Cours' : 'Mes En Cours'}</div>
                 <div className="kpi-value">
                   {dossierStats?.enCours ?? 0}
                 </div>
-                <div className="kpi-description">📝 En cours de traitement</div>
+                <div className="kpi-description">📝 {isAdmin ? 'En cours de traitement' : 'Mes dossiers en cours'}</div>
               </div>
 
-              <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
-                <div className="kpi-label">Utilisateurs Actifs</div>
-                <div className="kpi-value">
-                  {userStats?.activeUsers ?? '-'}
+              {/* KPI Utilisateurs Actifs - Admin uniquement */}
+              {isAdmin && (
+                <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
+                  <div className="kpi-label">Utilisateurs Actifs</div>
+                  <div className="kpi-value">
+                    {userStats?.activeUsers ?? '-'}
+                  </div>
+                  <div className="kpi-description">👥 Utilisateurs connectés</div>
                 </div>
-                <div className="kpi-description">👥 Utilisateurs connectés</div>
-              </div>
+              )}
             </div>
 
             {/* Répartition par Statut */}
             <div className="chart-section">
               <div className="chart-title">
-                📈 Répartition des Dossiers par Statut
+                📈 {isAdmin ? 'Répartition des Dossiers par Statut' : 'Répartition de Mes Dossiers par Statut'}
               </div>
               <div>
                 {dossierStats && [
@@ -183,7 +200,7 @@ export default function DashboardPage() {
             {/* Indicateurs de Performance */}
             <div className="chart-section">
               <div className="chart-title">
-                🎯 Indicateurs de Performance
+                🎯 {isAdmin ? 'Indicateurs de Performance' : 'Mes Indicateurs de Performance'}
               </div>
               <div className="performance-grid">
                 <div className="performance-card" style={{ 
