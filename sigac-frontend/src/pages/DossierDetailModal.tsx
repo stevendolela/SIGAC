@@ -479,7 +479,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
               padding: '0 32px'
             }}>
               <TabButton tab="documents" label="Documents" icon="📄" />
-              <TabButton tab="audiences" label="Audiences" icon="📅" />
+              <TabButton tab="audiences" label="Réunions" icon="📅" />
               <TabButton tab="actions" label="Actions" icon="⚙️" />
               <TabButton tab="historique" label="Historique" icon="📜" />
             </div>
