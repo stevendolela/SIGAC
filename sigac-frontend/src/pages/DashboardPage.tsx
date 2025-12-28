@@ -150,10 +150,10 @@ export default function DashboardPage() {
               <div>
                 {dossierStats && [
                   { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
-                  { key: 'En Instruction', value: dossierStats.enInstruction },
-                  { key: 'En Déliberé', value: dossierStats.enDelibere },
-                  { key: 'Jugé', value: dossierStats.juges },
-                  { key: 'Classé', value: dossierStats.classes }
+                  { key: 'En Cours', value: dossierStats.enCours },
+                  { key: 'En Validation', value: dossierStats.enValidation },
+                  { key: 'Validé', value: dossierStats.valides },
+                  { key: 'Terminé', value: dossierStats.termines }
                 ].map(({ key, value }) => {
                   const total = dossierStats.totalDossiers || 1
                   const percentage = Math.round((value / total) * 100)
