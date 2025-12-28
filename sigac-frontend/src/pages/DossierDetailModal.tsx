@@ -398,8 +398,8 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
             }}>
               {/* Parties */}
               <InfoCard title="Parties" icon="👥">
-                <InfoRow label="Client" value={detail.demandeur} />
-                {detail.defendeur && <InfoRow label="Tiers concerné" value={detail.defendeur} />}
+                <InfoRow label="Demandeur" value={detail.demandeur} />
+                {detail.defendeur && <InfoRow label="Défendeur" value={detail.defendeur} />}
               </InfoCard>
 
               {/* Juge assigné */}

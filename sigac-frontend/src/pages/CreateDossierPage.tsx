@@ -251,10 +251,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
               <div className="form-group">
-                <label>Client *</label>
+                <label>Demandeur *</label>
                 <input
                   type="text"
-                  placeholder="Nom du client"
+                  placeholder="Nom du demandeur"
                   value={demandeur}
                   onChange={(e) => setDemandeur(e.target.value)}
                   required
@@ -262,10 +262,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
               </div>
 
               <div className="form-group">
-                <label>Tiers concerné</label>
+                <label>Défendeur</label>
                 <input
                   type="text"
-                  placeholder="Nom du tiers concerné"
+                  placeholder="Nom du défendeur"
                   value={defendeur}
                   onChange={(e) => setDefendeur(e.target.value)}
                 />
