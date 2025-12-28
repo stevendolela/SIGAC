@@ -91,18 +91,6 @@ export default function DashboardPage() {
             📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
           </div>
           <div className="dashboard-actions">
-            {!isAdmin && (
-              <span className="badge" style={{ 
-                background: 'rgba(59, 130, 246, 0.1)', 
-                color: '#3b82f6',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '0.85rem',
-                marginRight: '12px'
-              }}>
-                👤 Mes statistiques
-              </span>
-            )}
             <span className="last-update">
               Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
             </span>
