@@ -205,9 +205,9 @@ export default function DashboardPage() {
                 } as React.CSSProperties}>
                   <div className="performance-label">Dossiers en Cours</div>
                   <div className="performance-value">
-                    {(dossierStats?.enInstruction ?? 0) + (dossierStats?.enDelibere ?? 0)}
+                    {(dossierStats?.enCours ?? 0) + (dossierStats?.enValidation ?? 0)}
                   </div>
-                  <div className="performance-description">Instruction + Délibéré</div>
+                  <div className="performance-description">En cours + En validation</div>
                 </div>
 
                 <div className="performance-card" style={{ 
@@ -227,11 +227,11 @@ export default function DashboardPage() {
                   '--border-color': 'rgba(107, 114, 128, 0.1)',
                   '--value-color': '#6b7280'
                 } as React.CSSProperties}>
-                  <div className="performance-label">Dossiers Classés</div>
+                  <div className="performance-label">Dossiers Terminés</div>
                   <div className="performance-value">
-                    {dossierStats?.classes ?? 0}
+                    {dossierStats?.termines ?? 0}
                   </div>
-                  <div className="performance-description">Archivés</div>
+                  <div className="performance-description">Clôturés</div>
                 </div>
               </div>
             </div>
