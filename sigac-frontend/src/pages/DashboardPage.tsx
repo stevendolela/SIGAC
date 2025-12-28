@@ -114,7 +114,7 @@ export default function DashboardPage() {
                 <div className="kpi-value">
                   {dossierStats?.totalDossiers ?? 0}
                 </div>
-                <div className="kpi-description">📁 Affaires constitutionnelles</div>
+                <div className="kpi-description">📁 Tous les dossiers</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                 <div className="kpi-value">
                   {dossierStats?.valides ?? 0}
                 </div>
-                <div className="kpi-description">✅ Affaires traitées</div>
+                <div className="kpi-description">✅ Dossiers validés</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 <div className="kpi-value">
                   {userStats?.activeUsers ?? '-'}
                 </div>
-                <div className="kpi-description">👥 Personnel connecté</div>
+                <div className="kpi-description">👥 Utilisateurs connectés</div>
               </div>
             </div>
 
@@ -195,7 +195,7 @@ export default function DashboardPage() {
                   <div className="performance-value">
                     {dossierStats ? Math.round(((dossierStats.valides ?? 0) / (dossierStats.totalDossiers || 1)) * 100) : 0}%
                   </div>
-                  <div className="performance-description">Affaires validées / Total</div>
+                  <div className="performance-description">Dossiers validés / Total</div>
                 </div>
 
                 <div className="performance-card" style={{ 
