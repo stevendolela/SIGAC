@@ -40,7 +40,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
     }
 
     if (!demandeur.trim() || demandeur.trim().length < 3) {
-      notify({ type: 'error', message: '⚠️ Le demandeur est obligatoire (min. 3 caractères)' })
+      notify({ type: 'error', message: '⚠️ Le client est obligatoire (min. 3 caractères)' })
       return
     }
 
@@ -251,10 +251,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
               <div className="form-group">
-                <label>Demandeur *</label>
+                <label>Client *</label>
                 <input
                   type="text"
-                  placeholder="Nom du demandeur"
+                  placeholder="Nom du client"
                   value={demandeur}
                   onChange={(e) => setDemandeur(e.target.value)}
                   required
@@ -262,10 +262,10 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
               </div>
 
               <div className="form-group">
-                <label>Défendeur</label>
+                <label>Tiers concerné</label>
                 <input
                   type="text"
-                  placeholder="Nom du défendeur"
+                  placeholder="Nom du tiers concerné"
                   value={defendeur}
                   onChange={(e) => setDefendeur(e.target.value)}
                 />
