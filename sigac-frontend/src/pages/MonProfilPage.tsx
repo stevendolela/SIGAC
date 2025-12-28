@@ -149,7 +149,7 @@ export default function MonProfilPage() {
 
   return (
     <div className="panel">
-      <div className="panel-title">👤 Mon Profil de Juge Constitutionnel</div>
+      <div className="panel-title">👤 Mon Profil Professionnel</div>
       
       {/* Onglets */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '2px solid #e2e8f0' }}>
@@ -219,7 +219,7 @@ export default function MonProfilPage() {
           {!profile && !loading && (
             <div style={{ padding: 20, textAlign: 'center', background: '#fef3c7', borderRadius: 8, border: '1px solid #fbbf24' }}>
               <p style={{ margin: 0, color: '#92400e', fontSize: 16 }}>
-                ⚠️ Aucun profil de juge n'a été créé pour votre compte. 
+                ⚠️ Aucun profil professionnel n'a été créé pour votre compte. 
                 <br />
                 <strong>Veuillez contacter un administrateur.</strong>
               </p>
@@ -270,7 +270,7 @@ export default function MonProfilPage() {
                       className="focus-outline"
                       value={grade}
                       onChange={e => setGrade(e.target.value)}
-                      placeholder="Ex: Juge Conseiller"
+                      placeholder="Ex: Responsable Senior"
                       required
                       style={{ fontSize: 15 }}
                     />

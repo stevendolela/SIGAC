@@ -1,32 +1,38 @@
 namespace SIGAC.Core.Enums;
 
 /// <summary>
-/// Type d'audience
+/// Type d'événement/rendez-vous/audience
+/// Les valeurs sont configurables selon le secteur d'activité
 /// </summary>
 public enum TypeAudience
 {
     /// <summary>
-    /// Audience préliminaire
+    /// Événement/Réunion préliminaire ou de préparation
+    /// Exemples: Audience préliminaire (juridique), Réunion kick-off (projet), Première consultation (médical)
     /// </summary>
     Preliminaire = 1,
 
     /// <summary>
-    /// Audience de plaidoirie
+    /// Présentation ou plaidoirie
+    /// Exemples: Plaidoirie (juridique), Présentation client (entreprise), Exposé de cas (médical)
     /// </summary>
     Plaidoirie = 2,
 
     /// <summary>
-    /// Audience de délibéré
+    /// Session de délibération ou validation
+    /// Exemples: Délibéré (juridique), Comité de validation (entreprise), Conseil médical (santé)
     /// </summary>
     Delibere = 3,
 
     /// <summary>
-    /// Audience de prononcé
+    /// Annonce de décision ou communication officielle
+    /// Exemples: Prononcé (juridique), Présentation de résultats (entreprise), Annonce diagnostic (médical)
     /// </summary>
     Prononce = 4,
 
     /// <summary>
-    /// Audience d'instruction
+    /// Session de travail ou d'analyse
+    /// Exemples: Instruction (juridique), Réunion de travail (entreprise), Consultation approfondie (médical)
     /// </summary>
     Instruction = 5,
 

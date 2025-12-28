@@ -219,7 +219,7 @@ export default function JugeProfilesPage() {
           disabled={loading}
           onClick={() => load()}
           style={{ minWidth: 140 }}
-          aria-label="Recharger la liste des juges"
+          aria-label="Recharger la liste des membres"
         >🔄 Rafraîchir</button>
         {search && (
           <button className="btn btn-secondary" onClick={() => setSearch('')} aria-label="Effacer recherche">❌ Effacer</button>
@@ -235,7 +235,7 @@ export default function JugeProfilesPage() {
         )}
       </div>
 
-      {/* Alerte si des juges n'ont pas de profil */}
+      {/* Alerte si des membres n'ont pas de profil */}
       {!loading && jugesSansProfile.length > 0 && (
         <div style={{ 
           marginBottom: 16, 
@@ -245,7 +245,7 @@ export default function JugeProfilesPage() {
           border: '1px solid #fbbf24',
           fontSize: 14
         }}>
-          <strong>⚠️ {jugesSansProfile.length} juge(s) sans profil :</strong>{' '}
+          <strong>⚠️ {jugesSansProfile.length} membre(s) sans profil :</strong>{' '}
           {jugesSansProfile.map(j => j.nomComplet || j.username).join(', ')}
           {isAdmin && (
             <button 
@@ -277,7 +277,7 @@ export default function JugeProfilesPage() {
             }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
               <div style={{ color: '#64748b', fontSize: 16, marginBottom: 8 }}>
-                Aucun profil de juge n'a encore été créé.
+                Aucun profil professionnel n'a encore été créé.
               </div>
               {isAdmin && jugesSansProfile.length > 0 && (
                 <button 
@@ -504,7 +504,7 @@ export default function JugeProfilesPage() {
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 40 }}>
                     <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
                     <div style={{ color: '#64748b', fontSize: 16, marginBottom: 8 }}>
-                      Aucun profil de juge n'a encore été créé.
+                      Aucun profil professionnel n'a encore été créé.
                     </div>
                     {isAdmin && jugesSansProfile.length > 0 && (
                       <button 
@@ -567,7 +567,7 @@ export default function JugeProfilesPage() {
             }}
           >
             <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b' }}>
-              ➕ Créer un Profil de Juge
+              ➕ Créer un Profil Professionnel
             </h2>
 
             <div style={{ display: 'grid', gap: 16 }}>

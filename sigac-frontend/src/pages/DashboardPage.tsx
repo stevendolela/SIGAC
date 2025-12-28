@@ -61,18 +61,32 @@ export default function DashboardPage() {
 
   const statusColors: Record<string, string> = {
     'Nouveau': '#3b82f6',
-    'En Instruction': '#f59e0b', 
+    'En Instruction': '#f59e0b',
+    'EnInstruction': '#f59e0b', 
+    'En Cours': '#f59e0b',
     'En Déliberé': '#6366f1',
+    'EnDelibere': '#6366f1',
+    'En Validation': '#6366f1',
     'Juge': '#10b981',
-    'Classe': '#6b7280'
+    'Validé': '#10b981',
+    'Classe': '#6b7280',
+    'Archivé': '#6b7280'
   }
 
   const statusIcons: Record<string, string> = {
     'Nouveau': '🆕',
     'En Instruction': '📝',
-    'En Déliberé': '💭', 
+    'EnInstruction': '📝',
+    'En Cours': '📝',
+    'En Déliberé': '💭',
+    'EnDelibere': '💭', 
+    'En Validation': '💭',
     'Jugé': '✅',
-    'Classé': '📦'
+    'Juge': '✅',
+    'Validé': '✅',
+    'Classé': '📦',
+    'Classe': '📦',
+    'Archivé': '📦'
   }
 
   return (

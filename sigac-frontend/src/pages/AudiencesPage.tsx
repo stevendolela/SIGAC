@@ -176,7 +176,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
   const handleAudienceSuccess = () => {
     setShowAudienceModal(false)
     setSelectedAudienceId(undefined)
-    notify({ type: 'success', message: '✅ Audience enregistrée avec succès' })
+    notify({ type: 'success', message: '✅ Événement enregistré avec succès' })
     // Recharger les audiences après création/modification
     loadAudiences()
   }
@@ -212,7 +212,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   return (
     <div className="panel">
-      <div className="panel-title">📅 Gestion des Audiences</div>
+      <div className="panel-title">📅 Gestion des Événements</div>
 
       {/* Affichage d'erreur */}
       {error && (
@@ -249,7 +249,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
             🏛️ Gestion des salles
           </button>
           <button className="btn" onClick={handleNewAudience}>
-          ➕ Planifier une audience
+          ➕ Planifier un événement
           </button>
         </div>
       </div>

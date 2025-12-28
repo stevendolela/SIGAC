@@ -91,14 +91,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           view: 'dossiers' as ViewType,
-          label: 'Dossiers',
+          label: 'Projets',
           icon: FolderOpen,
           color: '#10b981',
           badge: currentWorkspace?.currentProjectCount
         },
         {
           view: 'create-dossier' as ViewType,
-          label: 'Nouveau Dossier',
+          label: 'Nouveau Projet',
           icon: FilePlus,
           color: '#f59e0b'
         },
@@ -115,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           view: 'audiences' as ViewType,
-          label: 'Audiences',
+          label: 'Événements',
           icon: Calendar,
           color: '#ec4899'
         },
@@ -144,13 +144,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         }] : []),
         {
           view: 'profils' as ViewType,
-          label: 'Profils Juges',
+          label: 'Équipe',
           icon: UserCircle,
           color: '#8b5cf6'
         },
         {
           view: 'types-affaires' as ViewType,
-          label: "Types d'affaires",
+          label: "Catégories",
           icon: FileType,
           color: '#06b6d4'
         },

@@ -1,8 +1,8 @@
-# SIGAC (Taajii GED) - Instructions pour les Agents IA
+# SIGAC (Taajii) - Instructions pour les Agents IA
 
 ## Architecture Générale
 
-SIGAC/Taajii est un système de gestion électronique des dossiers (GED) pour la Cour Constitutionnelle RDC. Architecture 3-tier moderne:
+SIGAC/Taajii est une plateforme moderne de gestion électronique des documents (GED) et des workflows métiers, adaptable à tous les secteurs d'activité. Architecture 3-tier moderne:
 
 - **Backend** (.NET 8, C#): API REST avec Entity Framework Core + PostgreSQL
   - `SIGAC.API`: Contrôleurs, middleware, configuration startup
@@ -36,18 +36,25 @@ SIGAC/Taajii est un système de gestion électronique des dossiers (GED) pour la
 
 ## Fonctionnalités Principales
 
-### 1. Gestion des Dossiers (Core Feature)
-Le système central de SIGAC - gestion complète du cycle de vie des affaires constitutionnelles:
+### 1. Gestion des Dossiers/Projets (Core Feature)
+Le système central de SIGAC - gestion complète du cycle de vie des dossiers métiers (adaptable à tout secteur):
 - **Entities**: `Dossier`, `Document`, `Historique`, `TypeAffaire`
-- **Workflow**: Nouveau → EnInstruction → EnDelibere → Juge → Classe
-- **RBAC**: Juges voient seulement leurs dossiers assignés
+- **Workflow configurable**: Nouveau → EnCours → Validé → Terminé → Archivé (personnalisable)
+- **RBAC**: Contrôle d'accès granulaire selon les rôles
 - **Audit**: Historique métier + AuditLog système
+- **Cas d'usage multi-secteurs**: 
+  - Juridique: Affaires constitutionnelles, contentieux, contrats
+  - Santé: Dossiers patients, consultations
+  - Entreprise: Projets, contrats clients, devis
+  - Administration: Demandes citoyennes, procédures administratives
 
 ### 2. Workspaces (Multi-tenancy)
-Organisation multi-tenant permettant de gérer plusieurs institutions:
+Organisation multi-tenant permettant de gérer plusieurs organisations/entités:
 - **Entity**: `Workspace` avec `Members` (via `WorkspaceUser`)
-- **Features**: Slug URL, quotas (MaxStorageGB, MaxUsers), logo Base64
+- **Features**: Slug URL, quotas (MaxStorageGB, MaxUsers), logo Base64, branding personnalisé
 - **Roles**: Owner > Admin > Member > Guest (enum `WorkspaceRole`)
+- **Isolation**: Données complètement séparées par workspace
+- **Cas d'usage**: Cabinet avec plusieurs clients, groupe d'entreprises, administrations multi-services
 - **Soft Delete**: `IsActive` pour archivage
 
 ### 3. Chat Système (Collaboration)
@@ -60,15 +67,17 @@ Chat intégré 1-to-1 et groupes pour collaboration en temps réel:
 - **Unread Counts**: Badges sur conversations/groupes non lus
 
 ### 4. Audiences & Calendrier
-Gestion des audiences de la cour:
+Gestion des événements et calendrier (adaptable à tout secteur):
 - **Entities**: `Audience`, `CalendarEvent`, `Salle`
-- **Types**: `TypeAudience` (PubliqueOrale, PriseDeplieConclusions, etc.)
+- **Types configurables**: Audiences juridiques, réunions, consultations médicales, rendez-vous clients, etc.
 - **Statuts**: `StatutAudience` (Planifiee, EnCours, Terminee, Reportee)
+- **Cas d'usage**: Juridique (audiences), Médical (consultations), Entreprise (réunions clients)
 
 ### 5. Formations & Équipes
-Gestion des équipes de juges et participation:
+Gestion des équipes et collaboration:
 - **Entities**: `Formation`, `FormationParticipation`
-- **Link**: Formations liées à un `Workspace` spécifique
+- **Link**: Équipes liées à un `Workspace` spécifique
+- **Applications**: Équipes juridiques, équipes projet, équipes médicales, groupes de travail
 
 ---
 
@@ -330,11 +339,11 @@ dotnet ef database update --project SIGAC.Infrastructure --startup-project SIGAC
 
 ### Enums
 
-Toujours en `SIGAC.Core/Enums/`. Pattern Dossier:
-- `StatusDossier`: Workflow states (Nouveau → EnInstruction → EnDelibere → Juge → Classe)
+Toujours en `SIGAC.Core/Enums/`. Patterns adaptables:
+- `StatusDossier`: Workflow states personnalisables (Nouveau → EnCours → Validé → Terminé → Archivé)
 - `PrioriteDossier`: Urgency (Normale, Haute, Critique)
-- `TypeAffaire`: Case types (ContestatieElection, RecourseConstitu, etc.)
-- `UserRole`: Access levels (Admin, President, JugeConstitutionnel)
+- `TypeAffaire`: Types configurables selon le secteur métier
+- `UserRole`: Access levels flexibles (Admin, Manager, Collaborateur, Consultant)
 
 ---
 
@@ -765,6 +774,12 @@ Au-delà des 3 rôles principaux en `SIGAC.Core/Enums/UserRole.cs`:
 - `Consultant`: Accès en lecture sur dossiers assignés (optionnel)
 
 **Chaque service reçoit userId + userRole et applique filtrage automatique.**
+
+**Note**: Les noms de rôles sont adaptables selon le secteur:
+- Juridique: Juge, Greffier, Avocat
+- Santé: Médecin, Infirmier, Administratif
+- Entreprise: Manager, Collaborateur, Consultant
+- Administration: Directeur, Agent, Superviseur
 
 ---
 

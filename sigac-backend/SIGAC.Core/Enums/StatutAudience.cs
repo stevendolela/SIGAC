@@ -1,27 +1,32 @@
 namespace SIGAC.Core.Enums;
 
 /// <summary>
-/// Statut d'une audience
+/// Statut d'un événement/rendez-vous/audience
+/// Applicable à tous secteurs: réunions, consultations, audiences juridiques, etc.
 /// </summary>
 public enum StatutAudience
 {
     /// <summary>
-    /// Audience planifiée
+    /// Événement planifié
+    /// Exemples: Audience planifiée (juridique), Réunion planifiée (entreprise), Consultation prévue (médical)
     /// </summary>
     Planifiee = 1,
 
     /// <summary>
-    /// Audience confirmée
+    /// Événement confirmé par les participants
+    /// Applicable à tous types d'événements
     /// </summary>
     Confirmee = 2,
 
     /// <summary>
-    /// Audience reportée
+    /// Événement reporté à une date ultérieure
+    /// Applicable à tous types d'événements
     /// </summary>
     Reportee = 3,
 
     /// <summary>
-    /// Audience annulée
+    /// Événement annulé définitivement
+    /// Applicable à tous types d'événements
     /// </summary>
     Annulee = 4,
 
