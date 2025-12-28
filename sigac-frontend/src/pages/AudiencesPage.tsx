@@ -489,7 +489,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
           setShowAudienceModal(false)
           setSelectedAudienceId(undefined)
         }}
-        title={selectedAudienceId ? 'Modifier l\'audience' : 'Planifier une audience'}
+        title={selectedAudienceId ? 'Modifier l\'événement' : 'Planifier un événement'}
         size="lg"
       >
         <AudienceForm
