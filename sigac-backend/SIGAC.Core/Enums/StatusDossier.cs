@@ -14,25 +14,25 @@ public enum StatusDossier
 
     /// <summary>
     /// Dossier en cours de traitement/analyse
-    /// Exemples: En instruction (juridique), En consultation (médical), En développement (projet)
+    /// Exemples: En cours (général), En consultation (médical), En développement (projet)
     /// </summary>
-    EnInstruction = 2,
+    EnCours = 2,
 
     /// <summary>
-    /// En attente de validation/délibération
-    /// Exemples: En délibéré (juridique), En validation (entreprise), En révision (médical)
+    /// En attente de validation/révision
+    /// Exemples: En validation (général), En révision (médical), En approbation (projet)
     /// </summary>
-    EnDelibere = 3,
+    EnValidation = 3,
 
     /// <summary>
     /// Dossier traité/validé
-    /// Exemples: Jugé (juridique), Validé (entreprise), Diagnostic établi (médical)
+    /// Exemples: Validé (général), Approuvé (entreprise), Diagnostic établi (médical)
     /// </summary>
-    Juge = 4,
+    Valide = 4,
 
     /// <summary>
-    /// Dossier archivé/terminé
-    /// Exemples: Classé (juridique), Archivé (général), Clôturé (projet)
+    /// Dossier terminé/archivé
+    /// Exemples: Terminé (général), Archivé (général), Clôturé (projet)
     /// </summary>
-    Classe = 5
+    Termine = 5
 }

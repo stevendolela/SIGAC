@@ -255,8 +255,8 @@ public class DossierService : IDossierService
             return false;
         }
 
-        // Suppression logique - on marque comme Classé
-        dossier.Status = StatusDossier.Classe;
+        // Suppression logique - on marque comme Terminé
+        dossier.Status = StatusDossier.Termine;
         dossier.ModifiedBy = userId;
         dossier.ModifiedAt = DateTime.UtcNow;
 
@@ -376,7 +376,7 @@ public class DossierService : IDossierService
         dossier.ModifiedBy = userId;
         dossier.ModifiedAt = DateTime.UtcNow;
 
-        if (nouveauStatut == StatusDossier.Juge)
+        if (nouveauStatut == StatusDossier.Valide)
         {
             dossier.DateDecision = DateTime.UtcNow;
         }
@@ -423,10 +423,10 @@ public class DossierService : IDossierService
         {
             TotalDossiers = stats.TotalDossiers,
             NouveauxDossiers = stats.NouveauxDossiers,
-            EnInstruction = stats.EnInstruction,
-            EnDelibere = stats.EnDelibere,
-            Juges = stats.Juges,
-            Classes = stats.Classes,
+            EnCours = stats.EnCours,
+            EnValidation = stats.EnValidation,
+            Valides = stats.Valides,
+            Termines = stats.Termines,
             ParType = stats.ParType,
             ParPriorite = stats.ParPriorite
         };
@@ -461,10 +461,10 @@ public class DossierService : IDossierService
         // Les transitions autorisées
         var allowedTransitions = new Dictionary<StatusDossier, List<StatusDossier>>
         {
-            { StatusDossier.Nouveau, new List<StatusDossier> { StatusDossier.EnInstruction } },
-            { StatusDossier.EnInstruction, new List<StatusDossier> { StatusDossier.EnDelibere, StatusDossier.Nouveau } },
-            { StatusDossier.EnDelibere, new List<StatusDossier> { StatusDossier.Juge, StatusDossier.EnInstruction } },
-            { StatusDossier.Juge, new List<StatusDossier> { StatusDossier.Classe } }
+            { StatusDossier.Nouveau, new List<StatusDossier> { StatusDossier.EnCours } },
+            { StatusDossier.EnCours, new List<StatusDossier> { StatusDossier.EnValidation, StatusDossier.Nouveau } },
+            { StatusDossier.EnValidation, new List<StatusDossier> { StatusDossier.Valide, StatusDossier.EnCours } },
+            { StatusDossier.Valide, new List<StatusDossier> { StatusDossier.Termine } }
         };
 
         if (!allowedTransitions.ContainsKey(currentStatus) || 

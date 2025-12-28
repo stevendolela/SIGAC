@@ -270,10 +270,10 @@ public class EmailNotificationService : IEmailNotificationService
         return status switch
         {
             StatusDossier.Nouveau => "Nouveau",
-            StatusDossier.EnInstruction => "En instruction",
-            StatusDossier.EnDelibere => "En délibéré",
-            StatusDossier.Juge => "Jugé",
-            StatusDossier.Classe => "Classé",
+            StatusDossier.EnCours => "En cours",
+            StatusDossier.EnValidation => "En validation",
+            StatusDossier.Valide => "Validé",
+            StatusDossier.Termine => "Terminé",
             _ => status.ToString()
         };
     }

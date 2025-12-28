@@ -72,8 +72,8 @@ public class DossierRepository : IDossierRepository
             query = query.Where(d => d.WorkspaceId == workspaceId.Value);
         }
 
-        // Exclure les dossiers classés (suppression logique)
-        query = query.Where(d => d.Status != StatusDossier.Classe);
+        // Exclure les dossiers terminés (suppression logique)
+        query = query.Where(d => d.Status != StatusDossier.Termine);
 
         var totalCount = await query.CountAsync();
 
@@ -149,10 +149,10 @@ public class DossierRepository : IDossierRepository
         {
             TotalDossiers = await query.CountAsync(),
             NouveauxDossiers = await query.CountAsync(d => d.Status == StatusDossier.Nouveau),
-            EnInstruction = await query.CountAsync(d => d.Status == StatusDossier.EnInstruction),
-            EnDelibere = await query.CountAsync(d => d.Status == StatusDossier.EnDelibere),
-            Juges = await query.CountAsync(d => d.Status == StatusDossier.Juge),
-            Classes = await query.CountAsync(d => d.Status == StatusDossier.Classe),
+            EnCours = await query.CountAsync(d => d.Status == StatusDossier.EnCours),
+            EnValidation = await query.CountAsync(d => d.Status == StatusDossier.EnValidation),
+            Valides = await query.CountAsync(d => d.Status == StatusDossier.Valide),
+            Termines = await query.CountAsync(d => d.Status == StatusDossier.Termine),
             ParType = await _context.Dossiers
                 .GroupBy(d => d.TypeAffaireId)
                 .Select(g => new {
