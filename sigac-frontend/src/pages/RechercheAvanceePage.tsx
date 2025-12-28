@@ -102,7 +102,7 @@ export default function RechercheAvanceePage() {
             </div>
 
             <div className="form-group">
-              <label>📂 Type d'Affaire</label>
+              <label>📂 Catégorie</label>
               <select value={typeAffaire} onChange={(e) => setTypeAffaire(e.target.value)}>
                 <option value="">-- Tous les types --</option>
                 {/* Les valeurs doivent correspondre EXACTEMENT aux enums backend TypeAffaire */}

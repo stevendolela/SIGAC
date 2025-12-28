@@ -218,7 +218,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
                 <label>Titre du Dossier *</label>
                 <input
                   type="text"
-                  placeholder="Ex: Contestation électorale - Province du Nord-Kivu"
+                  placeholder="Ex: Projet Alpha - Déploiement infrastructure"
                   value={titre}
                   onChange={(e) => setTitre(e.target.value)}
                   required
@@ -226,7 +226,7 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
               </div>
 
               <div className="form-group">
-                <label>Type d'Affaire *</label>
+                <label>Catégorie *</label>
                 <TypeAffaireSelect value={typeAffaireId} onChange={setTypeAffaireId} />
               </div>
 
@@ -276,13 +276,13 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
           {/* Détails */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>📄</span> Détails de l'Affaire
+              <span>📄</span> Détails du Dossier
             </div>
 
             <div className="form-group" style={{ marginBottom: 16 }}>
               <label>Résumé</label>
               <textarea
-                placeholder="Résumé bref de l'affaire..."
+                placeholder="Résumé bref du dossier..."
                 value={resume}
                 onChange={(e) => setResume(e.target.value)}
                 rows={4}

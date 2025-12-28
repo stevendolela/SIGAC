@@ -189,7 +189,7 @@ export default function AudienceDetail({ audienceId, onEdit, onClose, canEdit = 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
                   <div>
                     <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 600, marginBottom: '4px' }}>
-                      Type d'affaire
+                      Catégorie
                     </div>
                     <div style={{ fontSize: '14px', color: '#374151' }}>
                       {dossier.typeAffaire}

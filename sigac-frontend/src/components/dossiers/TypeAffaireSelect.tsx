@@ -19,7 +19,7 @@ export const TypeAffaireSelect: React.FC<Props> = ({ value, onChange, disabled }
       onChange={(e) => onChange(e.target.value || null)}
       disabled={disabled}
     >
-      <option value="">-- Sélectionner un type d'affaire --</option>
+      <option value="">-- Sélectionner une catégorie --</option>
       {items.map((t) => (
         <option key={t.id} value={t.id}>{t.nom}</option>
       ))}

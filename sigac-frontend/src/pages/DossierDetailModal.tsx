@@ -443,7 +443,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
 
               {/* Informations générales */}
               <InfoCard title="Informations" icon="📊">
-                <InfoRow label="Type d'affaire" value={formatTypeAffaire(detail.type || detail.typeAffaire)} />
+                <InfoRow label="Catégorie" value={formatTypeAffaire(detail.type || detail.typeAffaire)} />
                 <InfoRow 
                   label="Date de dépôt" 
                   value={(detail.dateDepot || detail.dateDebut || detail.createdAt) ? new Date(detail.dateDepot || detail.dateDebut || detail.createdAt!).toLocaleDateString('fr-FR') : '-'} 
