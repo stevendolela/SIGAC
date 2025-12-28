@@ -845,7 +845,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                           fontWeight: 500
                         }}
                       >
-                        <option value="">-- Sélectionner un juge --</option>
+                        <option value="">-- Sélectionner un responsable --</option>
                         {juges.map((juge) => (
                           <option key={juge.id} value={juge.id}>
                             {juge.nomComplet || juge.username} • {juge.matricule || juge.email}

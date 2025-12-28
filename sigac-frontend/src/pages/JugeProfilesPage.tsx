@@ -58,7 +58,7 @@ export default function JugeProfilesPage() {
 
   async function handleCreate() {
     if (!selectedUserId) {
-      notify({ type: 'error', message: 'Veuillez sélectionner un juge' })
+      notify({ type: 'error', message: 'Veuillez sélectionner un responsable' })
       return
     }
     if (!grade.trim()) {
@@ -583,7 +583,7 @@ export default function JugeProfilesPage() {
                   required
                   style={{ width: '100%', padding: '10px 12px', fontSize: 15 }}
                 >
-                  <option value="">-- Sélectionner un juge --</option>
+                  <option value="">-- Sélectionner un responsable --</option>
                   {jugesSansProfile.map(j => (
                     <option key={j.id} value={j.id}>
                       {j.nomComplet || j.username} ({j.email})
