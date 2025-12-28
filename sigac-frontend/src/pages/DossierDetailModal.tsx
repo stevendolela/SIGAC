@@ -48,10 +48,10 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   function getStatusBadge(status?: string | null) {
     const colors: Record<string, { bg: string; text: string; label: string }> = {
       'Nouveau': { bg: '#dbeafe', text: '#1e40af', label: '🆕 Nouveau' },
-      'EnInstruction': { bg: '#fef3c7', text: '#92400e', label: '📝 En Instruction' },
-      'EnDelibere': { bg: '#e0e7ff', text: '#3730a3', label: '💭 En Délibéré' },
-      'Juge': { bg: '#d1fae5', text: '#065f46', label: '✅ Jugé' },
-      'Classe': { bg: '#f3f4f6', text: '#374151', label: '📦 Classé' }
+      'EnCours': { bg: '#fef3c7', text: '#92400e', label: '📝 En Cours' },
+      'EnValidation': { bg: '#e0e7ff', text: '#3730a3', label: '💭 En Validation' },
+      'Valide': { bg: '#d1fae5', text: '#065f46', label: '✅ Validé' },
+      'Termine': { bg: '#f3f4f6', text: '#374151', label: '📦 Terminé' }
     }
     const config = colors[status || ''] || { bg: '#f3f4f6', text: '#6b7280', label: status || '-' }
     return (
@@ -896,10 +896,10 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                       >
                         <option value="">-- Nouveau statut --</option>
                         <option value="1">🆕 Nouveau</option>
-                        <option value="2">📝 En Instruction</option>
-                        <option value="3">💭 En Délibéré</option>
-                        <option value="4">✅ Jugé</option>
-                        <option value="5">📦 Classé</option>
+                        <option value="2">📝 En Cours</option>
+                        <option value="3">💭 En Validation</option>
+                        <option value="4">✅ Validé</option>
+                        <option value="5">📦 Terminé</option>
                       </select>
                       <input
                         placeholder="Commentaire (optionnel)"

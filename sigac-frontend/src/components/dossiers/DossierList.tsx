@@ -157,10 +157,10 @@ export default function DossierList({ onSelect }: Props) {
           >
             <option value="">📋 Tous statuts</option>
             <option value="Nouveau">🆕 Nouveau</option>
-            <option value="EnInstruction">📝 En instruction</option>
-            <option value="EnDelibere">💭 En délibéré</option>
-            <option value="Juge">✅ Jugé</option>
-            <option value="Classe">📦 Classé</option>
+            <option value="EnCours">📝 En cours</option>
+            <option value="EnValidation">💭 En validation</option>
+            <option value="Valide">✅ Validé</option>
+            <option value="Termine">📦 Terminé</option>
           </select>
           <select
             value={priorite}

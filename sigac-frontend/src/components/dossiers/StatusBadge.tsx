@@ -1,6 +1,6 @@
 import React from 'react'
 
-export type StatusType = 'Nouveau' | 'EnInstruction' | 'EnDelibere' | 'Juge' | 'Classe' | string
+export type StatusType = 'Nouveau' | 'EnCours' | 'EnValidation' | 'Valide' | 'Termine' | string
 export type PrioriteType = 'Urgente' | 'Haute' | 'Normale' | 'Basse' | string
 
 interface StatusBadgeProps {
@@ -11,10 +11,10 @@ interface StatusBadgeProps {
 
 const statusMeta: Record<string, { text: string; icon: string; cls: string }> = {
   Nouveau: { text: 'Nouveau', icon: '🆕', cls: 'status-nouveau' },
-  EnInstruction: { text: 'En instruction', icon: '📝', cls: 'status-instruction' },
-  EnDelibere: { text: 'En délibéré', icon: '💭', cls: 'status-delibere' },
-  Juge: { text: 'Jugé', icon: '✅', cls: 'status-juge' },
-  Classe: { text: 'Classé', icon: '📦', cls: 'status-classe' }
+  EnCours: { text: 'En cours', icon: '📝', cls: 'status-cours' },
+  EnValidation: { text: 'En validation', icon: '💭', cls: 'status-validation' },
+  Valide: { text: 'Validé', icon: '✅', cls: 'status-valide' },
+  Termine: { text: 'Terminé', icon: '📦', cls: 'status-termine' }
 }
 
 const prioriteMeta: Record<string, { text: string; icon: string; cls: string }> = {
