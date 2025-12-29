@@ -294,8 +294,8 @@ export default function HistoriqueDossiersPage() {
     setPage(1) // Retour à la première page
   }
 
-  // Calculer les dossiers uniques touchés
-  const uniqueDossiers = new Set(
+  // Calculer les dossiers uniques touchés dans les logs
+  const uniqueDossiersInLogs = new Set(
     logs
       .filter(log => log.dossierId && log.dossierId !== '')
       .map(log => log.dossierId)
@@ -400,16 +400,16 @@ export default function HistoriqueDossiersPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <FolderOpen size={20} color="#8b5cf6" />
-            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>DOSSIERS</span>
+            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>DOSSIERS SYSTÈME</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
             <div style={{ fontSize: '24px', fontWeight: '700', color: '#8b5cf6' }}>
-              {uniqueDossiers.size}
+              {dossiers.length}
             </div>
-            <div style={{ fontSize: '14px', color: '#9ca3af' }}>uniques</div>
+            <div style={{ fontSize: '14px', color: '#9ca3af' }}>total</div>
           </div>
           <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-            {logs.filter(l => l.entityType === 'Dossier').length} actions
+            {uniqueDossiersInLogs.size} avec activité • {logs.filter(l => l.entityType === 'Dossier').length} actions
           </div>
         </div>
 
