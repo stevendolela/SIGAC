@@ -4,6 +4,7 @@ import type { UserDto } from '../types/user'
 import type { PaginationMetadata } from '../types/pagination'
 import { useToast } from '../components/common/ToastProvider'
 import { AdminResetPasswordModal } from '../components/common/AdminResetPasswordModal'
+import { migrateRole } from '../utils/roleMigration'
 
 export default function UsersPage() {
   const [items, setItems] = useState<UserDto[]>([])
@@ -42,7 +43,12 @@ export default function UsersPage() {
     setError(null)
     try {
       const res = await userApi.list(p, pageSize, q)
-      setItems(res.data)
+      // Migration automatique des rôles en cas de données anciennes
+      const migratedData = res.data.map(user => ({
+        ...user,
+        role: migrateRole(user.role) as any
+      }))
+      setItems(migratedData)
       setPagination(res.pagination)
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Erreur de chargement')
@@ -64,10 +70,14 @@ export default function UsersPage() {
     try {
       if (u.isActive) {
         const updated = await userApi.deactivate(u.id)
+        // Migration du rôle en cas de données anciennes
+        updated.role = migrateRole(updated.role) as any
         setItems(prev => prev.map(x => x.id === updated.id ? updated : x))
         notify({ type: 'success', message: `✅ Utilisateur désactivé: ${updated.username}` })
       } else {
         const updated = await userApi.activate(u.id)
+        // Migration du rôle en cas de données anciennes
+        updated.role = migrateRole(updated.role) as any
         setItems(prev => prev.map(x => x.id === updated.id ? updated : x))
         notify({ type: 'success', message: `✅ Utilisateur activé: ${updated.username}` })
       }
@@ -96,10 +106,12 @@ export default function UsersPage() {
 
   function openEdit(u: UserDto) {
     setEditingUser(u)
+    // Migration du rôle au moment de l'ouverture du formulaire
+    const migratedRole = migrateRole(u.role)
     setEditForm({
       email: u.email,
       nomComplet: u.nomComplet || '',
-      role: u.role,
+      role: migratedRole,
       matricule: u.matricule || ''
     })
   }
