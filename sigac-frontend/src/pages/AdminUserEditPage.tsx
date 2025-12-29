@@ -3,10 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { userApi } from '../api/userApi'
 import type { UserDto, UpdateUserDto, UserRole } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
-
-const roles: UserRole[] = [
-  'Admin','Manager','Collaborateur','Assistant','AssistantJunior','Consultant'
-]
+import { roleLabels, allRoles } from '../utils/roleUtils'
 
 export default function AdminUserEditPage() {
   const { id } = useParams<{id:string}>()
@@ -73,7 +70,7 @@ export default function AdminUserEditPage() {
         <label>
           Rôle
           <select value={form.role} onChange={e=>update('role', e.target.value as UserRole)}>
-            {roles.map(r=> <option key={r} value={r}>{r}</option>)}
+            {allRoles.map(r=> <option key={r} value={r}>{roleLabels[r]}</option>)}
           </select>
         </label>
         <label>

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { fileToBase64, validateImageFile } from '../utils/fileHelpers'
+import { formatRoleShort } from '../utils/roleUtils'
 
 export default function AccountPage() {
   const userStr = localStorage.getItem('user')
@@ -198,7 +199,7 @@ export default function AccountPage() {
                 </div>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Rôle</div>
-                  <span className="badge" style={{ background: '#ddd6fe', color: '#5b21b6', fontSize: 12, padding: '4px 10px' }}>{user.role}</span>
+                  <span className="badge" style={{ background: '#ddd6fe', color: '#5b21b6', fontSize: 12, padding: '4px 10px' }}>{formatRoleShort(user.role)}</span>
                 </div>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Matricule</div>

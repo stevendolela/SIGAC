@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { ChangePasswordModal } from './ChangePasswordModal'
+import { formatRoleShort } from '../../utils/roleUtils'
 
 interface AccountModalProps {
   onClose: () => void
@@ -196,7 +197,7 @@ export default function AccountModal({ onClose }: AccountModalProps) {
                     </div>
                     <div style={{ marginBottom: 16 }}>
                       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Rôle</div>
-                      <span className="badge" style={{ background: '#ddd6fe', color: '#5b21b6', fontSize: 12, padding: '4px 10px' }}>{user.role}</span>
+                      <span className="badge" style={{ background: '#ddd6fe', color: '#5b21b6', fontSize: 12, padding: '4px 10px' }}>{formatRoleShort(user.role)}</span>
                     </div>
                     <div style={{ marginBottom: 16 }}>
                       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Matricule</div>
