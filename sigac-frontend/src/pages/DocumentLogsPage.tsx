@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar, Download, Eye, User, Clock, Globe, Filter, FileText, Search } from 'lucide-react'
+import { getApiBaseUrl } from '../api/api-client'
 
 interface DocumentLog {
   id: string
@@ -46,18 +47,32 @@ export default function DocumentLogsPage() {
         return
       }
 
-      // Pour l'instant, on récupère tous les logs via l'endpoint AuditLog
-      const response = await fetch('http://localhost:5210/api/auditlogs?entityType=Document&limit=500', {
+      // Utiliser l'URL de base de l'API (fonctionne en dev et prod)
+      const apiUrl = getApiBaseUrl()
+      const response = await fetch(`${apiUrl}/auditlogs?entityType=Document&limit=500`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
       if (!response.ok) {
-        throw new Error(`Erreur ${response.status}`)
+        if (response.status === 401) {
+          throw new Error('Session expirée. Veuillez vous reconnecter.')
+        } else if (response.status === 403) {
+          throw new Error('Accès refusé. Cette page est réservée aux administrateurs.')
+        } else if (response.status === 404) {
+          throw new Error('Endpoint /api/auditlogs non trouvé.')
+        }
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
+      
+      // Vérifier que data est un tableau
+      if (!Array.isArray(data)) {
+        console.error('Réponse API invalide:', data)
+        throw new Error('Format de réponse invalide')
+      }
       
       // Transformer les AuditLogs en format DocumentLog
       const transformedLogs = data
