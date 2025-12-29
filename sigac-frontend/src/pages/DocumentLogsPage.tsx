@@ -45,14 +45,17 @@ export default function HistoriqueDossiersPage() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null)
 
   useEffect(() => {
-    loadDossiers()
-    loadLogs()
+    const loadData = async () => {
+      const dossiersData = await loadDossiers()
+      await loadLogs(dossiersData)
+    }
+    loadData()
   }, [])
 
   const loadDossiers = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) return
+      if (!token) return []
 
       const apiUrl = getApiBaseUrl()
       // Charger tous les dossiers pour Admin (limite élevée)
@@ -65,18 +68,22 @@ export default function HistoriqueDossiersPage() {
       if (response.ok) {
         const data = await response.json()
         const dossiersList = data.data || data
-        setDossiers(dossiersList.map((d: any) => ({
+        const dossiersMap = dossiersList.map((d: any) => ({
           id: d.id,
           numero: d.numeroDossier,
           titre: d.titre
-        })))
+        }))
+        setDossiers(dossiersMap)
+        return dossiersMap
       }
+      return []
     } catch (err) {
       console.error('Erreur chargement dossiers:', err)
+      return []
     }
   }
 
-  const loadLogs = async () => {
+  const loadLogs = async (dossiersData?: Array<{id: string, numero: string, titre: string}>) => {
     setLoading(true)
     setError(null)
     try {
@@ -140,6 +147,16 @@ export default function HistoriqueDossiersPage() {
           if (isDocument) {
             entityName = (parsedDetails as any).NomFichier || (parsedDetails as any).DocumentNom || 'Document'
             dossierId = (parsedDetails as any).DossierId || ''
+            
+            // Trouver le dossier associé pour afficher son numéro et titre
+            if (dossierId) {
+              const dossiersToUse = dossiersData || dossiers
+              const dossierAssocie = dossiersToUse.find(d => d.id === dossierId)
+              if (dossierAssocie) {
+                dossierNumero = dossierAssocie.numero
+                dossierTitre = dossierAssocie.titre
+              }
+            }
           } else if (isDossier) {
             entityName = (parsedDetails as any).Titre || (parsedOldValues as any).Titre || 'Dossier'
             dossierNumero = (parsedDetails as any).NumeroDossier || (parsedOldValues as any).NumeroDossier || ''
@@ -147,8 +164,8 @@ export default function HistoriqueDossiersPage() {
             dossierId = log.entityId
           }
 
-          // Mapper les actions
-          if (log.action === 'VIEW_DOCUMENT') actionType = 'view'
+          // Mapper les actions - inclure VIEW pour les dossiers
+          if (log.action === 'VIEW_DOCUMENT' || log.action === 'VIEW' || log.action === 'GET') actionType = 'view'
           else if (log.action === 'DOWNLOAD_DOCUMENT') actionType = 'download'
           else if (log.action === 'UPLOAD') actionType = 'upload'
           else if (log.action === 'CREATE') actionType = 'create'
