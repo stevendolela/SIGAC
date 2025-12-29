@@ -961,6 +961,7 @@ export default function DocumentsPage() {
             <thead>
               <tr>
                 <th>Nom du fichier</th>
+                <th>Dossier</th>
                 <th>Type</th>
                 <th>Taille</th>
                 <th>Date upload</th>
@@ -968,18 +969,43 @@ export default function DocumentsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredDocuments.map(doc => (
-                <tr key={doc.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 20 }}>📄</span>
-                      <span style={{ fontWeight: 600 }}>{doc.nomFichier}</span>
-                    </div>
-                  </td>
-                  <td>{doc.typeDocument}</td>
-                  <td>{(doc.tailleFichier / 1024 / 1024).toFixed(2)} MB</td>
-                  <td>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</td>
-                  <td style={{ display: 'flex', gap: 6 }}>
+              {filteredDocuments.map(doc => {
+                const dossier = dossiers.find(d => d.id === doc.dossierId);
+                return (
+                  <tr key={doc.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 20 }}>📄</span>
+                        <span style={{ fontWeight: 600 }}>{doc.nomFichier}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {dossier ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ 
+                            fontSize: 10, 
+                            fontWeight: 700, 
+                            color: '#6b7280',
+                            background: '#f3f4f6',
+                            padding: '2px 6px',
+                            borderRadius: 3
+                          }}>
+                            {dossier.numeroDossier}
+                          </span>
+                          <span style={{ fontSize: 13, color: '#374151' }}>
+                            {dossier.titre.length > 30 ? dossier.titre.substring(0, 30) + '...' : dossier.titre}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
+                          Non assigné
+                        </span>
+                      )}
+                    </td>
+                    <td>{doc.typeDocument}</td>
+                    <td>{(doc.tailleFichier / 1024 / 1024).toFixed(2)} MB</td>
+                    <td>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</td>
+                    <td style={{ display: 'flex', gap: 6 }}>
                     <button
                       title="Télécharger"
                       style={{
@@ -1037,7 +1063,8 @@ export default function DocumentsPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -1045,4 +1072,3 @@ export default function DocumentsPage() {
     </div>
   )
 }
-
