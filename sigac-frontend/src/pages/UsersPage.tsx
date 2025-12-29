@@ -140,16 +140,36 @@ export default function UsersPage() {
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault()
     
+    // Validation username
     if (!formData.username.trim() || formData.username.trim().length < 3) {
       notify({ type: 'error', message: "Le nom d'utilisateur doit contenir au moins 3 caractères" })
       return
     }
+    
+    // Validation email
     if (!formData.email.trim() || !formData.email.includes('@')) {
       notify({ type: 'error', message: "L'adresse email est invalide" })
       return
     }
-    if (!formData.password.trim() || formData.password.trim().length < 8) {
+    
+    // Validation mot de passe renforcée
+    const password = formData.password.trim()
+    if (!password || password.length < 8) {
       notify({ type: 'error', message: "Le mot de passe doit contenir au moins 8 caractères" })
+      return
+    }
+    
+    // Vérifier la complexité du mot de passe
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /[0-9]/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      notify({ 
+        type: 'error', 
+        message: "Le mot de passe doit contenir au moins: 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial (!@#$%...)" 
+      })
       return
     }
 
@@ -165,6 +185,8 @@ export default function UsersPage() {
         nomComplet: formData.nomComplet.trim() || null,
         matricule: formData.matricule.trim() || null
       }
+      
+      console.log('🔍 Payload envoyé:', payload)
       
       const newUser = await userApi.create(payload)
       
@@ -184,6 +206,9 @@ export default function UsersPage() {
       
       notify({ type: 'success', message: `✅ Utilisateur créé avec succès: ${newUser.username}` })
     } catch (e: any) {
+      console.error('❌ Erreur création utilisateur:', e)
+      console.error('❌ Response data:', e?.response?.data)
+      
       const serverMsg = e?.response?.data?.message || e?.message || "Erreur lors de la création de l'utilisateur"
       const modelErrors: string[] | undefined = e?.response?.data?.errors
       
@@ -407,7 +432,7 @@ export default function UsersPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimum 8 caractères"
+                    placeholder="Min 8 car: Aa1! (majuscule, minuscule, chiffre, spécial)"
                     required
                     minLength={8}
                     style={{ 
@@ -421,6 +446,14 @@ export default function UsersPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
                   />
+                  <p style={{ 
+                    margin: '6px 0 0 0', 
+                    fontSize: '12px', 
+                    color: '#6b7280',
+                    fontStyle: 'italic'
+                  }}>
+                    Doit contenir: majuscule, minuscule, chiffre et caractère spécial
+                  </p>
                 </div>
 
                 <div>
