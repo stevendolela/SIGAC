@@ -560,17 +560,17 @@ const UnreadBadge: React.FC = React.memo(() => {
 
   // Auto-scroll uniquement sur nouveau message
   useEffect(() => {
-    const messageCount = selectedChat?.type === 'conversation' 
+    const messageCount = (selectedChat?.type === 'conversation' 
       ? conversation?.messages.length || 0 
-      : group?.messages.length || 0;
+      : group?.messages.length || 0) + optimisticMessages.length;
     
     if (messageCount > lastMessageCount && !isUserScrolledRef.current) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 50);
       setLastMessageCount(messageCount);
     }
-  }, [conversation?.messages.length, group?.messages.length, lastMessageCount, selectedChat]);
+  }, [conversation?.messages.length, group?.messages.length, optimisticMessages.length, lastMessageCount, selectedChat]);
 
   // Composant Message mémorisé pour éviter les re-renders
   const MessageItem = React.memo<{ msg: any }>(({ msg }) => (
@@ -702,7 +702,11 @@ const UnreadBadge: React.FC = React.memo(() => {
       createdAt: new Date().toISOString(),
       senderId: currentUser?.id || '',
       senderNomComplet: currentUser?.nomComplet || currentUser?.username || 'Vous',
+      senderUsername: currentUser?.username || 'Vous',
+      senderStatus: currentUser?.status,
       isTemporary: true,
+      chatId: selectedChat.id, // Identifiant du chat
+      chatType: selectedChat.type, // Type du chat
     };
 
     // Ajouter le message à la liste optimistic immédiatement
@@ -710,6 +714,11 @@ const UnreadBadge: React.FC = React.memo(() => {
     
     // Vider l'input immédiatement
     setMessageInput('');
+    
+    // Scroll immédiat vers le bas
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
 
     try {
       if (selectedChat.type === 'conversation') {
@@ -1455,10 +1464,12 @@ const UnreadBadge: React.FC = React.memo(() => {
                         <MessageItem key={msg.id} msg={msg} />
                       ))}
                       
-                      {/* Messages optimistes (en attente d'envoi) */}
-                      {optimisticMessages.map(msg => (
-                        <MessageItem key={msg.id} msg={msg} />
-                      ))}
+                      {/* Messages optimistes (en attente d'envoi) pour ce chat uniquement */}
+                      {optimisticMessages
+                        .filter(m => m.chatId === selectedChat.id && m.chatType === selectedChat.type)
+                        .map(msg => (
+                          <MessageItem key={msg.id} msg={msg} />
+                        ))}
                       
                       <div ref={messagesEndRef} />
                     </>
