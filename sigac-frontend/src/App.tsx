@@ -32,8 +32,14 @@ import WorkspaceSelector from './components/workspace/WorkspaceSelector'
 import CreateWorkspaceModal from './components/workspace/CreateWorkspaceModal'
 import WorkspaceSettings from './pages/WorkspaceSettings'
 import Sidebar from './components/common/Sidebar'
+import { migrateUserDataInCache } from './utils/roleMigration'
 
 export default function App() {
+  // Migrer les données de cache au démarrage (anciens rôles → nouveaux rôles)
+  useEffect(() => {
+    migrateUserDataInCache()
+  }, [])
+
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
