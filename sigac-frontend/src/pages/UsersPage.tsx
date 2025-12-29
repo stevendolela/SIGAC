@@ -348,7 +348,7 @@ export default function UsersPage() {
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Ex: juge.kabila"
+                    placeholder="Ex: jean.dupont"
                     required
                     minLength={3}
                     style={{ 
@@ -378,7 +378,7 @@ export default function UsersPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Ex: juge.kabila@courconstitutionnelle.cd"
+                    placeholder="Ex: jean.dupont@entreprise.com"
                     required
                     style={{ 
                       width: '100%',
@@ -447,13 +447,13 @@ export default function UsersPage() {
                       cursor: 'pointer'
                     }}
                   >
-                    <option value="">👤 Consultant</option>
+                    <option value="">-- Sélectionner un rôle --</option>
                     <option value="1">👑 Administrateur</option>
-                    <option value="2">⚖️ Président</option>
-                    <option value="3">👨‍⚖️ Juge Constitutionnel</option>
-                    <option value="4">📋 Greffier</option>
-                    <option value="5">📝 Greffier Adjoint</option>
-                    <option value="6">👤 Consultant</option>
+                    <option value="2">👔 Directeur</option>
+                    <option value="3">👨‍💼 Manager</option>
+                    <option value="4">👤 Collaborateur</option>
+                    <option value="5">📋 Assistant</option>
+                    <option value="6">👁️ Consultant</option>
                   </select>
                 </div>
               </div>
@@ -499,7 +499,7 @@ export default function UsersPage() {
                     type="text"
                     value={formData.nomComplet}
                     onChange={(e) => setFormData({ ...formData, nomComplet: e.target.value })}
-                    placeholder="Ex: Joseph Kabila Kabange"
+                    placeholder="Ex: Jean Dupont Martin"
                     style={{ 
                       width: '100%',
                       padding: '10px 14px',
