@@ -484,6 +484,7 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [blobUrl, setBlobUrl] = useState<string>('');
   const [voiceNotePreview, setVoiceNotePreview] = useState<{ file: File; duration: number; blobUrl: string } | null>(null);
   const [filePreviewModal, setFilePreviewModal] = useState<{ isOpen: boolean; attachment: any | null; blobUrl: string | null }>({ isOpen: false, attachment: null, blobUrl: null });
+  const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const imageBlobUrls = useRef<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -550,6 +551,7 @@ const UnreadBadge: React.FC = React.memo(() => {
     if (selectedChat) {
       setLastMessageCount(0);
       isUserScrolledRef.current = false;
+      setOptimisticMessages([]); // Vider les messages optimistes au changement de chat
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 100);
@@ -688,22 +690,53 @@ const UnreadBadge: React.FC = React.memo(() => {
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return;
 
+    const tempMessageContent = messageInput;
+    const tempMessageId = `temp-${Date.now()}`;
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+
+    // Créer un message temporaire
+    const tempMessage = {
+      id: tempMessageId,
+      content: tempMessageContent,
+      createdAt: new Date().toISOString(),
+      senderId: currentUser?.id || '',
+      senderNomComplet: currentUser?.nomComplet || currentUser?.username || 'Vous',
+      isTemporary: true,
+    };
+
+    // Ajouter le message à la liste optimistic immédiatement
+    setOptimisticMessages((prev) => [...prev, tempMessage]);
+    
+    // Vider l'input immédiatement
+    setMessageInput('');
+
     try {
       if (selectedChat.type === 'conversation') {
-        await chatApi.sendMessage(selectedChat.id, messageInput);
+        // Envoyer au serveur en arrière-plan
+        await chatApi.sendMessage(selectedChat.id, tempMessageContent);
         await refetchConversation();
       } else {
+        // Envoyer au serveur en arrière-plan
         await chatApi.sendGroupMessage({
           chatGroupId: selectedChat.id,
-          content: messageInput,
+          content: tempMessageContent,
         });
         await refetchGroup();
       }
-      setMessageInput('');
-      await refetchConversations();
-      await refetchGroups();
+      
+      // Retirer le message temporaire après succès (le vrai message est maintenant chargé)
+      setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
+      
+      // Rafraîchir les listes en arrière-plan
+      refetchConversations();
+      refetchGroups();
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
+      
+      // En cas d'erreur, retirer le message temporaire et remettre le texte dans l'input
+      setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
+      setMessageInput(tempMessageContent);
     }
   };
 
@@ -1417,9 +1450,16 @@ const UnreadBadge: React.FC = React.memo(() => {
                     <div className="loading">Chargement des messages...</div>
                   ) : (
                     <>
+                      {/* Messages réels du serveur */}
                       {(selectedChat.type === 'conversation' ? conversation?.messages : group?.messages)?.map(msg => (
                         <MessageItem key={msg.id} msg={msg} />
                       ))}
+                      
+                      {/* Messages optimistes (en attente d'envoi) */}
+                      {optimisticMessages.map(msg => (
+                        <MessageItem key={msg.id} msg={msg} />
+                      ))}
+                      
                       <div ref={messagesEndRef} />
                     </>
                   )}
