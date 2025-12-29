@@ -145,13 +145,14 @@ export default function HistoriqueDossiersPage() {
           let actionType = log.action.toLowerCase()
 
           if (isDocument) {
-            entityName = (parsedDetails as any).NomFichier || (parsedDetails as any).DocumentNom || 'Document'
-            dossierId = (parsedDetails as any).DossierId || ''
+            entityName = (parsedDetails as any).NomFichier || (parsedDetails as any).nomFichier || (parsedDetails as any).DocumentNom || 'Document'
+            // Gérer les différentes casses possibles pour DossierId
+            dossierId = (parsedDetails as any).DossierId || (parsedDetails as any).dossierId || ''
             
             // Trouver le dossier associé pour afficher son numéro et titre
             if (dossierId) {
               const dossiersToUse = dossiersData || dossiers
-              const dossierAssocie = dossiersToUse.find(d => d.id === dossierId)
+              const dossierAssocie = dossiersToUse.find(d => d.id === dossierId || d.id.toLowerCase() === dossierId.toLowerCase())
               if (dossierAssocie) {
                 dossierNumero = dossierAssocie.numero
                 dossierTitre = dossierAssocie.titre
