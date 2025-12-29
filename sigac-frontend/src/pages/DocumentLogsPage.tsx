@@ -276,6 +276,29 @@ export default function HistoriqueDossiersPage() {
     }).format(date)
   }
 
+  // Fonction pour filtrer via KPI
+  const handleKpiClick = (type: 'entityType' | 'action', value: string) => {
+    if (type === 'entityType') {
+      setFilters(prev => ({
+        ...prev,
+        entityType: prev.entityType === value ? 'all' : value as any
+      }))
+    } else if (type === 'action') {
+      setFilters(prev => ({
+        ...prev,
+        action: prev.action === value ? 'all' : value as any
+      }))
+    }
+    setPage(1) // Retour à la première page
+  }
+
+  // Calculer les dossiers uniques touchés
+  const uniqueDossiers = new Set(
+    logs
+      .filter(log => log.dossierId && log.dossierId !== '')
+      .map(log => log.dossierId)
+  )
+
   const exportToCSV = () => {
     const headers = ['Date', 'Type', 'Entité', 'Dossier', 'Utilisateur', 'Action', 'IP']
     const rows = filteredLogs.map(log => [
@@ -319,36 +342,91 @@ export default function HistoriqueDossiersPage() {
         </p>
       </div>
 
-      {/* Statistiques rapides */}
+      {/* Statistiques rapides - CLIQUABLES */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
         gap: '16px',
         marginBottom: '24px'
       }}>
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Total des logs */}
+        <div 
+          onClick={() => {
+            setFilters({ search: '', entityType: 'all', action: 'all', dateDebut: '', dateFin: '', dossierId: '' })
+            setPage(1)
+          }}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.entityType === 'all' && filters.action === 'all' ? '2px solid #1e3a8a' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <Clock size={20} color="#1e3a8a" />
+            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>TOTAL ACTIONS</span>
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#1e3a8a' }}>
+            {logs.length}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Cliquez pour tout voir
+          </div>
+        </div>
+
+        {/* Dossiers uniques */}
+        <div 
+          onClick={() => handleKpiClick('entityType', 'Dossier')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.entityType === 'Dossier' ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <FolderOpen size={20} color="#8b5cf6" />
             <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>DOSSIERS</span>
           </div>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#8b5cf6' }}>
-            {logs.filter(l => l.entityType === 'Dossier').length}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#8b5cf6' }}>
+              {uniqueDossiers.size}
+            </div>
+            <div style={{ fontSize: '14px', color: '#9ca3af' }}>uniques</div>
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            {logs.filter(l => l.entityType === 'Dossier').length} actions
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Documents */}
+        <div 
+          onClick={() => handleKpiClick('entityType', 'Document')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.entityType === 'Document' ? '2px solid #0ea5e9' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <FileText size={20} color="#0ea5e9" />
             <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>DOCUMENTS</span>
@@ -356,15 +434,27 @@ export default function HistoriqueDossiersPage() {
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#0ea5e9' }}>
             {logs.filter(l => l.entityType === 'Document').length}
           </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Cliquez pour filtrer
+          </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Créations */}
+        <div 
+          onClick={() => handleKpiClick('action', 'create')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'create' ? '2px solid #10b981' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Plus size={20} color="#10b981" />
             <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>CRÉATIONS</span>
@@ -372,53 +462,148 @@ export default function HistoriqueDossiersPage() {
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
             {logs.filter(l => l.action === 'create').length}
           </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Nouveaux éléments
+          </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Modifications */}
+        <div 
+          onClick={() => handleKpiClick('action', 'update')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'update' ? '2px solid #0ea5e9' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Edit size={20} color="#0ea5e9" />
             <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>MODIFICATIONS</span>
           </div>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#0ea5e9' }}>
-            {logs.filter(l => l.action === 'update' || l.action === 'status_change').length}
+            {logs.filter(l => l.action === 'update').length}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Mises à jour
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Changements de statut */}
+        <div 
+          onClick={() => handleKpiClick('action', 'status_change')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'status_change' ? '2px solid #06b6d4' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <FolderOpen size={20} color="#06b6d4" />
+            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>STATUTS</span>
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#06b6d4' }}>
+            {logs.filter(l => l.action === 'status_change').length}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Changements
+          </div>
+        </div>
+
+        {/* Consultations */}
+        <div 
+          onClick={() => handleKpiClick('action', 'view')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'view' ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Eye size={20} color="#3b82f6" />
-            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>CONSULTATIONS</span>
+            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>VUES</span>
           </div>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>
             {logs.filter(l => l.action === 'view').length}
           </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Visualisations
+          </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
+        {/* Téléchargements */}
+        <div 
+          onClick={() => handleKpiClick('action', 'download')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'download' ? '2px solid #10b981' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <Download size={20} color="#10b981" />
+            <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>DOWNLOADS</span>
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
+            {logs.filter(l => l.action === 'download').length}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Téléchargements
+          </div>
+        </div>
+
+        {/* Suppressions */}
+        <div 
+          onClick={() => handleKpiClick('action', 'delete')}
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: filters.action === 'delete' ? '2px solid #ef4444' : '1px solid #e5e7eb',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Trash2 size={20} color="#ef4444" />
             <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>SUPPRESSIONS</span>
           </div>
           <div style={{ fontSize: '24px', fontWeight: '700', color: '#ef4444' }}>
             {logs.filter(l => l.action === 'delete').length}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+            Éléments supprimés
           </div>
         </div>
       </div>
@@ -432,9 +617,43 @@ export default function HistoriqueDossiersPage() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         border: '1px solid #e5e7eb'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Filter size={20} color="#3b82f6" />
-          <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Filtres</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Filter size={20} color="#3b82f6" />
+            <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Filtres</h3>
+            {(filters.entityType !== 'all' || filters.action !== 'all' || filters.search || filters.dossierId || filters.dateDebut || filters.dateFin) && (
+              <span style={{
+                background: '#dbeafe',
+                color: '#1e40af',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
+                {filteredLogs.length} résultat{filteredLogs.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          {(filters.entityType !== 'all' || filters.action !== 'all' || filters.search || filters.dossierId || filters.dateDebut || filters.dateFin) && (
+            <button
+              onClick={() => {
+                setFilters({ search: '', entityType: 'all', action: 'all', dateDebut: '', dateFin: '', dossierId: '' })
+                setPage(1)
+              }}
+              style={{
+                padding: '6px 12px',
+                background: '#fee2e2',
+                color: '#991b1b',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              ✕ Effacer tous les filtres
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -676,29 +895,41 @@ export default function HistoriqueDossiersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedLogs.map((log, index) => (
-                    <tr 
-                      key={log.id}
-                      style={{
-                        borderBottom: '1px solid #e5e7eb',
-                        background: index % 2 === 0 ? 'white' : '#f9fafb',
-                        transition: 'background 0.2s'
-                      }}
-                    >
+                  {paginatedLogs.map((log, index) => {
+                    const [isHovered, setIsHovered] = React.useState(false)
+                    return (
+                      <tr 
+                        key={log.id}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        style={{
+                          borderBottom: '1px solid #e5e7eb',
+                          background: isHovered ? '#f0f9ff' : (index % 2 === 0 ? 'white' : '#f9fafb'),
+                          transition: 'all 0.2s',
+                          cursor: 'pointer',
+                          boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                        }}
+                      >
                       <td style={{ padding: '16px', fontSize: '14px', color: '#374151' }}>
-                        {formatDate(log.dateAction)}
+                        <div style={{ fontWeight: '600', color: '#1e3a8a', marginBottom: '2px' }}>
+                          {formatDate(log.dateAction).split(',')[0]}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                          {formatDate(log.dateAction).split(',')[1]}
+                        </div>
                       </td>
                       <td style={{ padding: '16px' }}>
                         <div style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          fontSize: '11px',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
                           fontWeight: '600',
                           background: log.entityType === 'Dossier' ? '#ede9fe' : '#dbeafe',
-                          color: log.entityType === 'Dossier' ? '#6b21a8' : '#1e40af'
+                          color: log.entityType === 'Dossier' ? '#6b21a8' : '#1e40af',
+                          border: log.entityType === 'Dossier' ? '1px solid #c4b5fd' : '1px solid #93c5fd'
                         }}>
                           {log.entityType === 'Dossier' ? <FolderOpen size={14} /> : <FileText size={14} />}
                           {log.entityType}
@@ -709,18 +940,27 @@ export default function HistoriqueDossiersPage() {
                           overflow: 'hidden', 
                           textOverflow: 'ellipsis', 
                           whiteSpace: 'nowrap',
-                          fontWeight: '500'
+                          fontWeight: '600',
+                          color: '#1e3a8a',
+                          marginBottom: '4px'
                         }}>
                           {log.entityName}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
-                          ID: {log.entityId.substring(0, 8)}...
+                        <div style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace' }}>
+                          {log.entityId.substring(0, 8)}...
                         </div>
                       </td>
                       <td style={{ padding: '16px', fontSize: '13px', color: '#374151', maxWidth: '200px' }}>
                         {log.dossierNumero ? (
                           <div>
-                            <div style={{ fontWeight: '600', color: '#1e3a8a' }}>{log.dossierNumero}</div>
+                            <div style={{ 
+                              fontWeight: '700', 
+                              color: '#1e3a8a',
+                              marginBottom: '4px',
+                              fontSize: '13px'
+                            }}>
+                              📁 {log.dossierNumero}
+                            </div>
                             <div style={{ 
                               fontSize: '12px', 
                               color: '#6b7280',
@@ -736,14 +976,34 @@ export default function HistoriqueDossiersPage() {
                         )}
                       </td>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#374151' }}>
-                        {log.userNomComplet}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700'
+                          }}>
+                            {log.userNomComplet.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '600', fontSize: '13px', color: '#1e3a8a' }}>
+                              {log.userNomComplet}
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td style={{ padding: '16px' }}>
                         <div style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          padding: '4px 12px',
+                          gap: '8px',
+                          padding: '6px 14px',
                           borderRadius: '20px',
                           fontSize: '12px',
                           fontWeight: '600',
@@ -754,10 +1014,22 @@ export default function HistoriqueDossiersPage() {
                         </div>
                       </td>
                       <td style={{ padding: '16px', fontSize: '13px', color: '#6b7280', fontFamily: 'monospace' }}>
-                        {log.ipAddress}
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '6px',
+                          padding: '4px 8px',
+                          background: '#f3f4f6',
+                          borderRadius: '6px',
+                          width: 'fit-content'
+                        }}>
+                          <Globe size={14} />
+                          {log.ipAddress}
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
