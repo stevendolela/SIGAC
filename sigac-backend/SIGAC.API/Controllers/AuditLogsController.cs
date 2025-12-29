@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGAC.Core.Entities;
+using SIGAC.Core.DTOs;
 using SIGAC.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -39,7 +40,7 @@ public class AuditLogsController : ControllerBase
     /// <param name="limit">Nombre maximum de résultats (défaut: 100, max: 1000)</param>
     /// <returns>Liste des logs d'audit</returns>
     [HttpGet]
-    public async Task<ActionResult<List<AuditLog>>> GetAuditLogs(
+    public async Task<ActionResult<List<AuditLogDto>>> GetAuditLogs(
         [FromQuery] string? entityType = null,
         [FromQuery] string? action = null,
         [FromQuery] Guid? userId = null,
@@ -95,6 +96,20 @@ public class AuditLogsController : ControllerBase
             var logs = await query
                 .OrderByDescending(a => a.Timestamp)
                 .Take(limit)
+                .Select(a => new AuditLogDto
+                {
+                    Id = a.Id,
+                    Timestamp = a.Timestamp,
+                    UserId = a.UserId,
+                    UserName = a.User != null ? a.User.Username : null,
+                    Action = a.Action,
+                    EntityType = a.EntityType,
+                    EntityId = a.EntityId,
+                    OldValues = a.OldValues,
+                    NewValues = a.NewValues,
+                    IpAddress = a.IpAddress,
+                    UserAgent = a.UserAgent
+                })
                 .ToListAsync();
 
             _logger.LogInformation(
@@ -114,7 +129,7 @@ public class AuditLogsController : ControllerBase
     /// Récupère un log d'audit spécifique par son ID.
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<AuditLog>> GetAuditLogById(Guid id)
+    public async Task<ActionResult<AuditLogDto>> GetAuditLogById(Guid id)
     {
         try
         {
@@ -127,7 +142,22 @@ public class AuditLogsController : ControllerBase
 
             var log = await _context.AuditLogs
                 .Include(a => a.User)
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .Where(a => a.Id == id)
+                .Select(a => new AuditLogDto
+                {
+                    Id = a.Id,
+                    Timestamp = a.Timestamp,
+                    UserId = a.UserId,
+                    UserName = a.User != null ? a.User.Username : null,
+                    Action = a.Action,
+                    EntityType = a.EntityType,
+                    EntityId = a.EntityId,
+                    OldValues = a.OldValues,
+                    NewValues = a.NewValues,
+                    IpAddress = a.IpAddress,
+                    UserAgent = a.UserAgent
+                })
+                .FirstOrDefaultAsync();
 
             if (log == null)
             {

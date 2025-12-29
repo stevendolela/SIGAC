@@ -93,7 +93,7 @@ export default function DocumentLogsPage() {
             documentId: log.entityId || 'N/A',
             documentNom: (parsedDetails as any).DocumentNom || (parsedDetails as any).NomFichier || 'Document supprimé',
             userId: log.userId || 'Système',
-            userNomComplet: 'Chargement...', // À enrichir avec appel API Users si besoin
+            userNomComplet: log.userName || 'Utilisateur inconnu',
             dateVisualisation: log.timestamp,
             typeVisualisation: log.action === 'VIEW_DOCUMENT' ? 'view' : 
                               log.action === 'DOWNLOAD_DOCUMENT' ? 'download' :
