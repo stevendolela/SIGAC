@@ -269,140 +269,343 @@ export default function UsersPage() {
 
       {/* Formulaire de création */}
       {showCreateForm && (
-        <div className="card" style={{ marginBottom: 24, background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)', border: '2px solid #667eea' }}>
-          <h3 style={{ marginTop: 0, marginBottom: 20, color: '#5b21b6' }}>➕ Créer un Nouvel Utilisateur</h3>
+        <div style={{ 
+          background: 'white',
+          borderRadius: '12px',
+          padding: '32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            marginBottom: '28px',
+            paddingBottom: '20px',
+            borderBottom: '2px solid #f3f4f6'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              👤
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
+                Gestion des Utilisateurs
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+                Créer un nouvel utilisateur système
+              </p>
+            </div>
+          </div>
+
           <form onSubmit={handleCreateUser}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-              {/* Section Informations de Connexion */}
-              <div style={{ gridColumn: '1 / -1' }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#667eea', fontSize: 14, fontWeight: 600 }}>
-                  🔐 Informations de Connexion
-                </h4>
+            {/* Section Informations de Connexion */}
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                marginBottom: '20px'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: '#fef3c7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  🔐
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#374151' }}>
+                  Informations de Connexion
+                </h3>
               </div>
               
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Nom d'utilisateur <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Ex: juge.kabila"
-                  required
-                  minLength={3}
-                  style={{ width: '100%' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Nom d'utilisateur <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    placeholder="Ex: juge.kabila"
+                    required
+                    minLength={3}
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Email <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Ex: juge.kabila@courconstitutionnelle.cd"
+                    required
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Mot de passe <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Minimum 8 caractères"
+                    required
+                    minLength={8}
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Rôle <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    required
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      background: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="">👤 Consultant</option>
+                    <option value="1">👑 Administrateur</option>
+                    <option value="2">⚖️ Président</option>
+                    <option value="3">👨‍⚖️ Juge Constitutionnel</option>
+                    <option value="4">📋 Greffier</option>
+                    <option value="5">📝 Greffier Adjoint</option>
+                    <option value="6">👤 Consultant</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section Informations Complémentaires */}
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                marginBottom: '20px'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: '#dbeafe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  📋
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#374151' }}>
+                  Informations Complémentaires <span style={{ fontSize: '13px', fontWeight: '400', color: '#9ca3af' }}>(optionnel)</span>
+                </h3>
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Email <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Ex: juge.kabila@courconstitutionnelle.cd"
-                  required
-                  style={{ width: '100%' }}
-                />
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Nom complet
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.nomComplet}
+                    onChange={(e) => setFormData({ ...formData, nomComplet: e.target.value })}
+                    placeholder="Ex: Joseph Kabila Kabange"
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  />
+                </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Mot de passe <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Minimum 8 caractères"
-                  required
-                  minLength={8}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Rôle <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  required
-                  style={{ width: '100%' }}
-                >
-                  <option value="1">👑 Administrateur</option>
-                  <option value="2">⚖️ Président</option>
-                  <option value="3">👨‍⚖️ Juge Constitutionnel</option>
-                  <option value="4">📋 Greffier</option>
-                  <option value="5">📝 Greffier Adjoint</option>
-                  <option value="6">👤 Consultant</option>
-                </select>
-              </div>
-
-              {/* Section Informations Complémentaires */}
-              <div style={{ gridColumn: '1 / -1', marginTop: 8 }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#667eea', fontSize: 14, fontWeight: 600 }}>
-                  📋 Informations Complémentaires (optionnel)
-                </h4>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Nom complet
-                </label>
-                <input
-                  type="text"
-                  value={formData.nomComplet}
-                  onChange={(e) => setFormData({ ...formData, nomComplet: e.target.value })}
-                  placeholder="Ex: Joseph Kabila Kabange"
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
-                  Matricule
-                </label>
-                <input
-                  type="text"
-                  value={formData.matricule}
-                  onChange={(e) => setFormData({ ...formData, matricule: e.target.value })}
-                  placeholder="Ex: MAT-2025-001"
-                  style={{ width: '100%' }}
-                />
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}>
+                    Matricule
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.matricule}
+                    onChange={(e) => setFormData({ ...formData, matricule: e.target.value })}
+                    placeholder="Ex: MAT-2025-001"
+                    style={{ 
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                  />
+                </div>
               </div>
             </div>
 
             {error && (
-              <div className="error" style={{ marginBottom: 16 }}>
-                {error}
+              <div style={{
+                padding: '12px 16px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                color: '#dc2626',
+                fontSize: '14px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>⚠️</span>
+                <span>{error}</span>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end',
+              paddingTop: '20px',
+              borderTop: '1px solid #f3f4f6'
+            }}>
               <button 
                 type="button" 
-                className="btn" 
                 onClick={resetForm}
                 disabled={creating}
-                style={{ minWidth: 120 }}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  borderRadius: '8px',
+                  border: '2px solid #e5e7eb',
+                  background: 'white',
+                  color: '#374151',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  opacity: creating ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => !creating && (e.currentTarget.style.background = '#f9fafb')}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
               >
                 Annuler
               </button>
               <button 
                 type="submit" 
-                className="btn" 
                 disabled={creating}
                 style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
+                  padding: '10px 24px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  borderRadius: '8px',
                   border: 'none',
-                  minWidth: 120
+                  background: creating ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: creating ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.3)'
                 }}
+                onMouseEnter={(e) => !creating && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 {creating ? '⏳ Création...' : '✅ Créer l\'utilisateur'}
               </button>
