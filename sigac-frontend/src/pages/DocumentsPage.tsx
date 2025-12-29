@@ -3,6 +3,7 @@ import { documentApi } from '../api/documentApi'
 import type { DocumentDto } from '../types/document'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
+import DossierDetailModal from './DossierDetailModal'
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentDto[]>([])
@@ -26,6 +27,10 @@ export default function DocumentsPage() {
   const [scanningNetwork, setScanningNetwork] = useState(false)
   const [selectedNetworkScanner, setSelectedNetworkScanner] = useState<any>(null)
   const [scannerModalTab, setScannerModalTab] = useState<'local' | 'network'>('local')
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [previewDocument, setPreviewDocument] = useState<DocumentDto | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [selectedDossierDetailId, setSelectedDossierDetailId] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -115,6 +120,27 @@ export default function DocumentsPage() {
     doc.nomFichier.toLowerCase().includes(search.toLowerCase()) ||
     doc.typeDocument?.toLowerCase().includes(search.toLowerCase())
   )
+
+  async function handlePreviewDocument(doc: DocumentDto) {
+    try {
+      const blob = await documentApi.download(doc.id)
+      const url = URL.createObjectURL(blob)
+      setPreviewUrl(url)
+      setPreviewDocument(doc)
+      setShowPreviewModal(true)
+    } catch (e: any) {
+      notify({ type: 'error', message: 'Erreur lors du chargement du document' })
+    }
+  }
+
+  function closePreview() {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+    setPreviewUrl(null)
+    setPreviewDocument(null)
+    setShowPreviewModal(false)
+  }
 
   async function handleFileUpload(files: FileList | null) {
     if (!files || files.length === 0) return
@@ -981,18 +1007,33 @@ export default function DocumentsPage() {
                     </td>
                     <td>
                       {dossier ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div 
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 6,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setSelectedDossierDetailId(dossier.id)}
+                          title="Cliquer pour ouvrir le dossier"
+                        >
                           <span style={{ 
                             fontSize: 10, 
                             fontWeight: 700, 
                             color: '#6b7280',
                             background: '#f3f4f6',
                             padding: '2px 6px',
-                            borderRadius: 3
+                            borderRadius: 3,
+                            transition: 'all 0.2s'
                           }}>
                             {dossier.numeroDossier}
                           </span>
-                          <span style={{ fontSize: 13, color: '#374151' }}>
+                          <span style={{ 
+                            fontSize: 13, 
+                            color: '#1e40af',
+                            textDecoration: 'underline',
+                            transition: 'all 0.2s'
+                          }}>
                             {dossier.titre.length > 30 ? dossier.titre.substring(0, 30) + '...' : dossier.titre}
                           </span>
                         </div>
@@ -1006,6 +1047,22 @@ export default function DocumentsPage() {
                     <td>{(doc.tailleFichier / 1024 / 1024).toFixed(2)} MB</td>
                     <td>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</td>
                     <td style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      title="Voir le document"
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 4,
+                        fontSize: 16,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handlePreviewDocument(doc)}
+                    >
+                      👁️
+                    </button>
                     <button
                       title="Télécharger"
                       style={{
@@ -1068,6 +1125,137 @@ export default function DocumentsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Modal Prévisualisation Document */}
+      {showPreviewModal && previewDocument && previewUrl && (
+        <div className="modal-overlay" onClick={closePreview}>
+          <div 
+            className="card" 
+            style={{ 
+              maxWidth: '90vw', 
+              maxHeight: '90vh', 
+              width: '900px',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* En-tête */}
+            <div style={{ 
+              padding: '16px 20px', 
+              borderBottom: '2px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h2 style={{ margin: 0, fontSize: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                📄 {previewDocument.nomFichier}
+              </h2>
+              <button
+                onClick={closePreview}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 4,
+                  fontSize: 16,
+                  cursor: 'pointer'
+                }}
+                title="Fermer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Info document */}
+            <div style={{ 
+              padding: '12px 20px', 
+              background: '#f9fafb',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              gap: 20,
+              fontSize: 13
+            }}>
+              <span><strong>Type:</strong> {previewDocument.typeDocument}</span>
+              <span><strong>Taille:</strong> {(previewDocument.tailleFichier / 1024 / 1024).toFixed(2)} MB</span>
+              <span><strong>Upload:</strong> {new Date(previewDocument.uploadedAt).toLocaleDateString('fr-FR')}</span>
+            </div>
+
+            {/* Contenu */}
+            <div style={{ 
+              flex: 1, 
+              overflow: 'auto',
+              background: '#f3f4f6',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20
+            }}>
+              {previewDocument.mimeType?.startsWith('image/') ? (
+                <img 
+                  src={previewUrl} 
+                  alt={previewDocument.nomFichier}
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    borderRadius: 8,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                />
+              ) : previewDocument.mimeType === 'application/pdf' ? (
+                <iframe
+                  src={previewUrl}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: 8,
+                    background: 'white'
+                  }}
+                  title={previewDocument.nomFichier}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', padding: 40 }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+                  <p style={{ color: '#6b7280', marginBottom: 16 }}>
+                    Prévisualisation non disponible pour ce type de fichier
+                  </p>
+                  <button
+                    className="btn"
+                    onClick={async () => {
+                      const blob = await documentApi.download(previewDocument.id)
+                      const url = URL.createObjectURL(blob)
+                      const link = document.createElement('a')
+                      link.href = url
+                      link.download = previewDocument.nomFichier
+                      link.click()
+                    }}
+                    style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      padding: '10px 20px'
+                    }}
+                  >
+                    ⬇️ Télécharger le fichier
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Détail Dossier */}
+      {selectedDossierDetailId && (
+        <DossierDetailModal 
+          dossierId={selectedDossierDetailId} 
+          onClose={() => setSelectedDossierDetailId(null)} 
+        />
       )}
     </div>
   )
