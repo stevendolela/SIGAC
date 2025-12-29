@@ -40,12 +40,28 @@ export default function DocumentsPage() {
     setLoading(true)
     setError(null)
     try {
-      // Pour maintenant, charger depuis un dossier si sélectionné
       if (selectedDossierId) {
+        // Charger les documents d'un dossier spécifique
         const docs = await documentApi.listByDossier(selectedDossierId)
         setDocuments(docs)
       } else {
-        setDocuments([])
+        // Charger TOUS les documents (avec ou sans dossier)
+        try {
+          const allDocs = await documentApi.listAll()
+          setDocuments(allDocs)
+        } catch (err) {
+          // Si listAll n'existe pas, essayer de charger depuis tous les dossiers
+          const allDocsFromDossiers: DocumentDto[] = []
+          for (const dossier of dossiers) {
+            try {
+              const docs = await documentApi.listByDossier(dossier.id)
+              allDocsFromDossiers.push(...docs)
+            } catch (e) {
+              console.error(`Erreur chargement docs du dossier ${dossier.id}`, e)
+            }
+          }
+          setDocuments(allDocsFromDossiers)
+        }
       }
     } catch (e: any) {
       const msg = e?.response?.data?.message || e?.message || 'Erreur de chargement'
@@ -54,7 +70,7 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [selectedDossierId, notify])
+  }, [selectedDossierId, dossiers, notify])
 
   // Charger les dossiers (pour sélection dans assign modal)
   useEffect(() => {
@@ -88,10 +104,11 @@ export default function DocumentsPage() {
   }
 
   useEffect(() => {
-    if (selectedDossierId) {
+    // Charger les documents dès qu'on a les dossiers ou qu'on change de sélection
+    if (dossiers.length > 0 || selectedDossierId) {
       fetchDocuments()
     }
-  }, [selectedDossierId, fetchDocuments])
+  }, [selectedDossierId, dossiers, fetchDocuments])
 
   // Filtrer les documents selon la recherche
   const filteredDocuments = documents.filter(doc =>
@@ -297,20 +314,25 @@ export default function DocumentsPage() {
       {/* Sélection du dossier */}
       <div style={{ marginBottom: 24, padding: 16, background: '#f0f9ff', borderRadius: 8 }}>
         <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-          📁 Dossier (pour voir/ajouter les documents):
+          📁 Dossier (optionnel - laissez vide pour voir tous les documents):
         </label>
         <select
           value={selectedDossierId}
           onChange={(e) => setSelectedDossierId(e.target.value)}
           style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #cbd5e1' }}
         >
-          <option value="">-- Sélectionner un dossier --</option>
+          <option value="">-- Tous les documents --</option>
           {dossiers.map(d => (
             <option key={d.id} value={d.id}>
               {d.numeroDossier} - {d.titre}
             </option>
           ))}
         </select>
+        {!selectedDossierId && (
+          <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+            💡 Affichage de tous les documents (avec ou sans dossier associé)
+          </div>
+        )}
       </div>
 
       {/* Boutons d'action */}
