@@ -42,6 +42,7 @@ export default function HistoriqueDossiersPage() {
   })
   const [page, setPage] = useState(1)
   const pageSize = 50
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null)
 
   useEffect(() => {
     loadDossiers()
@@ -896,12 +897,12 @@ export default function HistoriqueDossiersPage() {
                 </thead>
                 <tbody>
                   {paginatedLogs.map((log, index) => {
-                    const [isHovered, setIsHovered] = React.useState(false)
+                    const isHovered = hoveredRowId === log.id
                     return (
                       <tr 
                         key={log.id}
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
+                        onMouseEnter={() => setHoveredRowId(log.id)}
+                        onMouseLeave={() => setHoveredRowId(null)}
                         style={{
                           borderBottom: '1px solid #e5e7eb',
                           background: isHovered ? '#f0f9ff' : (index % 2 === 0 ? 'white' : '#f9fafb'),
