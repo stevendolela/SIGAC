@@ -13,7 +13,8 @@ import {
   Settings,
   Palette,
   FileType,
-  DoorOpen
+  DoorOpen,
+  History
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -36,6 +37,7 @@ type ViewType =
   | 'logo-management' 
   | 'workspace-settings'
   | 'mon-profil'
+  | 'document-logs'
 
 interface MenuItem {
   view: ViewType
@@ -184,6 +186,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           label: 'Logo',
           icon: Palette,
           color: '#a855f7'
+        },
+        {
+          view: 'document-logs' as ViewType,
+          label: 'Logs Documents',
+          icon: History,
+          color: '#6366f1'
         }
       ]
     }] : [])

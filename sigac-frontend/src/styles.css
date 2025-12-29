@@ -816,8 +816,6 @@ label {
   
   .main-content-wrapper {
     margin-left: 0;
-    padding: 80px 20px 20px 20px;
-  }
     padding: 60px 16px 16px 16px;
   }
   
@@ -830,7 +828,6 @@ label {
     padding: 4px 8px;
     font-size: 12px;
   }
-} }
 }
 
 /* Petit mobile (480px et moins) */

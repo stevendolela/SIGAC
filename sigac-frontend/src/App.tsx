@@ -24,6 +24,7 @@ import ChangePasswordPage from './pages/ChangePasswordPage'
 import AccountModal from './components/common/AccountModal'
 import SystemConfigPage from './pages/SystemConfigPage'
 import LogoManagementPage from './pages/LogoManagementPage'
+import DocumentLogsPage from './pages/DocumentLogsPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
@@ -36,7 +37,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings' | 'document-logs'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -200,6 +201,7 @@ export default function App() {
           )}
           {view === 'system-config' && <SystemConfigPage />}
           {view === 'logo-management' && <LogoManagementPage />}
+          {view === 'document-logs' && <DocumentLogsPage />}
           {view === 'types-affaires' && <TypesAffairesPage />}
           {view === 'workspace-settings' && <WorkspaceSettings />}
           
