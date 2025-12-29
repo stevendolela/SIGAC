@@ -23,7 +23,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Assistant")]
     public async Task<ActionResult<NotificationDto>> Create([FromBody] CreateNotificationDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

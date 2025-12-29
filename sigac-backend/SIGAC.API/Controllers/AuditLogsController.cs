@@ -52,7 +52,7 @@ public class AuditLogsController : ControllerBase
         {
             // Vérifier que l'utilisateur est administrateur
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole != "Administrateur")
+            if (userRole != "Admin")
             {
                 _logger.LogWarning("Tentative d'accès aux logs par utilisateur non-admin: {User}", User.Identity?.Name);
                 return Forbid();
@@ -135,7 +135,7 @@ public class AuditLogsController : ControllerBase
         {
             // Vérifier que l'utilisateur est administrateur
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole != "Administrateur")
+            if (userRole != "Admin")
             {
                 return Forbid();
             }
@@ -185,7 +185,7 @@ public class AuditLogsController : ControllerBase
         {
             // Vérifier que l'utilisateur est administrateur
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole != "Administrateur")
+            if (userRole != "Admin")
             {
                 return Forbid();
             }

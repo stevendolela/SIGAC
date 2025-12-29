@@ -65,7 +65,7 @@ public class SallesController : ControllerBase
     /// Créer une nouvelle salle (Admin seulement)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SalleDetailDto>> CreateSalle([FromBody] CreateSalleDto dto)
     {
         try
@@ -89,7 +89,7 @@ public class SallesController : ControllerBase
     /// Mettre à jour une salle (Admin seulement)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<SalleDetailDto>> UpdateSalle(Guid id, [FromBody] UpdateSalleDto dto)
     {
         try
@@ -117,7 +117,7 @@ public class SallesController : ControllerBase
     /// Supprimer une salle (Admin seulement)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> DeleteSalle(Guid id)
     {
         try

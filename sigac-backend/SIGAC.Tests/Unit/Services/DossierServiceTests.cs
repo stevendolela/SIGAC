@@ -69,7 +69,7 @@ public class DossierServiceTests
             Id = rapporteurId,
             NomComplet = "Juge Mbala",
             Email = "juge.mbala@example.com",
-            Role = UserRole.JugeConstitutionnel
+            Role = UserRole.Collaborateur
         };
 
         _dossierRepo.Setup(r => r.GetByIdAsync(dossierId)).ReturnsAsync(dossier);
@@ -110,7 +110,7 @@ public class DossierServiceTests
         var actorId = Guid.NewGuid();
 
         var dossier = new Dossier { Id = dossierId, NumeroDossier = "CC-2025-002", Titre = "X", TypeAffaireId = Guid.NewGuid(), Priorite = PrioriteDossier.Normale };
-        var nonJudgeUser = new User { Id = rapporteurId, NomComplet = "Greffier", Role = UserRole.Administrateur };
+        var nonJudgeUser = new User { Id = rapporteurId, NomComplet = "Assistant", Role = UserRole.Admin };
 
         _dossierRepo.Setup(r => r.GetByIdAsync(dossierId)).ReturnsAsync(dossier);
         _userRepo.Setup(r => r.GetByIdAsync(rapporteurId)).ReturnsAsync(nonJudgeUser);

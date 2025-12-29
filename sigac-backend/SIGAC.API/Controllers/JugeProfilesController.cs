@@ -34,7 +34,7 @@ public class JugeProfilesController : ControllerBase
     }
 
     [HttpPut("me")]
-    [Authorize(Roles = "JugeConstitutionnel")]
+    [Authorize(Roles = "Collaborateur")]
     public async Task<ActionResult<JugeProfileDto>> UpdateMine([FromBody] UpdateJugeProfileDto dto)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -50,7 +50,7 @@ public class JugeProfilesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<JugeProfileDto>> Create([FromBody] CreateJugeProfileDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -59,7 +59,7 @@ public class JugeProfilesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<JugeProfileDto>> Update(Guid id, [FromBody] UpdateJugeProfileDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -68,7 +68,7 @@ public class JugeProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

@@ -20,7 +20,7 @@ export default function CalendarPage() {
 
   const userStr = localStorage.getItem('user')
   const user = useMemo(() => userStr ? JSON.parse(userStr) : null, [userStr])
-  const canEdit = ['Administrateur', 'President', 'Greffier'].includes(user?.role)
+  const canEdit = ['Admin', 'Manager', 'Assistant'].includes(user?.role)
 
   async function load() {
     setLoading(true)

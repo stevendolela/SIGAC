@@ -26,7 +26,7 @@ public class FormationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FormationDto>> Create([FromBody] CreateFormationDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -35,7 +35,7 @@ public class FormationsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FormationDto>> Update(Guid id, [FromBody] CreateFormationDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -44,7 +44,7 @@ public class FormationsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -53,7 +53,7 @@ public class FormationsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/participants")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FormationParticipationDto>> AddParticipant(Guid id, [FromBody] CreateFormationParticipationDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -62,7 +62,7 @@ public class FormationsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/participants/{userId:guid}/complete")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FormationParticipationDto>> MarkCompleted(Guid id, Guid userId, [FromQuery] DateTime date, [FromBody] string? certificatUrl)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

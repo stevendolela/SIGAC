@@ -25,7 +25,7 @@ export default function UsersPage() {
   // Vérification du rôle administrateur
   const userStr = localStorage.getItem('user')
   const currentUser = userStr ? JSON.parse(userStr) : null
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Administrateur'
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Admin'
 
   // État du formulaire de création
   const [formData, setFormData] = useState({
@@ -238,11 +238,11 @@ export default function UsersPage() {
 
   const roleColors: Record<string, { bg: string; text: string; icon: string }> = {
     'Admin': { bg: '#fee2e2', text: '#991b1b', icon: '👑' },
-    'Administrateur': { bg: '#fee2e2', text: '#991b1b', icon: '👑' },
-    'President': { bg: '#ddd6fe', text: '#5b21b6', icon: '⚖️' },
-    'JugeConstitutionnel': { bg: '#dbeafe', text: '#1e40af', icon: '👨‍⚖️' },
-    'Greffier': { bg: '#d1fae5', text: '#065f46', icon: '📋' },
-    'GreffierAdjoint': { bg: '#e0e7ff', text: '#3730a3', icon: '📝' },
+    'Admin': { bg: '#fee2e2', text: '#991b1b', icon: '👑' },
+    'Manager': { bg: '#ddd6fe', text: '#5b21b6', icon: '⚖️' },
+    'Collaborateur': { bg: '#dbeafe', text: '#1e40af', icon: '👨‍⚖️' },
+    'Assistant': { bg: '#d1fae5', text: '#065f46', icon: '📋' },
+    'AssistantJunior': { bg: '#e0e7ff', text: '#3730a3', icon: '📝' },
     'Consultant': { bg: '#f3f4f6', text: '#374151', icon: '👤' }
   }
 
@@ -838,11 +838,11 @@ export default function UsersPage() {
               <label>
                 Rôle
                 <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))}>
-                  <option value="Administrateur">Administrateur</option>
-                  <option value="President">President</option>
-                  <option value="JugeConstitutionnel">Juge Constitutionnel</option>
-                  <option value="Greffier">Greffier</option>
-                  <option value="GreffierAdjoint">Greffier Adjoint</option>
+                  <option value="Admin">Administrateur</option>
+                  <option value="Manager">President</option>
+                  <option value="Collaborateur">Juge Constitutionnel</option>
+                  <option value="Assistant">Greffier</option>
+                  <option value="AssistantJunior">Greffier Adjoint</option>
                   <option value="Consultant">Consultant</option>
                 </select>
               </label>

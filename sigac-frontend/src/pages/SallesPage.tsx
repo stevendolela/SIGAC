@@ -41,7 +41,7 @@ export default function SallesPage() {
     try {
       const userStr = localStorage.getItem('user')
       const user = userStr ? JSON.parse(userStr) : null
-      setIsAdmin(user?.role === 'Administrateur')
+      setIsAdmin(user?.role === 'Admin')
     } catch {
       setIsAdmin(false)
     }

@@ -457,7 +457,7 @@ public class DocumentsController : ControllerBase
     /// Obtient les statistiques de stockage
     /// </summary>
     [HttpGet("admin/stats")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<object>> GetStorageStats()
     {

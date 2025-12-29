@@ -87,7 +87,7 @@ public class UsersController : ControllerBase
     /// <param name="search">Recherche par username ou email</param>
     /// <returns>Liste paginée des utilisateurs inactifs</returns>
     [HttpGet("deleted")]
-    [Authorize(Roles = "Administrateur,Admin")]
+    [Authorize(Roles = "Admin,Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -194,7 +194,7 @@ public class UsersController : ControllerBase
     /// <response code="401">Non authentifié</response>
     /// <response code="403">Permission insuffisante (admin requis)</response>
     [HttpPost]
-    [Authorize(Roles = "Administrateur,Admin")]
+    [Authorize(Roles = "Admin,Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -310,11 +310,11 @@ public class UsersController : ControllerBase
             var currentUserRole = GetCurrentUserRole();
 
             // Vérifier les permissions: admin ou propriétaire du profil
-            if (currentUserId != id && currentUserRole != UserRole.Administrateur)
+            if (currentUserId != id && currentUserRole != UserRole.Admin)
                 return Forbid();
 
             // Si non-admin, ne peut pas changer son propre rôle
-            if (currentUserRole != UserRole.Administrateur && updateUserDto.Role.HasValue)
+            if (currentUserRole != UserRole.Admin && updateUserDto.Role.HasValue)
                 return BadRequest(new { message = "Vous ne pouvez pas modifier votre propre rôle" });
 
             var updated = await _userService.UpdateUserAsync(
@@ -379,7 +379,7 @@ public class UsersController : ControllerBase
     /// <response code="403">Permission insuffisante (admin requis)</response>
     /// <response code="404">Utilisateur non trouvé</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrateur,Admin")]
+    [Authorize(Roles = "Admin,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -480,7 +480,7 @@ public class UsersController : ControllerBase
     /// <response code="403">Permission insuffisante (admin requis)</response>
     /// <response code="404">Utilisateur non trouvé</response>
     [HttpPost("{id}/deactivate")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -529,7 +529,7 @@ public class UsersController : ControllerBase
     /// <response code="403">Permission insuffisante (admin requis)</response>
     /// <response code="404">Utilisateur non trouvé</response>
     [HttpPost("{id}/activate")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -573,7 +573,7 @@ public class UsersController : ControllerBase
     /// <response code="401">Non authentifié</response>
     /// <response code="403">Permission insuffisante (admin requis)</response>
     [HttpGet("admin/stats")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -700,7 +700,7 @@ public class UsersController : ControllerBase
     /// Admin: réinitialise le mot de passe d'un utilisateur.
     /// </summary>
     [HttpPost("admin/{id:guid}/reset-password")]
-    [Authorize(Roles = nameof(UserRole.Administrateur))]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> AdminResetPassword([FromRoute] Guid id, [FromBody] AdminResetPasswordDto dto)
     {
         var adminIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

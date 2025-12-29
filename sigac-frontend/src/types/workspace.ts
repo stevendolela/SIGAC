@@ -80,7 +80,7 @@ export const getWorkspaceRoleLabel = (role: WorkspaceRole): string => {
     case WorkspaceRole.Owner:
       return 'Propriétaire';
     case WorkspaceRole.Admin:
-      return 'Administrateur';
+      return 'Admin';
     case WorkspaceRole.Member:
       return 'Membre';
     case WorkspaceRole.Guest:

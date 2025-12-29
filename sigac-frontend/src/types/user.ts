@@ -1,9 +1,9 @@
 export type UserRole =
-  | 'Administrateur'
-  | 'President'
-  | 'JugeConstitutionnel'
-  | 'Greffier'
-  | 'GreffierAdjoint'
+  | 'Admin'
+  | 'Manager'
+  | 'Collaborateur'
+  | 'Assistant'
+  | 'AssistantJunior'
   | 'Consultant'
 
 export interface UserDto {

@@ -149,7 +149,7 @@ public class UsersControllerTests : IntegrationTestBase
     var content = await response.Content.ReadFromJsonAsync<UserDto>();
     Assert.That(content, Is.Not.Null);
     Assert.That(content!.Username, Is.EqualTo("admin"));
-    Assert.That(content.Role, Is.EqualTo("Administrateur"));
+    Assert.That(content.Role, Is.EqualTo("Admin"));
     }
 
     [Test]
@@ -174,7 +174,7 @@ public class UsersControllerTests : IntegrationTestBase
             Username = "newuser_" + Guid.NewGuid().ToString().Substring(0, 8),
             Email = "newuser_" + Guid.NewGuid().ToString().Substring(0, 8) + "@sigac.local",
             Password = "TestPassword123!",
-            Role = UserRole.JugeConstitutionnel
+            Role = UserRole.Collaborateur
         };
 
         var response = await Client.PostAsJsonAsync("/api/Users", createDto);
@@ -357,7 +357,7 @@ public class UsersControllerTests : IntegrationTestBase
 
             var updateDto = new UpdateUserDto
             {
-                Role = UserRole.Administrateur // Essayer de se donner le rôle admin
+                Role = UserRole.Admin // Essayer de se donner le rôle admin
             };
 
             var response = await Client.PutAsJsonAsync($"/api/Users/{currentUser!.Id}", updateDto);

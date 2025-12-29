@@ -428,7 +428,7 @@ public class UserService : IUserService
 
     public async Task<List<UserDto>> GetJugesAsync()
     {
-        var allJuges = await _userRepository.GetByRoleAsync(UserRole.JugeConstitutionnel);
+        var allJuges = await _userRepository.GetByRoleAsync(UserRole.Collaborateur);
         return _mapper.Map<List<UserDto>>(allJuges);
     }
 

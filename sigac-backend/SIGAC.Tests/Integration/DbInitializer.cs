@@ -40,8 +40,8 @@ public static class DbInitializer
                 Username = "admin",
                 Email = "admin@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2024!"),
-                NomComplet = "Administrateur Système",
-                Role = UserRole.Administrateur,
+                NomComplet = "Admin Système",
+                Role = UserRole.Admin,
                 Matricule = "ADM-001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -55,7 +55,7 @@ public static class DbInitializer
                 Email = "president@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("President@2024!"),
                 NomComplet = "Benoît LWAMBA BINDU",
-                Role = UserRole.President,
+                Role = UserRole.Manager,
                 Matricule = "PRE-001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -69,7 +69,7 @@ public static class DbInitializer
                 Email = "mbala@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
                 NomComplet = "Juge MBALA MUDIMBI",
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 Matricule = "JCC-001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -82,7 +82,7 @@ public static class DbInitializer
                 Email = "tshisekedi@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
                 NomComplet = "Juge TSHISEKEDI KALALA",
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 Matricule = "JCC-002",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -95,7 +95,7 @@ public static class DbInitializer
                 Email = "kabongo@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
                 NomComplet = "Juge KABONGO MBUYA",
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 Matricule = "JCC-003",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -109,7 +109,7 @@ public static class DbInitializer
                 Email = "greffier@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Greffier@2024!"),
                 NomComplet = "MUKENDI KALENGA",
-                Role = UserRole.Greffier,
+                Role = UserRole.Assistant,
                 Matricule = "GRE-001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -123,7 +123,7 @@ public static class DbInitializer
                 Email = "greffier.adj@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Greffier@2024!"),
                 NomComplet = "ILUNGA NKULU",
-                Role = UserRole.GreffierAdjoint,
+                Role = UserRole.AssistantJunior,
                 Matricule = "GRA-001",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow

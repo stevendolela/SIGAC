@@ -9,7 +9,7 @@ namespace SIGAC.API.Controllers;
 
 [ApiController]
 [Route("api/system")]
-[Authorize(Roles = nameof(UserRole.Administrateur))]
+[Authorize(Roles = nameof(UserRole.Admin))]
 public class SystemConfigController : ControllerBase
 {
     private readonly ISystemConfigService _systemConfigService;

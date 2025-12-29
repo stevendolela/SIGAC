@@ -1,8 +1,8 @@
 namespace SIGAC.Core.Enums;
 
 /// <summary>
-/// Rôles utilisateurs configurables selon le secteur d'activité
-/// Les noms sont maintenus pour compatibilité, mais s'adaptent à différents contextes
+/// Rôles utilisateurs génériques adaptables à tous les secteurs d'activité
+/// (Juridique, Santé, Entreprise, Administration, etc.)
 /// </summary>
 public enum UserRole
 {
@@ -10,31 +10,31 @@ public enum UserRole
     /// Administrateur système - Accès complet à toutes les fonctionnalités
     /// Applicable à tous les secteurs
     /// </summary>
-    Administrateur = 1,
+    Admin = 1,
 
     /// <summary>
-    /// Directeur/Manager principal - Vue globale et gestion de tous les dossiers
+    /// Manager/Directeur - Vue globale et gestion de tous les dossiers
     /// Exemples: Président (juridique), Directeur (entreprise), Chef de service (médical)
     /// </summary>
-    President = 2,
+    Manager = 2,
 
     /// <summary>
-    /// Responsable/Expert - Accès aux dossiers assignés, peut traiter et valider
+    /// Collaborateur principal - Accès aux dossiers assignés, peut traiter et valider
     /// Exemples: Juge (juridique), Chef de projet (entreprise), Médecin (santé)
     /// </summary>
-    JugeConstitutionnel = 3,
+    Collaborateur = 3,
 
     /// <summary>
-    /// Gestionnaire administratif - Gestion administrative des dossiers
+    /// Assistant - Gestion administrative des dossiers
     /// Exemples: Greffier (juridique), Assistant (entreprise), Secrétaire médical (santé)
     /// </summary>
-    Greffier = 4,
+    Assistant = 4,
 
     /// <summary>
-    /// Assistant gestionnaire - Support administratif
-    /// Exemples: Greffier adjoint (juridique), Assistant junior (entreprise)
+    /// Assistant Junior - Support administratif
+    /// Exemples: Greffier adjoint (juridique), Stagiaire (entreprise)
     /// </summary>
-    GreffierAdjoint = 5,
+    AssistantJunior = 5,
 
     /// <summary>
     /// Consultant externe - Accès limité en lecture sur dossiers assignés

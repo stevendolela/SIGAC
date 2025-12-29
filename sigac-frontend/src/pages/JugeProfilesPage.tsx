@@ -33,7 +33,7 @@ export default function JugeProfilesPage() {
 
   const userStr = localStorage.getItem('user')
   const currentUser = userStr ? JSON.parse(userStr) : null
-  const isAdmin = currentUser?.role === 'Administrateur' || currentUser?.role === 'President'
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Manager'
 
   async function load() {
     setLoading(true)

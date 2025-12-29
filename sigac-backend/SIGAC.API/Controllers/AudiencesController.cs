@@ -252,7 +252,7 @@ public class AudiencesController : ControllerBase
     private UserRole GetCurrentUserRole()
     {
         var claim = User.FindFirst(ClaimTypes.Role);
-        return claim != null && Enum.TryParse<UserRole>(claim.Value, out var role) ? role : UserRole.JugeConstitutionnel;
+        return claim != null && Enum.TryParse<UserRole>(claim.Value, out var role) ? role : UserRole.Collaborateur;
     }
 
     #endregion

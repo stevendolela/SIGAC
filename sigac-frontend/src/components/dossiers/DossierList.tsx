@@ -15,7 +15,7 @@ export default function DossierList({ onSelect }: Props) {
   const { currentWorkspace } = useWorkspaceStore()
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const isAdmin = user?.role === 'Administrateur'  // Backend envoie "Administrateur" pas "Admin"
+  const isAdmin = user?.role === 'Admin'  // Backend envoie "Admin" pas "Admin"
   const [items, setItems] = useState<DossierListDto[]>([])
   const [pagination, setPagination] = useState<PaginationMetadata | null>(null)
   const [page, setPage] = useState(1)

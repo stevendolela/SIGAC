@@ -41,7 +41,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
     }
   }
 
-  const isAdmin = getUserRole() === 'Administrateur'
+  const isAdmin = getUserRole() === 'Admin'
 
   // Charger les audiences depuis l'API
   useEffect(() => {

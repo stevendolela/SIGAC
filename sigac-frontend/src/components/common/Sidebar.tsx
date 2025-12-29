@@ -138,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       section: 'Administration',
       items: [
-        ...(userRole === 'JugeConstitutionnel' ? [{
+        ...(userRole === 'Collaborateur' ? [{
           view: 'mon-profil' as ViewType,
           label: 'Mon Profil',
           icon: UserCircle,
@@ -156,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           icon: FileType,
           color: '#06b6d4'
         },
-        ...(userRole === 'Administrateur' ? [
+        ...(userRole === 'Admin' ? [
           {
             view: 'users' as ViewType,
             label: 'Utilisateurs',
@@ -172,7 +172,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         ] : [])
       ]
     },
-    ...(userRole === 'Administrateur' ? [{
+    ...(userRole === 'Admin' ? [{
       section: 'Système',
       items: [
         {

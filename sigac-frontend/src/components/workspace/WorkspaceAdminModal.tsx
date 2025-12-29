@@ -267,7 +267,7 @@ export default function WorkspaceAdminModal({ onClose }: WorkspaceAdminModalProp
   const getRoleName = (role: WorkspaceRole): string => {
     switch (role) {
       case WorkspaceRole.Owner: return 'Propriétaire'
-      case WorkspaceRole.Admin: return 'Administrateur'
+      case WorkspaceRole.Admin: return 'Admin'
       case WorkspaceRole.Member: return 'Membre'
       case WorkspaceRole.Guest: return 'Invité'
       default: return 'Inconnu'

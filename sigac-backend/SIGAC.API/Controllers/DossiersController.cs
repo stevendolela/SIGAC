@@ -93,7 +93,7 @@ public class DossiersController : ControllerBase
     /// Crée un nouveau dossier
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President,Greffier,GreffierAdjoint,JugeConstitutionnel")]
+    [Authorize(Roles = "Admin,Manager,Assistant,AssistantAdjoint,Collaborateur")]
     [ProducesResponseType(typeof(DossierDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<DossierDto>> CreateDossier([FromBody] CreateDossierDto createDto)
@@ -133,7 +133,7 @@ public class DossiersController : ControllerBase
     /// Met à jour un dossier existant
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Administrateur,President,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Assistant")]
     [ProducesResponseType(typeof(DossierDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DossierDto>> UpdateDossier(Guid id, [FromBody] UpdateDossierDto updateDto)
@@ -181,7 +181,7 @@ public class DossiersController : ControllerBase
     /// Supprime un dossier (suppression logique)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrateur")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteDossier(Guid id)
@@ -211,7 +211,7 @@ public class DossiersController : ControllerBase
     /// Attribue un rapporteur à un dossier
     /// </summary>
     [HttpPost("{id}/attribuer-rapporteur")]
-    [Authorize(Roles = "Administrateur,President")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AttribuerRapporteur(Guid id, [FromBody] AttribuerRapporteurDto dto)
@@ -246,7 +246,7 @@ public class DossiersController : ControllerBase
     /// Change le statut d'un dossier
     /// </summary>
     [HttpPost("{id}/changer-statut")]
-    [Authorize(Roles = "Administrateur,President,JugeConstitutionnel,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Collaborateur,Assistant")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

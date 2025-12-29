@@ -22,7 +22,7 @@ public class CalendarController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Administrateur,President,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Assistant")]
     public async Task<ActionResult<CalendarEventDto>> Create([FromBody] CreateCalendarEventDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -31,7 +31,7 @@ public class CalendarController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Assistant")]
     public async Task<ActionResult<CalendarEventDto>> Update(Guid id, [FromBody] CreateCalendarEventDto dto)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -40,7 +40,7 @@ public class CalendarController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrateur,President,Greffier")]
+    [Authorize(Roles = "Admin,Manager,Assistant")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

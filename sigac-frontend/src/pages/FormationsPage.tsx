@@ -16,7 +16,7 @@ export default function FormationsPage() {
 
   const userStr = localStorage.getItem('user')
   const user = useMemo(() => userStr ? JSON.parse(userStr) : null, [userStr])
-  const isAdmin = user?.role === 'Administrateur' || user?.role === 'President'
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Manager'
 
   async function load() {
     setLoading(true)

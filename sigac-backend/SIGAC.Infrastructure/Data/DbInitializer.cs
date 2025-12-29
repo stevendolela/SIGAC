@@ -37,7 +37,7 @@ public static class DbInitializer
                 Username = "admin",
                 Email = "admin@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2024!"),
-                Role = UserRole.Administrateur,
+                Role = UserRole.Admin,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -49,7 +49,7 @@ public static class DbInitializer
                 Username = "president.benoit",
                 Email = "president@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("President@2024!"),
-                Role = UserRole.President,
+                Role = UserRole.Manager,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -61,7 +61,7 @@ public static class DbInitializer
                 Username = "juge.mbala",
                 Email = "mbala@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -72,7 +72,7 @@ public static class DbInitializer
                 Username = "juge.tshisekedi",
                 Email = "tshisekedi@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -83,7 +83,7 @@ public static class DbInitializer
                 Username = "juge.kabongo",
                 Email = "kabongo@courconstitutionnelle.cd",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Juge@2024!"),
-                Role = UserRole.JugeConstitutionnel,
+                Role = UserRole.Collaborateur,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             }

@@ -30,7 +30,7 @@ public class AudienceService : IAudienceService
         var audiences = await _audienceRepository.GetAllAsync();
         
         // Si juge, filtrer uniquement les audiences des dossiers dont il est rapporteur
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null, false);
             var dossierIds = dossiers.Select(d => d.Id).ToHashSet();
@@ -59,7 +59,7 @@ public class AudienceService : IAudienceService
         if (dossier == null)
             throw new KeyNotFoundException($"Dossier {dossierId} non trouvé");
 
-        if (userRole == UserRole.JugeConstitutionnel && dossier.RapporteurId != userId)
+        if (userRole == UserRole.Collaborateur && dossier.RapporteurId != userId)
             throw new UnauthorizedAccessException("Accès refusé à ce dossier");
 
         var audiences = await _audienceRepository.GetByDossierIdAsync(dossierId);
@@ -88,7 +88,7 @@ public class AudienceService : IAudienceService
         var audiences = await _audienceRepository.GetByDateRangeAsync(dateDebut, dateFin);
         
         // Si juge, filtrer uniquement les audiences des dossiers dont il est rapporteur
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             var (dossiers, _) = await _dossierRepository.GetDossiersAsync(1, int.MaxValue, null, null, null, null, null, null, userId, null, false);
             var dossierIds = dossiers.Select(d => d.Id).ToHashSet();
@@ -117,7 +117,7 @@ public class AudienceService : IAudienceService
             return null;
 
         // Vérifier accès
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             var dossier = await _dossierRepository.GetByIdAsync(audience.DossierId);
             if (dossier?.RapporteurId != userId)
@@ -157,7 +157,7 @@ public class AudienceService : IAudienceService
         if (dossier == null)
             throw new KeyNotFoundException($"Dossier {dto.DossierId} non trouvé");
 
-        if (userRole == UserRole.JugeConstitutionnel && dossier.RapporteurId != userId)
+        if (userRole == UserRole.Collaborateur && dossier.RapporteurId != userId)
             throw new UnauthorizedAccessException("Accès refusé à ce dossier");
 
         var audience = new Audience
@@ -214,7 +214,7 @@ public class AudienceService : IAudienceService
             throw new KeyNotFoundException($"Audience {id} non trouvée");
 
         // Vérifier accès
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             var dossier = await _dossierRepository.GetByIdAsync(audience.DossierId);
             if (dossier?.RapporteurId != userId)
@@ -289,7 +289,7 @@ public class AudienceService : IAudienceService
             return false;
 
         // Vérifier accès
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             var dossier = await _dossierRepository.GetByIdAsync(audience.DossierId);
             if (dossier?.RapporteurId != userId)

@@ -5,7 +5,7 @@ import type { UserDto, UpdateUserDto, UserRole } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
 
 const roles: UserRole[] = [
-  'Administrateur','President','JugeConstitutionnel','Greffier','GreffierAdjoint','Consultant'
+  'Admin','Manager','Collaborateur','Assistant','AssistantJunior','Consultant'
 ]
 
 export default function AdminUserEditPage() {

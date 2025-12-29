@@ -45,7 +45,7 @@ public class DossierService : IDossierService
 
         // Les juges ne voient que leurs dossiers assignés (sauf Admin et Président)
         Guid? filtreRapporteur = rapporteurId;
-        if (userRole == UserRole.JugeConstitutionnel)
+        if (userRole == UserRole.Collaborateur)
         {
             filtreRapporteur = userId;
         }
@@ -53,7 +53,7 @@ public class DossierService : IDossierService
         // 🆕 Les admins sans workspaceId voient TOUS les dossiers (y compris ceux sans workspace)
         // Pour les autres rôles ou si un workspaceId est fourni, on applique le filtre
         Guid? filtreWorkspace = workspaceId;
-        bool includeAllForAdmin = userRole == UserRole.Administrateur && !workspaceId.HasValue;
+        bool includeAllForAdmin = userRole == UserRole.Admin && !workspaceId.HasValue;
 
         var (dossiers, totalCount) = await _dossierRepository.GetDossiersAsync(
             page, pageSize, search, typeAffaireId, status, priorite,
@@ -105,7 +105,7 @@ public class DossierService : IDossierService
         }
 
         // Vérification des permissions
-        if (userRole == UserRole.JugeConstitutionnel && dossier.RapporteurId != userId)
+        if (userRole == UserRole.Collaborateur && dossier.RapporteurId != userId)
         {
             throw new UnauthorizedAccessException("Accès non autorisé à ce dossier");
         }
@@ -296,7 +296,7 @@ public class DossierService : IDossierService
 
         // Vérifier que le rapporteur est un juge
         var rapporteur = await _userRepository.GetByIdAsync(rapporteurId);
-        if (rapporteur == null || rapporteur.Role != UserRole.JugeConstitutionnel)
+        if (rapporteur == null || rapporteur.Role != UserRole.Collaborateur)
         {
             throw new ArgumentException("Le rapporteur doit être un juge constitutionnel");
         }
@@ -417,7 +417,7 @@ public class DossierService : IDossierService
     public async Task<DossierStatisticsDto> GetStatisticsAsync(Guid userId, UserRole userRole)
     {
         var stats = await _dossierRepository.GetStatisticsAsync(
-            userRole == UserRole.JugeConstitutionnel ? userId : null);
+            userRole == UserRole.Collaborateur ? userId : null);
 
         return new DossierStatisticsDto
         {
@@ -474,7 +474,7 @@ public class DossierService : IDossierService
         }
 
         // Vérification des permissions selon le rôle
-        if (userRole == UserRole.JugeConstitutionnel && rapporteurId != userId)
+        if (userRole == UserRole.Collaborateur && rapporteurId != userId)
         {
             throw new UnauthorizedAccessException("Un juge ne peut modifier que ses propres dossiers");
         }
