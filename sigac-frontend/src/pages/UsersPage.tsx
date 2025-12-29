@@ -481,11 +481,11 @@ export default function UsersPage() {
                     }}
                   >
                     <option value="">-- Sélectionner un rôle --</option>
-                    <option value="1">👑 Administrateur</option>
-                    <option value="2">👔 Directeur</option>
-                    <option value="3">👨‍💼 Manager</option>
-                    <option value="4">👤 Collaborateur</option>
-                    <option value="5">📋 Assistant</option>
+                    <option value="1">👑 Admin</option>
+                    <option value="2">👔 Manager</option>
+                    <option value="3">👨‍💼 Collaborateur</option>
+                    <option value="4">📋 Assistant</option>
+                    <option value="5">🎓 Assistant Junior</option>
                     <option value="6">👁️ Consultant</option>
                   </select>
                 </div>
@@ -838,11 +838,11 @@ export default function UsersPage() {
               <label>
                 Rôle
                 <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))}>
-                  <option value="Admin">Administrateur</option>
-                  <option value="Manager">President</option>
-                  <option value="Collaborateur">Juge Constitutionnel</option>
-                  <option value="Assistant">Greffier</option>
-                  <option value="AssistantJunior">Greffier Adjoint</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Collaborateur">Collaborateur</option>
+                  <option value="Assistant">Assistant</option>
+                  <option value="AssistantJunior">Assistant Junior</option>
                   <option value="Consultant">Consultant</option>
                 </select>
               </label>
