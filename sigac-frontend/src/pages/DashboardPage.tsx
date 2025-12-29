@@ -48,10 +48,10 @@ export default function DashboardPage() {
     const mounted = { current: true }
     loadStats(mounted)
     
-    // Auto-refresh toutes les 2 minutes (moins de clignotement, mais garde le chat temps réel)
+    // Auto-refresh toutes les 1 heure (évite les clignotements d'écran)
     const interval = setInterval(() => {
       if (mounted.current) loadStats(mounted)
-    }, 120000)
+    }, 3600000)
     
     return () => { 
       mounted.current = false

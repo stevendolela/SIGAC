@@ -64,7 +64,7 @@ export function useChatConversations() {
   useEffect(() => {
     fetchConversations();
     // Rafraîchir les conversations toutes les 3 secondes en temps réel
-    const interval = setInterval(fetchConversations, 3000);
+    const interval = setInterval(fetchConversations, 3600000);
     return () => clearInterval(interval);
   }, []);
 
@@ -132,7 +132,7 @@ export function useChatConversation(conversationId: string | null) {
     fetchConversation();
     
     // Rafraîchir les messages toutes les 2 secondes en temps réel
-    const interval = setInterval(fetchConversation, 2000);
+    const interval = setInterval(fetchConversation, 3600000);
     return () => clearInterval(interval);
   }, [conversationId]);
 
@@ -154,7 +154,7 @@ export function useUnreadCount() {
   useEffect(() => {
     fetchUnreadCount();
     // Rafraîchir le nombre de messages non lus toutes les 5 secondes
-    const interval = setInterval(fetchUnreadCount, 5000);
+    const interval = setInterval(fetchUnreadCount, 3600000);
     return () => clearInterval(interval);
   }, []);
 
@@ -223,7 +223,7 @@ export function useChatGroups() {
   useEffect(() => {
     fetchGroups();
     // Rafraîchir les groupes toutes les 3 secondes
-    const interval = setInterval(fetchGroups, 3000);
+    const interval = setInterval(fetchGroups, 3600000);
     return () => clearInterval(interval);
   }, []);
 
@@ -289,7 +289,7 @@ export function useChatGroup(groupId: string | null) {
     fetchGroup();
     
     // Rafraîchir les messages du groupe toutes les 2 secondes
-    const interval = setInterval(fetchGroup, 2000);
+    const interval = setInterval(fetchGroup, 3600000);
     return () => clearInterval(interval);
   }, [groupId]);
 
