@@ -695,6 +695,9 @@ const UnreadBadge: React.FC = React.memo(() => {
     const userStr = localStorage.getItem('user');
     const currentUser = userStr ? JSON.parse(userStr) : null;
 
+    // Vider l'input immédiatement pour une meilleure UX
+    setMessageInput('');
+
     // Créer un message temporaire
     const tempMessage = {
       id: tempMessageId,
@@ -705,15 +708,12 @@ const UnreadBadge: React.FC = React.memo(() => {
       senderUsername: currentUser?.username || 'Vous',
       senderStatus: currentUser?.status,
       isTemporary: true,
-      chatId: selectedChat.id, // Identifiant du chat
-      chatType: selectedChat.type, // Type du chat
+      chatId: selectedChat.id,
+      chatType: selectedChat.type,
     };
 
     // Ajouter le message à la liste optimistic immédiatement
     setOptimisticMessages((prev) => [...prev, tempMessage]);
-    
-    // Vider l'input immédiatement
-    setMessageInput('');
     
     // Scroll immédiat vers le bas
     setTimeout(() => {
@@ -722,30 +722,36 @@ const UnreadBadge: React.FC = React.memo(() => {
 
     try {
       if (selectedChat.type === 'conversation') {
-        // Envoyer au serveur en arrière-plan
+        // Envoyer au serveur
         await chatApi.sendMessage(selectedChat.id, tempMessageContent);
-        await refetchConversation();
+        // Attendre un peu avant de refetch pour laisser le temps au serveur de traiter
+        setTimeout(async () => {
+          await refetchConversation();
+          // Retirer le message temporaire après le refetch
+          setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
+        }, 500);
       } else {
-        // Envoyer au serveur en arrière-plan
+        // Envoyer au serveur
         await chatApi.sendGroupMessage({
           chatGroupId: selectedChat.id,
           content: tempMessageContent,
         });
-        await refetchGroup();
+        // Attendre un peu avant de refetch
+        setTimeout(async () => {
+          await refetchGroup();
+          // Retirer le message temporaire après le refetch
+          setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
+        }, 500);
       }
-      
-      // Retirer le message temporaire après succès (le vrai message est maintenant chargé)
-      setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
-      
-      // Rafraîchir les listes en arrière-plan
-      refetchConversations();
-      refetchGroups();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'envoi du message:', error);
       
       // En cas d'erreur, retirer le message temporaire et remettre le texte dans l'input
       setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempMessageId));
       setMessageInput(tempMessageContent);
+      
+      // Afficher un message d'erreur plus détaillé
+      alert(`Erreur lors de l'envoi du message: ${error?.response?.data?.message || error.message || 'Erreur inconnue'}`);
     }
   };
 
