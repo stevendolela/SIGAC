@@ -55,7 +55,8 @@ export default function HistoriqueDossiersPage() {
       if (!token) return
 
       const apiUrl = getApiBaseUrl()
-      const response = await fetch(`${apiUrl}/dossiers?page=1&pageSize=1000`, {
+      // Charger tous les dossiers pour Admin (limite élevée)
+      const response = await fetch(`${apiUrl}/dossiers?page=1&pageSize=5000`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -85,9 +86,9 @@ export default function HistoriqueDossiersPage() {
         return
       }
 
-      // Charger les audit logs pour Documents ET Dossiers
+      // Charger TOUS les audit logs pour Documents ET Dossiers (Admin)
       const apiUrl = getApiBaseUrl()
-      const response = await fetch(`${apiUrl}/auditlogs?limit=1000`, {
+      const response = await fetch(`${apiUrl}/auditlogs?limit=5000`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
