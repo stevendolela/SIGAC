@@ -24,7 +24,7 @@ import ChangePasswordPage from './pages/ChangePasswordPage'
 import AccountModal from './components/common/AccountModal'
 import SystemConfigPage from './pages/SystemConfigPage'
 import LogoManagementPage from './pages/LogoManagementPage'
-import DocumentLogsPage from './pages/DocumentLogsPage'
+import HistoriqueDossiersPage from './pages/DocumentLogsPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
@@ -201,7 +201,7 @@ export default function App() {
           )}
           {view === 'system-config' && <SystemConfigPage />}
           {view === 'logo-management' && <LogoManagementPage />}
-          {view === 'document-logs' && <DocumentLogsPage />}
+          {view === 'document-logs' && <HistoriqueDossiersPage />}
           {view === 'types-affaires' && <TypesAffairesPage />}
           {view === 'workspace-settings' && <WorkspaceSettings />}
           

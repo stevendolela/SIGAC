@@ -189,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           view: 'document-logs' as ViewType,
-          label: 'Logs Documents',
+          label: 'Historique Dossiers',
           icon: History,
           color: '#6366f1'
         }
