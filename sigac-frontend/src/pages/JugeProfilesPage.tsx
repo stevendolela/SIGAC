@@ -6,6 +6,7 @@ import type { UserDto } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
 import { SkeletonTableRows } from '../components/common/LoadingSkeleton'
 import { formatDateToISO } from '../utils/dateUtils'
+import '../styles/create-chat-modal.css'
 
 export default function JugeProfilesPage() {
   const [items, setItems] = useState<JugeProfileDto[]>([])
@@ -543,44 +544,9 @@ export default function JugeProfilesPage() {
 
       {/* Modal de création */}
       {showCreateModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCreateModal(false)
-              resetForm()
-            }
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              padding: 24,
-              maxWidth: 700,
-              width: '95%',
-              maxHeight: '85vh',
-              overflow: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }}
-          >
-            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b', fontWeight: 700 }}>
-              ➕ Créer un Profil Professionnel
-            </h2>
-
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Création profil">
+          <div className="panel" style={{ maxWidth: 700, width: '95%', maxHeight: '85vh', overflow: 'auto' }}>
+            <div className="panel-title">➕ Créer un Profil Professionnel</div>
             <div style={{ display: 'grid', gap: 16 }}>
               {/* Sélection du collaborateur */}
               <div>
@@ -695,6 +661,7 @@ export default function JugeProfilesPage() {
 
             <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={() => {
                   setShowCreateModal(false)
@@ -702,13 +669,13 @@ export default function JugeProfilesPage() {
                 }}
                 disabled={creating}
               >
-                ❌ Annuler
+                Annuler
               </button>
               <button
+                type="button"
                 className="btn"
                 onClick={handleCreate}
                 disabled={creating}
-                style={{ background: '#10b981' }}
               >
                 {creating ? '⏳ Création...' : '💾 Créer le profil'}
               </button>
@@ -719,44 +686,11 @@ export default function JugeProfilesPage() {
 
       {/* Modal d'édition */}
       {showEditModal && selectedProfile && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowEditModal(false)
-              setSelectedProfile(null)
-              resetForm()
-            }
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              padding: 24,
-              maxWidth: 700,
-              width: '95%',
-              maxHeight: '85vh',
-              overflow: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }}
-          >
-            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b', fontWeight: 700 }}>
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Édition profil">
+          <div className="panel" style={{ maxWidth: 700, width: '95%', maxHeight: '85vh', overflow: 'auto' }}>
+            <div className="panel-title">
               ✏️ Modifier le Profil de {users[selectedProfile.userId] || 'Utilisateur inconnu'}
-            </h2>
+            </div>
 
             <div style={{ display: 'grid', gap: 16 }}>
               {/* Collaborateur (non modifiable) */}
@@ -868,6 +802,7 @@ export default function JugeProfilesPage() {
 
             <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={() => {
                   setShowEditModal(false)
@@ -876,13 +811,13 @@ export default function JugeProfilesPage() {
                 }}
                 disabled={updating}
               >
-                ❌ Annuler
+                Annuler
               </button>
               <button
+                type="button"
                 className="btn"
                 onClick={handleUpdate}
                 disabled={updating}
-                style={{ background: '#3b82f6' }}
               >
                 {updating ? '⏳ Mise à jour...' : '💾 Enregistrer'}
               </button>
