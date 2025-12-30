@@ -146,12 +146,6 @@ export default function JugeProfilesPage() {
   }
 
   useEffect(() => { load() }, [])
-  useEffect(() => { 
-    // Focus uniquement après le chargement initial, pas pendant l'ouverture des modals
-    if (!loading && !showCreateModal && !showEditModal) {
-      focusRef.current?.focus() 
-    }
-  }, [loading, showCreateModal, showEditModal])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -580,6 +574,7 @@ export default function JugeProfilesPage() {
           }}
         >
           <div 
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: 'white',
               borderRadius: 12,
@@ -588,7 +583,6 @@ export default function JugeProfilesPage() {
               width: '95%',
               maxHeight: '85vh',
               overflow: 'auto',
-              animation: 'slideIn 0.3s ease-out',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}
           >
@@ -757,6 +751,7 @@ export default function JugeProfilesPage() {
           }}
         >
           <div 
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: 'white',
               borderRadius: 12,
@@ -765,7 +760,6 @@ export default function JugeProfilesPage() {
               width: '95%',
               maxHeight: '85vh',
               overflow: 'auto',
-              animation: 'slideIn 0.3s ease-out',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}
           >
