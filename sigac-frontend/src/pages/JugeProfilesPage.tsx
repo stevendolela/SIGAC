@@ -146,7 +146,12 @@ export default function JugeProfilesPage() {
   }
 
   useEffect(() => { load() }, [])
-  useEffect(() => { focusRef.current?.focus() }, [loading])
+  useEffect(() => { 
+    // Focus uniquement après le chargement initial, pas pendant l'ouverture des modals
+    if (!loading && !showCreateModal && !showEditModal) {
+      focusRef.current?.focus() 
+    }
+  }, [loading, showCreateModal, showEditModal])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
