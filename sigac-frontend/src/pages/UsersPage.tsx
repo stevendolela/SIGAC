@@ -250,7 +250,6 @@ export default function UsersPage() {
 
   const roleColors: Record<string, { bg: string; text: string; icon: string }> = {
     'Admin': { bg: '#fee2e2', text: '#991b1b', icon: '👑' },
-    'Admin': { bg: '#fee2e2', text: '#991b1b', icon: '👑' },
     'Manager': { bg: '#ddd6fe', text: '#5b21b6', icon: '⚖️' },
     'Collaborateur': { bg: '#dbeafe', text: '#1e40af', icon: '👨‍⚖️' },
     'Assistant': { bg: '#d1fae5', text: '#065f46', icon: '📋' },

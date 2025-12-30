@@ -507,7 +507,7 @@ const UnreadBadge: React.FC = React.memo(() => {
   
   // Debug: tracer les changements de conversations
   useEffect(() => {
-    console.log('[UnifiedChatPanel] conversations changed:', conversations.length, 'items');
+    // Conversations updated
   }, [conversations]);
   
   const { conversation, loading: convDetailLoading, refetch: refetchConversation } = useChatConversation(
@@ -519,7 +519,7 @@ const UnreadBadge: React.FC = React.memo(() => {
   
   // Debug: tracer les changements de groupes
   useEffect(() => {
-    console.log('[UnifiedChatPanel] groups changed:', groups.length, 'items');
+    // Groups updated
   }, [groups]);
   
   const { group, loading: groupDetailLoading, refetch: refetchGroup } = useChatGroup(
@@ -1034,23 +1034,9 @@ const UnreadBadge: React.FC = React.memo(() => {
     if (!audioBlob || !selectedChat) return;
 
     try {
-      console.log('Envoi note vocale:', {
-        blobSize: audioBlob.size,
-        blobType: audioBlob.type,
-        duration: duration,
-        chatId: selectedChat.id,
-        chatType: selectedChat.type
-      });
-
       // Créer le fichier avec le même MIME type que le blob
       const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { 
         type: audioBlob.type // Utiliser le type du blob (audio/webm ou audio/ogg)
-      });
-      
-      console.log('File créé:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
       });
       
       if (selectedChat.type === 'conversation') {
@@ -1061,7 +1047,6 @@ const UnreadBadge: React.FC = React.memo(() => {
         await refetchGroup();
       }
 
-      console.log('Upload réussi!');
       cancelVoiceNote();
     } catch (error: any) {
       console.error('Erreur upload complète:', error);

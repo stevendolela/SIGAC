@@ -41,7 +41,7 @@ export function migrateUserDataInCache(): void {
       if (user.role && roleMapping[user.role]) {
         user.role = roleMapping[user.role]
         localStorage.setItem('user', JSON.stringify(user))
-        console.log('✅ Rôle utilisateur migré en cache:', user.role)
+        // User role migrated successfully
       }
     }
   } catch (error) {
