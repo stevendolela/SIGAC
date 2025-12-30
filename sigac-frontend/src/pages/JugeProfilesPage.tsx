@@ -171,10 +171,10 @@ export default function JugeProfilesPage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           className="focus-outline"
-          placeholder="🔍 Rechercher juge ou spécialisation..."
+          placeholder="🔍 Rechercher responsable ou spécialisation..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          aria-label="Rechercher juge"
+          aria-label="Rechercher responsable"
           style={{ maxWidth: 340, flex: 1 }}
         />
         
@@ -459,46 +459,66 @@ export default function JugeProfilesPage() {
         <div className="table-wrapper" role="region" aria-live="polite" aria-busy={loading}>
           <table className="table" aria-describedby="juges-caption">
           <caption id="juges-caption" style={{ textAlign: 'left', padding: '8px 12px', fontSize: 12, color: '#64748b' }}>
-            Liste des juges constitutionnels avec tri alphabétique et recherche locale.
+            Liste des responsables avec tri alphabétique et recherche locale.
           </caption>
           <thead>
             <tr>
-              <th>Juge</th>
-              <th>Grade</th>
-              <th>Spécialisations</th>
-              <th>Téléphone</th>
-              <th>Date Nomination</th>
-              {isAdmin && <th style={{ width: 120 }}>Actions</th>}
+              <th style={{ minWidth: 180 }}>RESPONSABLE</th>
+              <th style={{ minWidth: 140 }}>GRADE</th>
+              <th style={{ minWidth: 200 }}>SPÉCIALISATIONS</th>
+              <th style={{ minWidth: 130 }}>TÉLÉPHONE</th>
+              <th style={{ minWidth: 140 }}>DATE NOMINATION</th>
+              {isAdmin && <th style={{ width: 120, textAlign: 'center' }}>ACTIONS</th>}
             </tr>
           </thead>
           {loading && <SkeletonTableRows rows={5} cols={isAdmin ? 6 : 5} />}
           {!loading && (
             <tbody>
-              {filtered.map(p => (
-                <tr key={p.id}>
-                  <td style={{ fontWeight: 600 }}>{users[p.userId] || p.userId}</td>
-                  <td>{p.grade}</td>
-                  <td>{p.specialisations || '-'}</td>
-                  <td>{p.telephone || '-'}</td>
-                  <td>{p.dateNomination ? new Date(p.dateNomination).toLocaleDateString('fr-FR') : '-'}</td>
-                  {isAdmin && (
+              {filtered.map(p => {
+                const userName = users[p.userId] || 'Utilisateur inconnu'
+                return (
+                  <tr key={p.id}>
                     <td>
-                      <button
-                        className="btn"
-                        onClick={() => openEditModal(p)}
-                        style={{ 
-                          padding: '6px 12px', 
-                          fontSize: 13, 
-                          background: '#3b82f6'
-                        }}
-                        title="Modifier le profil"
-                      >
-                        ✏️ Éditer
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 18,
+                          flexShrink: 0
+                        }}>
+                          👤
+                        </div>
+                        <span style={{ fontWeight: 600, color: '#1e293b' }}>{userName}</span>
+                      </div>
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td style={{ color: '#475569' }}>{p.grade}</td>
+                    <td style={{ color: '#64748b', fontSize: 14 }}>{p.specialisations || '-'}</td>
+                    <td style={{ color: '#64748b', fontFamily: 'monospace', fontSize: 13 }}>{p.telephone || '-'}</td>
+                    <td style={{ color: '#64748b' }}>{p.dateNomination ? new Date(p.dateNomination).toLocaleDateString('fr-FR') : '-'}</td>
+                    {isAdmin && (
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          className="btn"
+                          onClick={() => openEditModal(p)}
+                          style={{ 
+                            padding: '6px 14px', 
+                            fontSize: 13, 
+                            background: '#3b82f6'
+                          }}
+                          title="Modifier le profil"
+                        >
+                          ✏️ Éditer
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                )
+              })}
               {filtered.length === 0 && items.length === 0 && (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 40 }}>
@@ -571,10 +591,10 @@ export default function JugeProfilesPage() {
             </h2>
 
             <div style={{ display: 'grid', gap: 16 }}>
-              {/* Sélection du juge */}
+              {/* Sélection du responsable */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Juge <span style={{ color: '#dc2626' }}>*</span>
+                  Responsable <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <select
                   className="focus-outline"
@@ -595,13 +615,13 @@ export default function JugeProfilesPage() {
               {/* Grade */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Grade <span style={{ color: '#dc2626' }}>*</span>
+                  Grade / Fonction <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   className="focus-outline"
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
-                  placeholder="Ex: Juge Conseiller"
+                  placeholder="Ex: Juge Conseiller, Manager, Directeur..."
                   required
                   style={{ fontSize: 15 }}
                 />
@@ -610,13 +630,13 @@ export default function JugeProfilesPage() {
               {/* Spécialisations */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Spécialisations
+                  Spécialisations / Domaines d'expertise
                 </label>
                 <input
                   className="focus-outline"
                   value={specialisations}
                   onChange={e => setSpecialisations(e.target.value)}
-                  placeholder="Ex: Droit constitutionnel, Droits de l'homme"
+                  placeholder="Ex: Droit constitutionnel, Gestion de projets, Finance..."
                   style={{ fontSize: 15 }}
                 />
               </div>
@@ -743,14 +763,14 @@ export default function JugeProfilesPage() {
             }}
           >
             <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b' }}>
-              ✏️ Modifier le Profil de {users[selectedProfile.userId]}
+              ✏️ Modifier le Profil de {users[selectedProfile.userId] || 'Utilisateur inconnu'}
             </h2>
 
             <div style={{ display: 'grid', gap: 16 }}>
-              {/* Juge (non modifiable) */}
+              {/* Responsable (non modifiable) */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#64748b' }}>
-                  Juge
+                  Responsable
                 </label>
                 <div style={{ 
                   padding: '10px 12px', 
@@ -760,20 +780,20 @@ export default function JugeProfilesPage() {
                   fontSize: 15,
                   fontWeight: 500
                 }}>
-                  {users[selectedProfile.userId] || selectedProfile.userId}
+                  {users[selectedProfile.userId] || 'Utilisateur inconnu'}
                 </div>
               </div>
 
               {/* Grade */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Grade <span style={{ color: '#dc2626' }}>*</span>
+                  Grade / Fonction <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   className="focus-outline"
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
-                  placeholder="Ex: Juge Conseiller"
+                  placeholder="Ex: Juge Conseiller, Manager, Directeur..."
                   required
                   style={{ fontSize: 15 }}
                 />
@@ -782,13 +802,13 @@ export default function JugeProfilesPage() {
               {/* Spécialisations */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Spécialisations
+                  Spécialisations / Domaines d'expertise
                 </label>
                 <input
                   className="focus-outline"
                   value={specialisations}
                   onChange={e => setSpecialisations(e.target.value)}
-                  placeholder="Ex: Droit constitutionnel, Droits de l'homme"
+                  placeholder="Ex: Droit constitutionnel, Gestion de projets, Finance..."
                   style={{ fontSize: 15 }}
                 />
               </div>
