@@ -20,7 +20,6 @@ export default function JugeProfilesPage() {
   const [updating, setUpdating] = useState(false)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const { notify } = useToast()
-  const focusRef = useRef<HTMLDivElement | null>(null)
   
   // Form state
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -165,7 +164,7 @@ export default function JugeProfilesPage() {
   }, [items, jugesList])
 
   return (
-    <div className="panel" ref={focusRef} tabIndex={-1} aria-labelledby="juges-heading">
+    <div className="panel" aria-labelledby="juges-heading">
       <div className="panel-title" id="juges-heading">📋 Profils des Collaborateurs</div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
@@ -302,22 +301,14 @@ export default function JugeProfilesPage() {
           {filtered.map(p => (
             <div 
               key={p.id}
+              className="card-hover"
               style={{
                 background: 'white',
                 borderRadius: 12,
                 padding: 20,
                 border: '2px solid #e2e8f0',
-                transition: 'all 0.2s',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'
-                e.currentTarget.style.borderColor = '#3b82f6'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
-                e.currentTarget.style.borderColor = '#e2e8f0'
               }}
             >
               {/* En-tête */}

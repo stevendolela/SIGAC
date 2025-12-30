@@ -89,6 +89,17 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
+
+/* Hover effect for cards - pure CSS to eliminate flickering */
+.card-hover {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  border-color: #3b82f6 !important;
+}
+
 .user-menu-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
