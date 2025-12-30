@@ -584,14 +584,15 @@ export default function JugeProfilesPage() {
               background: 'white',
               borderRadius: 12,
               padding: 24,
-              maxWidth: 600,
-              width: '90%',
-              maxHeight: '90vh',
+              maxWidth: 700,
+              width: '95%',
+              maxHeight: '85vh',
               overflow: 'auto',
-              animation: 'slideIn 0.3s ease-out'
+              animation: 'slideIn 0.3s ease-out',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}
           >
-            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b', fontWeight: 700 }}>
               ➕ Créer un Profil Professionnel
             </h2>
 
@@ -760,14 +761,15 @@ export default function JugeProfilesPage() {
               background: 'white',
               borderRadius: 12,
               padding: 24,
-              maxWidth: 600,
-              width: '90%',
-              maxHeight: '90vh',
+              maxWidth: 700,
+              width: '95%',
+              maxHeight: '85vh',
               overflow: 'auto',
-              animation: 'slideIn 0.3s ease-out'
+              animation: 'slideIn 0.3s ease-out',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}
           >
-            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, color: '#1e293b', fontWeight: 700 }}>
               ✏️ Modifier le Profil de {users[selectedProfile.userId] || 'Utilisateur inconnu'}
             </h2>
 
