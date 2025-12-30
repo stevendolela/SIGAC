@@ -32,9 +32,9 @@ export default function FormationsPage() {
 
   useEffect(() => {
     load()
-    // Charger une liste d'utilisateurs (jusqu'à 100)
-    userApi.list(1, 100)
-      .then(res => setUsers(res.data))
+    // Charger la liste des collaborateurs
+    userApi.listJuges()
+      .then(res => setUsers(res))
       .catch(() => {})
   }, [])
 
