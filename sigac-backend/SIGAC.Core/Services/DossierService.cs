@@ -152,10 +152,22 @@ public class DossierService : IDossierService
         await _dossierRepository.AddAsync(dossier);
         await _dossierRepository.SaveChangesAsync();
 
-        // Audit log
+        // Audit log - Sérialiser uniquement les propriétés simples pour éviter les cycles
+        var auditData = new
+        {
+            dossier.Id,
+            dossier.NumeroDossier,
+            dossier.Titre,
+            dossier.Status,
+            dossier.TypeAffaireId,
+            dossier.Demandeur,
+            dossier.Defendeur,
+            dossier.Priorite,
+            dossier.Resume
+        };
         await _auditLogRepository.LogActionAsync(
             userId, "CREATE", "Dossier", dossier.Id.ToString(),
-            null, System.Text.Json.JsonSerializer.Serialize(dossier));
+            null, System.Text.Json.JsonSerializer.Serialize(auditData));
 
         // Recharger le dossier complet avec les relations pour le mapper
         var createdDossier = await _dossierRepository.GetByIdAsync(dossier.Id);
@@ -191,8 +203,21 @@ public class DossierService : IDossierService
             return null;
         }
 
-        // Sauvegarde des anciennes valeurs pour l'audit
-        var oldValues = System.Text.Json.JsonSerializer.Serialize(dossier);
+        // Sauvegarde des anciennes valeurs pour l'audit - données essentielles seulement
+        var oldData = new
+        {
+            dossier.Id,
+            dossier.NumeroDossier,
+            dossier.Titre,
+            dossier.Status,
+            dossier.TypeAffaireId,
+            dossier.Demandeur,
+            dossier.Defendeur,
+            dossier.Priorite,
+            dossier.Resume,
+            dossier.Observations
+        };
+        var oldValues = System.Text.Json.JsonSerializer.Serialize(oldData);
 
         // Mise à jour des champs
         if (!string.IsNullOrWhiteSpace(updateDto.Titre))
@@ -238,8 +263,21 @@ public class DossierService : IDossierService
         // Le dossier est tracké, SaveChanges suffit
         await _dossierRepository.SaveChangesAsync();
 
-        // Audit log
-        var newValues = System.Text.Json.JsonSerializer.Serialize(dossier);
+        // Audit log - Nouvelles valeurs
+        var newData = new
+        {
+            dossier.Id,
+            dossier.NumeroDossier,
+            dossier.Titre,
+            dossier.Status,
+            dossier.TypeAffaireId,
+            dossier.Demandeur,
+            dossier.Defendeur,
+            dossier.Priorite,
+            dossier.Resume,
+            dossier.Observations
+        };
+        var newValues = System.Text.Json.JsonSerializer.Serialize(newData);
         await _auditLogRepository.LogActionAsync(
             userId, "UPDATE", "Dossier", dossier.Id.ToString(), oldValues, newValues);
 
@@ -278,10 +316,20 @@ public class DossierService : IDossierService
         // Sauvegarder tous les changements
         await _dossierRepository.SaveChangesAsync();
 
-        // Audit log
+        // Audit log - Sérialiser uniquement les propriétés simples pour éviter les cycles
+        var auditData = new
+        {
+            dossier.Id,
+            dossier.NumeroDossier,
+            dossier.Titre,
+            dossier.Status,
+            dossier.TypeAffaireId,
+            dossier.Demandeur,
+            dossier.Defendeur
+        };
         await _auditLogRepository.LogActionAsync(
             userId, "DELETE", "Dossier", dossier.Id.ToString(),
-            System.Text.Json.JsonSerializer.Serialize(dossier), null);
+            System.Text.Json.JsonSerializer.Serialize(auditData), null);
 
         return true;
     }
