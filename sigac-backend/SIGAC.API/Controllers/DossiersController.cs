@@ -181,7 +181,7 @@ public class DossiersController : ControllerBase
     /// Supprime un dossier (suppression logique)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteDossier(Guid id)
@@ -203,7 +203,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la suppression du dossier {DossierId}", id);
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
