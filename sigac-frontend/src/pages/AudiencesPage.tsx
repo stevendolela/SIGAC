@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useToast } from '../components/common/ToastProvider'
 import AudienceForm from '../components/audiences/AudienceForm'
 import AudienceDetail from '../components/audiences/AudienceDetail'
-import Modal from '../components/common/Modal'
 import { audienceApi } from '../api/audienceApi'
 import { dossierApi } from '../api/dossierApi'
 import type { AudienceListDto } from '../types/audience'
@@ -22,9 +21,8 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
-  const [showAudienceModal, setShowAudienceModal] = useState(false)
+  const [showForm, setShowForm] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selectedAudienceId, setSelectedAudienceId] = useState<string | undefined>()
-  const [showDetailModal, setShowDetailModal] = useState(false)
   const [viewAudienceId, setViewAudienceId] = useState<string | null>(null)
   const { notify } = useToast()
 
@@ -170,11 +168,12 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   const handleNewAudience = () => {
     setSelectedAudienceId(undefined)
-    setShowAudienceModal(true)
+    setShowForm('create')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleAudienceSuccess = () => {
-    setShowAudienceModal(false)
+    setShowForm(null)
     setSelectedAudienceId(undefined)
     notify({ type: 'success', message: '✅ Événement enregistré avec succès' })
     // Recharger les audiences après création/modification
@@ -183,24 +182,25 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   const handleSelectAudience = (id: string) => {
     setSelectedAudienceId(id)
-    setShowAudienceModal(true)
+    setShowForm('edit')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleViewAudience = (id: string) => {
     setViewAudienceId(id)
-    setShowDetailModal(true)
+    setShowForm('detail')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleEditFromDetail = () => {
     if (!viewAudienceId) return
-    setShowDetailModal(false)
     setSelectedAudienceId(viewAudienceId)
     setViewAudienceId(null)
-    setShowAudienceModal(true)
+    setShowForm('edit')
   }
 
   const handleCloseDetail = () => {
-    setShowDetailModal(false)
+    setShowForm(null)
     setViewAudienceId(null)
   }
 
@@ -213,6 +213,138 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
   return (
     <div className="panel">
       <div className="panel-title">📅 Gestion des Événements</div>
+
+      {/* Formulaire inline création/édition */}
+      {(showForm === 'create' || showForm === 'edit') && (
+        <div style={{ 
+          background: 'white',
+          borderRadius: '12px',
+          padding: '32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '2px solid #3b82f6'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            marginBottom: '28px',
+            paddingBottom: '20px',
+            borderBottom: '2px solid #f3f4f6'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: showForm === 'create' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              {showForm === 'create' ? '➕' : '✏️'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
+                {showForm === 'create' ? 'Planifier une réunion' : 'Modifier la réunion'}
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+                {showForm === 'create' ? 'Créer un nouvel événement au calendrier' : 'Mettre à jour les informations'}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowForm(null)
+                setSelectedAudienceId(undefined)
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#6b7280',
+                padding: '4px 8px'
+              }}
+              title="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <AudienceForm
+            audienceId={selectedAudienceId}
+            onSuccess={handleAudienceSuccess}
+            onCancel={() => {
+              setShowForm(null)
+              setSelectedAudienceId(undefined)
+            }}
+          />
+        </div>
+      )}
+
+      {/* Détail inline */}
+      {showForm === 'detail' && viewAudienceId && (
+        <div style={{ 
+          background: 'white',
+          borderRadius: '12px',
+          padding: '32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '2px solid #8b5cf6'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            marginBottom: '28px',
+            paddingBottom: '20px',
+            borderBottom: '2px solid #f3f4f6'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              👁️
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
+                Détails de l'audience
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+                Informations complètes
+              </p>
+            </div>
+            <button
+              onClick={handleCloseDetail}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#6b7280',
+                padding: '4px 8px'
+              }}
+              title="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <AudienceDetail
+            audienceId={viewAudienceId}
+            onEdit={handleEditFromDetail}
+            onClose={handleCloseDetail}
+            canEdit={isAdmin}
+            onViewDossier={handleViewDossier}
+          />
+        </div>
+      )}
 
       {/* Affichage d'erreur */}
       {error && (
@@ -480,44 +612,6 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
             </div>
           )}
         </div>
-      )}
-      
-      {/* Modal Formulaire Audience */}
-      <Modal
-        isOpen={showAudienceModal}
-        onClose={() => {
-          setShowAudienceModal(false)
-          setSelectedAudienceId(undefined)
-        }}
-        title={selectedAudienceId ? 'Modifier la réunion' : 'Planifier une réunion'}
-        size="lg"
-      >
-        <AudienceForm
-          audienceId={selectedAudienceId}
-          onSuccess={handleAudienceSuccess}
-          onCancel={() => {
-            setShowAudienceModal(false)
-            setSelectedAudienceId(undefined)
-          }}
-        />
-      </Modal>
-
-      {/* Modal Détail Audience */}
-      {viewAudienceId && (
-        <Modal
-          isOpen={showDetailModal}
-          onClose={handleCloseDetail}
-          title="Détails de l'audience"
-          size="lg"
-        >
-          <AudienceDetail
-            audienceId={viewAudienceId}
-            onEdit={handleEditFromDetail}
-            onClose={handleCloseDetail}
-            canEdit={isAdmin}
-            onViewDossier={handleViewDossier}
-          />
-        </Modal>
       )}
     </div>
   )
