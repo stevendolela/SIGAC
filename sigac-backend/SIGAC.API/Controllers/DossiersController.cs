@@ -52,7 +52,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la récupération des dossiers");
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -85,7 +85,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la récupération du dossier {DossierId}", id);
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -125,7 +125,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la création du dossier");
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -173,7 +173,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la mise à jour du dossier {DossierId}", id);
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -238,7 +238,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de l'attribution du rapporteur au dossier {DossierId}", id);
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -280,7 +280,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors du changement de statut du dossier {DossierId}", id);
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
@@ -302,7 +302,7 @@ public class DossiersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la récupération des statistiques");
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            return StatusCode(500, new { error = "InternalServerError", message = ex.Message, details = ex.InnerException?.Message });
         }
     }
 
