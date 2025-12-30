@@ -14,8 +14,7 @@ export default function JugeProfilesPage() {
   const [users, setUsers] = useState<Record<string, string>>({})
   const [jugesList, setJugesList] = useState<UserDto[]>([])
   const [search, setSearch] = useState('')
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [showForm, setShowForm] = useState<'create' | 'edit' | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<JugeProfileDto | null>(null)
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
@@ -81,7 +80,6 @@ export default function JugeProfilesPage() {
       await JugeApi.create(dto)
       notify({ type: 'success', message: '✅ Profil créé avec succès' })
       resetForm()
-      setShowCreateModal(false)
       load()
     } catch (e: any) {
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur création profil' })
@@ -113,8 +111,6 @@ export default function JugeProfilesPage() {
       await JugeApi.update(selectedProfile.id, dto)
       notify({ type: 'success', message: '✅ Profil mis à jour avec succès' })
       resetForm()
-      setShowEditModal(false)
-      setSelectedProfile(null)
       load()
     } catch (e: any) {
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur mise à jour profil' })
@@ -132,7 +128,8 @@ export default function JugeProfilesPage() {
     setDateNomination(profile.dateNomination ? formatDateToISO(new Date(profile.dateNomination)) : '')
     setTelephone(profile.telephone || '')
     setAdresse(profile.adresse || '')
-    setShowEditModal(true)
+    setShowForm('edit')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function resetForm() {
@@ -143,6 +140,8 @@ export default function JugeProfilesPage() {
     setDateNomination('')
     setTelephone('')
     setAdresse('')
+    setSelectedProfile(null)
+    setShowForm(null)
   }
 
   useEffect(() => { load() }, [])
@@ -167,6 +166,216 @@ export default function JugeProfilesPage() {
   return (
     <div className="panel" aria-labelledby="juges-heading">
       <div className="panel-title" id="juges-heading">📋 Profils des Collaborateurs</div>
+      
+      {/* Formulaire inline de création/édition */}
+      {showForm && (
+        <div style={{ 
+          background: 'white',
+          borderRadius: '12px',
+          padding: '32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '2px solid #3b82f6'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            marginBottom: '28px',
+            paddingBottom: '20px',
+            borderBottom: '2px solid #f3f4f6'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: showForm === 'create' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              {showForm === 'create' ? '➕' : '✏️'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
+                {showForm === 'create' ? 'Créer un Profil Professionnel' : `Modifier le Profil de ${selectedProfile ? users[selectedProfile.userId] || 'Utilisateur inconnu' : ''}`}
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+                {showForm === 'create' ? 'Remplissez les informations du collaborateur' : 'Mettez à jour les informations'}
+              </p>
+            </div>
+            <button
+              onClick={() => resetForm()}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#6b7280',
+                padding: '4px 8px'
+              }}
+              title="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gap: 16 }}>
+            {/* Sélection du collaborateur (création seulement) */}
+            {showForm === 'create' && (
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                  Collaborateur <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <select
+                  className="focus-outline"
+                  value={selectedUserId}
+                  onChange={e => setSelectedUserId(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '10px 12px', fontSize: 15 }}
+                >
+                  <option value="">-- Sélectionner un collaborateur --</option>
+                  {jugesSansProfile.map(j => (
+                    <option key={j.id} value={j.id}>
+                      {j.nomComplet || j.username} ({j.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Collaborateur (édition - non modifiable) */}
+            {showForm === 'edit' && selectedProfile && (
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#64748b' }}>
+                  Collaborateur
+                </label>
+                <div style={{ 
+                  padding: '10px 12px', 
+                  background: '#f8fafc', 
+                  borderRadius: 6, 
+                  border: '2px solid #e2e8f0',
+                  fontSize: 15,
+                  fontWeight: 500
+                }}>
+                  {users[selectedProfile.userId] || 'Utilisateur inconnu'}
+                </div>
+              </div>
+            )}
+
+            {/* Grade */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                Grade / Fonction <span style={{ color: '#dc2626' }}>*</span>
+              </label>
+              <input
+                className="focus-outline"
+                value={grade}
+                onChange={e => setGrade(e.target.value)}
+                placeholder="Ex: Juge Conseiller, Manager, Directeur..."
+                required
+                style={{ fontSize: 15 }}
+              />
+            </div>
+
+            {/* Spécialisations */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                Spécialisations / Domaines d'expertise
+              </label>
+              <input
+                className="focus-outline"
+                value={specialisations}
+                onChange={e => setSpecialisations(e.target.value)}
+                placeholder="Ex: Droit constitutionnel, Gestion de projets, Finance..."
+                style={{ fontSize: 15 }}
+              />
+            </div>
+
+            {/* Date d'entrée */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                Date d'entrée
+              </label>
+              <input
+                type="date"
+                className="focus-outline"
+                value={dateNomination}
+                onChange={e => setDateNomination(e.target.value)}
+                style={{ fontSize: 15 }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* Téléphone */}
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  className="focus-outline"
+                  value={telephone}
+                  onChange={e => setTelephone(e.target.value)}
+                  placeholder="+243 XXX XXX XXX"
+                  style={{ fontSize: 15 }}
+                />
+              </div>
+
+              {/* Adresse */}
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                  Adresse
+                </label>
+                <input
+                  className="focus-outline"
+                  value={adresse}
+                  onChange={e => setAdresse(e.target.value)}
+                  placeholder="Kinshasa, Gombe"
+                  style={{ fontSize: 15 }}
+                />
+              </div>
+            </div>
+
+            {/* Biographie */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
+                Biographie
+              </label>
+              <textarea
+                className="focus-outline"
+                value={biographie}
+                onChange={e => setBiographie(e.target.value)}
+                placeholder="Parcours professionnel et académique..."
+                rows={4}
+                style={{ resize: 'vertical', fontSize: 15 }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => resetForm()}
+              disabled={creating || updating}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={showForm === 'create' ? handleCreate : handleUpdate}
+              disabled={creating || updating}
+              style={{ background: showForm === 'create' ? '#10b981' : '#3b82f6' }}
+            >
+              {creating || updating ? '⏳ En cours...' : showForm === 'create' ? '💾 Créer le profil' : '💾 Enregistrer'}
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           className="focus-outline"
@@ -226,10 +435,10 @@ export default function JugeProfilesPage() {
         {isAdmin && jugesSansProfile.length > 0 && (
           <button 
             className="btn" 
-            onClick={() => setShowCreateModal(true)}
-            style={{ background: '#10b981', marginLeft: 'auto' }}
+            onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            style={{ background: showForm === 'create' ? '#ef4444' : '#10b981', marginLeft: 'auto' }}
           >
-            ➕ Créer un profil
+            {showForm === 'create' ? '❌ Annuler' : '➕ Créer un profil'}
           </button>
         )}
       </div>
@@ -249,7 +458,7 @@ export default function JugeProfilesPage() {
           {isAdmin && (
             <button 
               className="btn" 
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
               style={{ marginLeft: 12, padding: '4px 12px', fontSize: 13 }}
             >
               ➕ Créer
@@ -281,7 +490,7 @@ export default function JugeProfilesPage() {
               {isAdmin && jugesSansProfile.length > 0 && (
                 <button 
                   className="btn" 
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                   style={{ background: '#10b981', marginTop: 12 }}
                 >
                   ➕ Créer le premier profil
@@ -520,7 +729,7 @@ export default function JugeProfilesPage() {
                     {isAdmin && jugesSansProfile.length > 0 && (
                       <button 
                         className="btn" 
-                        onClick={() => setShowCreateModal(true)}
+                        onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                         style={{ background: '#10b981', marginTop: 12 }}
                       >
                         ➕ Créer le premier profil
@@ -540,290 +749,6 @@ export default function JugeProfilesPage() {
           )}
         </table>
       </div>
-      )}
-
-      {/* Modal de création */}
-      {showCreateModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Création profil">
-          <div className="panel" style={{ maxWidth: 700, width: '95%', maxHeight: '85vh', overflow: 'auto' }}>
-            <div className="panel-title">➕ Créer un Profil Professionnel</div>
-            <div style={{ display: 'grid', gap: 16 }}>
-              {/* Sélection du collaborateur */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Collaborateur <span style={{ color: '#dc2626' }}>*</span>
-                </label>
-                <select
-                  className="focus-outline"
-                  value={selectedUserId}
-                  onChange={e => setSelectedUserId(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '10px 12px', fontSize: 15 }}
-                >
-                  <option value="">-- Sélectionner un collaborateur --</option>
-                  {jugesSansProfile.map(j => (
-                    <option key={j.id} value={j.id}>
-                      {j.nomComplet || j.username} ({j.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Grade */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Grade / Fonction <span style={{ color: '#dc2626' }}>*</span>
-                </label>
-                <input
-                  className="focus-outline"
-                  value={grade}
-                  onChange={e => setGrade(e.target.value)}
-                  placeholder="Ex: Juge Conseiller, Manager, Directeur..."
-                  required
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              {/* Spécialisations */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Spécialisations / Domaines d'expertise
-                </label>
-                <input
-                  className="focus-outline"
-                  value={specialisations}
-                  onChange={e => setSpecialisations(e.target.value)}
-                  placeholder="Ex: Droit constitutionnel, Gestion de projets, Finance..."
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              {/* Date d'entrée */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Date d'entrée
-                </label>
-                <input
-                  type="date"
-                  className="focus-outline"
-                  value={dateNomination}
-                  onChange={e => setDateNomination(e.target.value)}
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                {/* Téléphone */}
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                    Téléphone
-                  </label>
-                  <input
-                    type="tel"
-                    className="focus-outline"
-                    value={telephone}
-                    onChange={e => setTelephone(e.target.value)}
-                    placeholder="+243 XXX XXX XXX"
-                    style={{ fontSize: 15 }}
-                  />
-                </div>
-
-                {/* Adresse */}
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                    Adresse
-                  </label>
-                  <input
-                    className="focus-outline"
-                    value={adresse}
-                    onChange={e => setAdresse(e.target.value)}
-                    placeholder="Kinshasa, Gombe"
-                    style={{ fontSize: 15 }}
-                  />
-                </div>
-              </div>
-
-              {/* Biographie */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Biographie
-                </label>
-                <textarea
-                  className="focus-outline"
-                  value={biographie}
-                  onChange={e => setBiographie(e.target.value)}
-                  placeholder="Parcours professionnel et académique..."
-                  rows={4}
-                  style={{ resize: 'vertical', fontSize: 15 }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowCreateModal(false)
-                  resetForm()
-                }}
-                disabled={creating}
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={handleCreate}
-                disabled={creating}
-              >
-                {creating ? '⏳ Création...' : '💾 Créer le profil'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal d'édition */}
-      {showEditModal && selectedProfile && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Édition profil">
-          <div className="panel" style={{ maxWidth: 700, width: '95%', maxHeight: '85vh', overflow: 'auto' }}>
-            <div className="panel-title">
-              ✏️ Modifier le Profil de {users[selectedProfile.userId] || 'Utilisateur inconnu'}
-            </div>
-
-            <div style={{ display: 'grid', gap: 16 }}>
-              {/* Collaborateur (non modifiable) */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#64748b' }}>
-                  Collaborateur
-                </label>
-                <div style={{ 
-                  padding: '10px 12px', 
-                  background: '#f8fafc', 
-                  borderRadius: 6, 
-                  border: '2px solid #e2e8f0',
-                  fontSize: 15,
-                  fontWeight: 500
-                }}>
-                  {users[selectedProfile.userId] || 'Utilisateur inconnu'}
-                </div>
-              </div>
-
-              {/* Grade */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Grade / Fonction <span style={{ color: '#dc2626' }}>*</span>
-                </label>
-                <input
-                  className="focus-outline"
-                  value={grade}
-                  onChange={e => setGrade(e.target.value)}
-                  placeholder="Ex: Juge Conseiller, Manager, Directeur..."
-                  required
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              {/* Spécialisations */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Spécialisations / Domaines d'expertise
-                </label>
-                <input
-                  className="focus-outline"
-                  value={specialisations}
-                  onChange={e => setSpecialisations(e.target.value)}
-                  placeholder="Ex: Droit constitutionnel, Gestion de projets, Finance..."
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              {/* Date d'entrée */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Date d'entrée
-                </label>
-                <input
-                  type="date"
-                  className="focus-outline"
-                  value={dateNomination}
-                  onChange={e => setDateNomination(e.target.value)}
-                  style={{ fontSize: 15 }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                {/* Téléphone */}
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                    Téléphone
-                  </label>
-                  <input
-                    type="tel"
-                    className="focus-outline"
-                    value={telephone}
-                    onChange={e => setTelephone(e.target.value)}
-                    placeholder="+243 XXX XXX XXX"
-                    style={{ fontSize: 15 }}
-                  />
-                </div>
-
-                {/* Adresse */}
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                    Adresse
-                  </label>
-                  <input
-                    className="focus-outline"
-                    value={adresse}
-                    onChange={e => setAdresse(e.target.value)}
-                    placeholder="Kinshasa, Gombe"
-                    style={{ fontSize: 15 }}
-                  />
-                </div>
-              </div>
-
-              {/* Biographie */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Biographie
-                </label>
-                <textarea
-                  className="focus-outline"
-                  value={biographie}
-                  onChange={e => setBiographie(e.target.value)}
-                  placeholder="Parcours professionnel et académique..."
-                  rows={6}
-                  style={{ resize: 'vertical', fontSize: 15 }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowEditModal(false)
-                  setSelectedProfile(null)
-                  resetForm()
-                }}
-                disabled={updating}
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={handleUpdate}
-                disabled={updating}
-              >
-                {updating ? '⏳ Mise à jour...' : '💾 Enregistrer'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
