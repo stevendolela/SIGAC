@@ -167,14 +167,14 @@ export default function JugeProfilesPage() {
 
   return (
     <div className="panel" ref={focusRef} tabIndex={-1} aria-labelledby="juges-heading">
-      <div className="panel-title" id="juges-heading">� Profils des Responsables</div>
+      <div className="panel-title" id="juges-heading">📋 Profils des Collaborateurs</div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           className="focus-outline"
-          placeholder="🔍 Rechercher responsable ou spécialisation..."
+          placeholder="🔍 Rechercher collaborateur ou spécialisation..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          aria-label="Rechercher responsable"
+          aria-label="Rechercher collaborateur"
           style={{ maxWidth: 340, flex: 1 }}
         />
         
@@ -295,7 +295,7 @@ export default function JugeProfilesPage() {
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
               <p style={{ margin: 0, color: '#64748b' }}>
-                Aucun responsable ne correspond à la recherche "{search}".
+                Aucun collaborateur ne correspond à la recherche "{search}".
               </p>
             </div>
           )}
@@ -399,7 +399,7 @@ export default function JugeProfilesPage() {
                 {p.dateNomination && (
                   <div>
                     <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      📅 Date de nomination
+                      📅 Date d'entrée
                     </div>
                     <div style={{ fontSize: 14, color: '#1e293b' }}>
                       {new Date(p.dateNomination).toLocaleDateString('fr-FR', {
@@ -459,15 +459,15 @@ export default function JugeProfilesPage() {
         <div className="table-wrapper" role="region" aria-live="polite" aria-busy={loading}>
           <table className="table" aria-describedby="juges-caption">
           <caption id="juges-caption" style={{ textAlign: 'left', padding: '8px 12px', fontSize: 12, color: '#64748b' }}>
-            Liste des responsables avec tri alphabétique et recherche locale.
+            Liste des collaborateurs avec tri alphabétique et recherche locale.
           </caption>
           <thead>
             <tr>
-              <th style={{ minWidth: 180 }}>RESPONSABLE</th>
+              <th style={{ minWidth: 180 }}>COLLABORATEUR</th>
               <th style={{ minWidth: 140 }}>GRADE</th>
               <th style={{ minWidth: 200 }}>SPÉCIALISATIONS</th>
               <th style={{ minWidth: 130 }}>TÉLÉPHONE</th>
-              <th style={{ minWidth: 140 }}>DATE NOMINATION</th>
+              <th style={{ minWidth: 140 }}>DATE D'ENTRÉE</th>
               {isAdmin && <th style={{ width: 120, textAlign: 'center' }}>ACTIONS</th>}
             </tr>
           </thead>
@@ -541,7 +541,7 @@ export default function JugeProfilesPage() {
               {filtered.length === 0 && items.length > 0 && (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 24, color: '#64748b' }}>
-                    🔍 Aucun responsable ne correspond à la recherche "{search}".
+                    🔍 Aucun collaborateur ne correspond à la recherche "{search}".
                   </td>
                 </tr>
               )}
@@ -591,10 +591,10 @@ export default function JugeProfilesPage() {
             </h2>
 
             <div style={{ display: 'grid', gap: 16 }}>
-              {/* Sélection du responsable */}
+              {/* Sélection du collaborateur */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Responsable <span style={{ color: '#dc2626' }}>*</span>
+                  Collaborateur <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <select
                   className="focus-outline"
@@ -603,7 +603,7 @@ export default function JugeProfilesPage() {
                   required
                   style={{ width: '100%', padding: '10px 12px', fontSize: 15 }}
                 >
-                  <option value="">-- Sélectionner un responsable --</option>
+                  <option value="">-- Sélectionner un collaborateur --</option>
                   {jugesSansProfile.map(j => (
                     <option key={j.id} value={j.id}>
                       {j.nomComplet || j.username} ({j.email})
@@ -641,10 +641,10 @@ export default function JugeProfilesPage() {
                 />
               </div>
 
-              {/* Date de nomination */}
+              {/* Date d'entrée */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Date de nomination
+                  Date d'entrée
                 </label>
                 <input
                   type="date"
@@ -767,10 +767,10 @@ export default function JugeProfilesPage() {
             </h2>
 
             <div style={{ display: 'grid', gap: 16 }}>
-              {/* Responsable (non modifiable) */}
+              {/* Collaborateur (non modifiable) */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14, color: '#64748b' }}>
-                  Responsable
+                  Collaborateur
                 </label>
                 <div style={{ 
                   padding: '10px 12px', 
@@ -813,10 +813,10 @@ export default function JugeProfilesPage() {
                 />
               </div>
 
-              {/* Date de nomination */}
+              {/* Date d'entrée */}
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 14 }}>
-                  Date de nomination
+                  Date d'entrée
                 </label>
                 <input
                   type="date"
