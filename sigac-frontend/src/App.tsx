@@ -17,6 +17,7 @@ import ApiHealth from './components/common/ApiHealth'
 import NotificationsBell from './components/common/NotificationsBell'
 import JugeProfilesPage from './pages/JugeProfilesPage'
 import MonProfilPage from './pages/MonProfilPage'
+import CalendarPage from './pages/CalendarPage'
 import AdminUserEditPage from './pages/AdminUserEditPage'
 import AccountPage from './pages/AccountPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
@@ -196,6 +197,7 @@ export default function App() {
           {view === 'create-dossier' && <CreateDossierPage onSuccess={() => setView('dossiers')} />}
           {view === 'recherche' && <RechercheAvanceePage />}
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
+          {view === 'calendrier' && <CalendarPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'documents' && <DocumentsPage />}
           {view === 'salles' && <SallesPage />}
           {view === 'mon-profil' && <MonProfilPage />}
