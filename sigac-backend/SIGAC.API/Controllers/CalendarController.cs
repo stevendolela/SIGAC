@@ -25,9 +25,16 @@ public class CalendarController : ControllerBase
     [Authorize(Roles = "Admin,Manager,Assistant")]
     public async Task<ActionResult<CalendarEventDto>> Create([FromBody] CreateCalendarEventDto dto)
     {
-        var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var created = await _service.CreateAsync(dto, actor);
-        return Ok(created);
+        try
+        {
+            var actor = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var created = await _service.CreateAsync(dto, actor);
+            return Ok(created);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erreur lors de la création de l'événement", message = ex.Message, details = ex.InnerException?.Message, stackTrace = ex.StackTrace });
+        }
     }
 
     [HttpPut("{id:guid}")]
