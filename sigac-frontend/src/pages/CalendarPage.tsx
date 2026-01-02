@@ -18,11 +18,15 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
   const [events, setEvents] = useState<CalendarEventDto[]>([])
   const [dossiers, setDossiers] = useState<DossierListDto[]>([])
   const [users, setUsers] = useState<UserDto[]>([])
+  const [salles, setSalles] = useState<any[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
   const [showForm, setShowForm] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventDto | null>(null)
   const [loading, setLoading] = useState(false)
+  const [searchParticipant, setSearchParticipant] = useState('')
+  const [filterType, setFilterType] = useState<string>('')
+  const [filterStatut, setFilterStatut] = useState<string>('')
   const { notify } = useToast()
 
   const [formData, setFormData] = useState<CreateCalendarEventDto>({
@@ -34,7 +38,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
     dossierId: undefined,
     salleId: undefined,
     touteLaJournee: false,
-    participants: []
+    participants: [],
+    statut: 'Planifie',
+    rappelAvant: 30
   })
 
   const userStr = localStorage.getItem('user')
@@ -302,7 +308,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
           {/* Section: Informations générales */}
           <div style={{ marginBottom: 24 }}>
             <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📋 Informations générales</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 150px', gap: 16, alignItems: 'start' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: 6 }}>Type d'événement *</label>
                 <select 
@@ -311,9 +317,11 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                   required
                   style={{ width: '100%' }}
                 >
-                  <option value="Reunion">🤝 Réunion</option>
+                  <option value="Reunion">🤝 Réunions</option>
+                  <option value="Audience">⚖️ Audiences</option>
+                  <option value="Formation">🎓 Formations</option>
+                  <option value="Deadline">⏰ Deadlines</option>
                   <option value="Personnel">📅 Personnel</option>
-                  <option value="Audience">⚖️ Audience</option>
                 </select>
               </div>
 
@@ -327,6 +335,21 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                   required
                   style={{ width: '100%' }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6 }}>Statut *</label>
+                <select 
+                  value={formData.statut} 
+                  onChange={e => setFormData({ ...formData, statut: e.target.value })}
+                  required
+                  style={{ width: '100%' }}
+                >
+                  <option value="Planifie">📅 Planifié</option>
+                  <option value="EnCours">▶️ En cours</option>
+                  <option value="Termine">✅ Terminé</option>
+                  <option value="Reporte">⏸️ Reporté</option>
+                </select>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
@@ -380,45 +403,82 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                 </label>
               </div>
             </div>
+
+            {/* Rappel automatique */}
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: 'block', marginBottom: 6 }}>🔔 Rappel automatique</label>
+              <select 
+                value={formData.rappelAvant} 
+                onChange={e => setFormData({ ...formData, rappelAvant: parseInt(e.target.value) })}
+                style={{ width: '200px' }}
+              >
+                <option value="0">Aucun rappel</option>
+                <option value="15">15 minutes avant</option>
+                <option value="30">30 minutes avant</option>
+                <option value="60">1 heure avant</option>
+                <option value="120">2 heures avant</option>
+                <option value="1440">1 jour avant</option>
+              </select>
+            </div>
           </div>
 
           {/* Section: Association */}
           <div style={{ marginBottom: 24 }}>
             <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📁 Association</h4>
-            {formData.type === 'Audience' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* Dossier */}
+              {formData.type === 'Audience' ? (
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>Dossier * (requis pour audience)</label>
+                  <select
+                    value={formData.dossierId || ''}
+                    onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
+                    required
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">-- Sélectionner un dossier --</option>
+                    {dossiers.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.numeroDossier} - {d.titre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>Dossier associé (optionnel)</label>
+                  <select
+                    value={formData.dossierId || ''}
+                    onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">Aucun</option>
+                    {dossiers.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.numeroDossier} - {d.titre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Salle de réunion */}
               <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Dossier * (requis pour audience)</label>
+                <label style={{ display: 'block', marginBottom: 6 }}>Salle de réunion (optionnel)</label>
                 <select
-                  value={formData.dossierId || ''}
-                  onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
-                  required
-                  style={{ width: '100%', maxWidth: 600 }}
+                  value={formData.salleId || ''}
+                  onChange={e => setFormData({ ...formData, salleId: e.target.value || undefined })}
+                  style={{ width: '100%' }}
                 >
-                  <option value="">-- Sélectionner un dossier --</option>
-                  {dossiers.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.numeroDossier} - {d.titre}
+                  <option value="">Aucune salle</option>
+                  {salles.map(s => (
+                    <option key={s.id} value={s.id}>
+                      🏢 {s.nom} - {s.capacite} pers.
                     </option>
                   ))}
                 </select>
               </div>
-            ) : (
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Dossier associé (optionnel)</label>
-                <select
-                  value={formData.dossierId || ''}
-                  onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
-                  style={{ width: '100%', maxWidth: 600 }}
-                >
-                  <option value="">Aucun</option>
-                  {dossiers.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.numeroDossier} - {d.titre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Section: Participants */}
@@ -431,6 +491,88 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                 </span>
               )}
             </h4>
+
+            {/* Zone de recherche */}
+            <div style={{ marginBottom: 12 }}>
+              <input
+                type="text"
+                placeholder="🔍 Rechercher un participant par nom, prénom ou rôle..."
+                value={searchParticipant}
+                onChange={e => setSearchParticipant(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#d1d5db'}
+              />
+            </div>
+
+            {/* Participants sélectionnés (badges) */}
+            {formData.participants && formData.participants.length > 0 && (
+              <div style={{ 
+                marginBottom: 12,
+                padding: 12,
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: 8
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: '#1e40af', marginBottom: 8 }}>
+                  ✓ Participants sélectionnés :
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {formData.participants.map(userId => {
+                    const user = users.find(u => u.id === userId);
+                    if (!user) return null;
+                    return (
+                      <span
+                        key={userId}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 10px',
+                          backgroundColor: '#3b82f6',
+                          color: 'white',
+                          borderRadius: 16,
+                          fontSize: 13,
+                          fontWeight: 500
+                        }}
+                      >
+                        {user.nomComplet}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newParticipants = formData.participants?.filter(p => p !== userId) || [];
+                            setFormData({ ...formData, participants: newParticipants });
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: 16,
+                            lineHeight: 1,
+                            padding: 0,
+                            marginLeft: 2
+                          }}
+                          title="Retirer"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Liste filtrée des participants */}
             <div style={{ 
               border: '1px solid #e5e7eb', 
               borderRadius: 8, 
@@ -440,42 +582,65 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
               backgroundColor: '#fafafa'
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-                {users.map(user => (
-                  <label 
-                    key={user.id} 
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: 10,
-                      backgroundColor: 'white',
-                      borderRadius: 6,
-                      border: '1px solid #e5e7eb',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    className="participant-label"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.participants?.includes(user.id) || false}
-                      onChange={e => {
-                        const newParticipants = e.target.checked
-                          ? [...(formData.participants || []), user.id]
-                          : (formData.participants || []).filter(p => p !== user.id)
-                        setFormData({ ...formData, participants: newParticipants })
+                {users
+                  .filter(user => {
+                    if (!searchParticipant) return true;
+                    const searchLower = searchParticipant.toLowerCase();
+                    return (
+                      user.nomComplet.toLowerCase().includes(searchLower) ||
+                      user.role.toLowerCase().includes(searchLower) ||
+                      (user.username && user.username.toLowerCase().includes(searchLower))
+                    );
+                  })
+                  .map(user => (
+                    <label 
+                      key={user.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: 10,
+                        backgroundColor: 'white',
+                        borderRadius: 6,
+                        border: '1px solid #e5e7eb',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
                       }}
-                      style={{ cursor: 'pointer', flexShrink: 0 }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 500, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {user.nomComplet}
+                      className="participant-label"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.participants?.includes(user.id) || false}
+                        onChange={e => {
+                          const newParticipants = e.target.checked
+                            ? [...(formData.participants || []), user.id]
+                            : (formData.participants || []).filter(p => p !== user.id)
+                          setFormData({ ...formData, participants: newParticipants })
+                        }}
+                        style={{ cursor: 'pointer', flexShrink: 0 }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 500, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.nomComplet}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>{user.role}</div>
                       </div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{user.role}</div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  ))}
               </div>
+              {users.filter(user => {
+                if (!searchParticipant) return true;
+                const searchLower = searchParticipant.toLowerCase();
+                return (
+                  user.nomComplet.toLowerCase().includes(searchLower) ||
+                  user.role.toLowerCase().includes(searchLower) ||
+                  (user.username && user.username.toLowerCase().includes(searchLower))
+                );
+              }).length === 0 && (
+                <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>
+                  Aucun participant trouvé pour "{searchParticipant}"
+                </div>
+              )}
             </div>
           </div>
 
