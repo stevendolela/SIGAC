@@ -297,80 +297,102 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       {/* Formulaire de création/édition */}
       {showForm === 'create' && (
         <form onSubmit={handleCreateEvent} className="card" style={{ marginBottom: 16 }}>
-          <h3>➕ Nouvel événement</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12 }}>
-            <div>
-              <label>Type d'événement *</label>
-              <select 
-                value={formData.type} 
-                onChange={e => setFormData({ ...formData, type: e.target.value })}
-                required
-              >
-                <option value="Reunion">🤝 Réunion</option>
-                <option value="Personnel">📅 Personnel</option>
-                <option value="Audience">⚖️ Audience</option>
-              </select>
-            </div>
-
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>Titre *</label>
-              <input
-                type="text"
-                value={formData.titre}
-                onChange={e => setFormData({ ...formData, titre: e.target.value })}
-                placeholder="Ex: Réunion d'équipe, Consultation, Audience publique..."
-                required
-              />
-            </div>
-
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Détails de l'événement..."
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label>Date et heure de début *</label>
-              <input
-                type="datetime-local"
-                value={formData.debut.substring(0, 16)}
-                onChange={e => setFormData({ ...formData, debut: new Date(e.target.value).toISOString() })}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Date et heure de fin *</label>
-              <input
-                type="datetime-local"
-                value={formData.fin.substring(0, 16)}
-                onChange={e => setFormData({ ...formData, fin: new Date(e.target.value).toISOString() })}
-                required
-              />
-            </div>
-
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={formData.touteLaJournee}
-                  onChange={e => setFormData({ ...formData, touteLaJournee: e.target.checked })}
-                />
-                {' '}Toute la journée
-              </label>
-            </div>
-
-            {formData.type === 'Audience' && (
+          <h3 style={{ marginBottom: 24 }}>➕ Nouvel événement</h3>
+          
+          {/* Section: Informations générales */}
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📋 Informations générales</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, alignItems: 'start' }}>
               <div>
-                <label>Dossier * (requis pour audience)</label>
+                <label style={{ display: 'block', marginBottom: 6 }}>Type d'événement *</label>
+                <select 
+                  value={formData.type} 
+                  onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  required
+                  style={{ width: '100%' }}
+                >
+                  <option value="Reunion">🤝 Réunion</option>
+                  <option value="Personnel">📅 Personnel</option>
+                  <option value="Audience">⚖️ Audience</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6 }}>Titre *</label>
+                <input
+                  type="text"
+                  value={formData.titre}
+                  onChange={e => setFormData({ ...formData, titre: e.target.value })}
+                  placeholder="Ex: Réunion d'équipe, Consultation, Audience publique..."
+                  required
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: 6 }}>Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Détails de l'événement..."
+                  rows={3}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Date et heure */}
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>🕒 Date et heure</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6 }}>Date et heure de début *</label>
+                <input
+                  type="datetime-local"
+                  value={formData.debut.substring(0, 16)}
+                  onChange={e => setFormData({ ...formData, debut: new Date(e.target.value).toISOString() })}
+                  required
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6 }}>Date et heure de fin *</label>
+                <input
+                  type="datetime-local"
+                  value={formData.fin.substring(0, 16)}
+                  onChange={e => setFormData({ ...formData, fin: new Date(e.target.value).toISOString() })}
+                  required
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ paddingBottom: 8 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.touteLaJournee}
+                    onChange={e => setFormData({ ...formData, touteLaJournee: e.target.checked })}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span>Toute la journée</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Association */}
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📁 Association</h4>
+            {formData.type === 'Audience' ? (
+              <div>
+                <label style={{ display: 'block', marginBottom: 6 }}>Dossier * (requis pour audience)</label>
                 <select
                   value={formData.dossierId || ''}
                   onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
                   required
+                  style={{ width: '100%', maxWidth: 600 }}
                 >
                   <option value="">-- Sélectionner un dossier --</option>
                   {dossiers.map(d => (
@@ -380,14 +402,13 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                   ))}
                 </select>
               </div>
-            )}
-
-            {formData.type !== 'Audience' && (
+            ) : (
               <div>
-                <label>Dossier associé (optionnel)</label>
+                <label style={{ display: 'block', marginBottom: 6 }}>Dossier associé (optionnel)</label>
                 <select
                   value={formData.dossierId || ''}
                   onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
+                  style={{ width: '100%', maxWidth: 600 }}
                 >
                   <option value="">Aucun</option>
                   {dossiers.map(d => (
@@ -398,12 +419,43 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                 </select>
               </div>
             )}
+          </div>
 
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>Participants (internes)</label>
-              <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12, maxHeight: 200, overflowY: 'auto' }}>
+          {/* Section: Participants */}
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>
+              👥 Participants (internes)
+              {formData.participants && formData.participants.length > 0 && (
+                <span style={{ marginLeft: 8, fontSize: 13, color: '#6b7280', fontWeight: 400 }}>
+                  ({formData.participants.length} sélectionné{formData.participants.length > 1 ? 's' : ''})
+                </span>
+              )}
+            </h4>
+            <div style={{ 
+              border: '1px solid #e5e7eb', 
+              borderRadius: 8, 
+              padding: 16, 
+              maxHeight: 240, 
+              overflowY: 'auto',
+              backgroundColor: '#fafafa'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
                 {users.map(user => (
-                  <label key={user.id} style={{ display: 'block', marginBottom: 8 }}>
+                  <label 
+                    key={user.id} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: 10,
+                      backgroundColor: 'white',
+                      borderRadius: 6,
+                      border: '1px solid #e5e7eb',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    className="participant-label"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.participants?.includes(user.id) || false}
@@ -413,17 +465,27 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                           : (formData.participants || []).filter(p => p !== user.id)
                         setFormData({ ...formData, participants: newParticipants })
                       }}
+                      style={{ cursor: 'pointer', flexShrink: 0 }}
                     />
-                    {' '}{user.nomComplet} ({user.role})
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 500, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {user.nomComplet}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>{user.role}</div>
+                    </div>
                   </label>
                 ))}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            <button type="submit" className="btn btn-primary">💾 Créer</button>
-            <button type="button" className="btn" onClick={() => setShowForm(null)}>Annuler</button>
+          <div style={{ display: 'flex', gap: 12, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+            <button type="submit" className="btn btn-primary" style={{ minWidth: 120 }}>
+              💾 Créer
+            </button>
+            <button type="button" className="btn" onClick={() => setShowForm(null)} style={{ minWidth: 120 }}>
+              Annuler
+            </button>
           </div>
         </form>
       )}
