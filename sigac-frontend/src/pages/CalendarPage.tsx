@@ -218,6 +218,11 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
         </div>
         <div className="calendar-body">
           {daysInMonth.map((day, idx) => {
+            if (!day) {
+              // Jour vide (avant le début du mois)
+              return <div key={idx} className="calendar-day-cell calendar-day-empty" />
+            }
+            
             const dayEvents = events.filter(ev => isSameDate(new Date(ev.debut), day))
             const isToday = isSameDate(day, today)
             const isCurrentMonth = day.getMonth() === currentDate.getMonth()

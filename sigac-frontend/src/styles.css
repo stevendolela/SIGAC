@@ -932,6 +932,15 @@ label {
   opacity: 0.5;
 }
 
+.calendar-day-empty {
+  background: #fafafa;
+  cursor: default;
+}
+
+.calendar-day-empty:hover {
+  background: #fafafa;
+}
+
 .day-number {
   font-weight: 600;
   font-size: 14px;
