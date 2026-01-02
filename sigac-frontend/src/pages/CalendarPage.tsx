@@ -78,7 +78,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       date.setDate(date.getDate() - date.getDay() + 1)
       return date
     }
-    return new Date(currentDate.setHours(0, 0, 0, 0))
+    const date = new Date(currentDate)
+    date.setHours(0, 0, 0, 0)
+    return date
   }
 
   const getEndDate = () => {
@@ -92,7 +94,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       date.setDate(date.getDate() - date.getDay() + 7)
       return date
     }
-    return new Date(currentDate.setHours(23, 59, 59, 999))
+    const date = new Date(currentDate)
+    date.setHours(23, 59, 59, 999)
+    return date
   }
 
   const handleCreateEvent = async (e: React.FormEvent) => {
