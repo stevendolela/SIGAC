@@ -25,8 +25,6 @@ public class CalendarRepository : ICalendarRepository
     {
         return await _context.CalendarEvents
             .AsNoTracking()
-            .Include(c => c.Salle)
-            .Include(c => c.Dossier)
             .Where(c => c.Debut <= end && c.Fin >= start)
             .OrderBy(c => c.Debut)
             .ToListAsync();
@@ -34,7 +32,9 @@ public class CalendarRepository : ICalendarRepository
 
     public async Task<CalendarEvent?> GetByIdAsync(Guid id)
     {
-        return await _context.CalendarEvents.Include(c => c.Salle).Include(c => c.Dossier).FirstOrDefaultAsync(c => c.Id == id);
+        return await _context.CalendarEvents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
