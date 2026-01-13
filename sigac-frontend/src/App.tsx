@@ -25,6 +25,7 @@ import AccountModal from './components/common/AccountModal'
 import SystemConfigPage from './pages/SystemConfigPage'
 import LogoManagementPage from './pages/LogoManagementPage'
 import HistoriqueDossiersPage from './pages/DocumentLogsPage'
+import LoginHistoryPage from './pages/LoginHistoryPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
@@ -43,7 +44,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings' | 'document-logs'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings' | 'document-logs' | 'login-history'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -202,6 +203,7 @@ export default function App() {
           {view === 'salles' && <SallesPage />}
           {view === 'mon-profil' && <MonProfilPage />}
           {view === 'profils' && <JugeProfilesPage />}
+          {view === 'login-history' && <LoginHistoryPage />}
           {view === 'users' && (
             <UsersPage />
           )}

@@ -1,0 +1,392 @@
+.login-history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.login-history-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.login-history-header h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.login-history-header p {
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.login-history-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.limit-selector {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: white;
+  transition: border-color 0.3s;
+}
+
+.limit-selector:hover {
+  border-color: #3498db;
+}
+
+.limit-selector:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.refresh-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-history-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.login-history-table-wrapper {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.login-history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.login-history-table thead {
+  background: linear-gradient(135deg, #34495e, #2c3e50);
+  color: white;
+}
+
+.login-history-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.login-history-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.login-history-row {
+  transition: background-color 0.2s;
+}
+
+.login-history-row:hover {
+  background-color: #f8f9fa;
+}
+
+.timestamp-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.time-icon {
+  font-size: 1.2rem;
+}
+
+.ip-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ip-address {
+  font-family: 'Courier New', monospace;
+  background: #f5f7fa;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.copy-btn:hover {
+  transform: scale(1.2);
+}
+
+.device-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.browser-info {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.os-info {
+  color: #8e44ad;
+  font-weight: 500;
+}
+
+.details-btn {
+  padding: 0.5rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.details-btn:hover {
+  background: #2980b9;
+}
+
+.login-history-details-row td {
+  padding: 0;
+  background: #f8f9fa;
+  border-bottom: none;
+}
+
+.details-panel {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.user-agent-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+.user-agent-box code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #2c3e50;
+  flex: 1;
+  word-break: break-all;
+}
+
+.copy-btn-small {
+  padding: 0.4rem 0.8rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.copy-btn-small:hover {
+  background: #2980b9;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status-badge.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.failed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.login-history-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.info-card {
+  background: white;
+  border-left: 4px solid #3498db;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.info-card h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.info-card p {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-history-container {
+    padding: 1rem;
+  }
+
+  .login-history-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-history-table {
+    font-size: 0.85rem;
+  }
+
+  .login-history-table th,
+  .login-history-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .ip-cell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .details-panel {
+    padding: 1rem;
+  }
+
+  .user-agent-box {
+    flex-direction: column;
+  }
+
+  .copy-btn-small {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-history-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .login-history-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .limit-selector,
+  .refresh-btn {
+    width: 100%;
+  }
+
+  .login-history-table {
+    font-size: 0.75rem;
+  }
+
+  .login-history-table th,
+  .login-history-table td {
+    padding: 0.5rem;
+  }
+}

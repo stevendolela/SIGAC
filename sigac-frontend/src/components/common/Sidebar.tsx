@@ -38,6 +38,7 @@ type ViewType =
   | 'workspace-settings'
   | 'mon-profil'
   | 'document-logs'
+  | 'login-history'
 
 interface MenuItem {
   view: ViewType
@@ -144,6 +145,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           icon: UserCircle,
           color: '#8b5cf6'
         }] : []),
+        {
+          view: 'login-history' as ViewType,
+          label: 'Historique Connexions',
+          icon: UserCircle,
+          color: '#f97316'
+        },
         {
           view: 'profils' as ViewType,
           label: 'Équipe',

@@ -148,6 +148,7 @@ builder.Services.AddScoped<IFormationService, FormationService>();
 builder.Services.AddScoped<IJugeProfileService, JugeProfileService>();
 builder.Services.AddScoped<ISystemConfigService, SIGAC.Infrastructure.Services.SystemConfigService>();
 builder.Services.AddScoped<ISystemInfoService, SIGAC.Infrastructure.Services.SystemInfoServiceImpl>();
+builder.Services.AddScoped<ILoginHistoryService, LoginHistoryService>();
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
