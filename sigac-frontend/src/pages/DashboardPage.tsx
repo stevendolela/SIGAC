@@ -170,14 +170,14 @@ export default function DashboardPage() {
               <div className="chart-title">🎯 Indicateurs de Performance</div>
               <div className="performance-grid">
                 <div className="performance-card">
-                  <div className="performance-label">Taux Complétion</div>
-                  <div className="performance-value">{Math.round(stats.tauxCompletionMoyen)}%</div>
+                  <div className="performance-label">Taux Traitement</div>
+                  <div className="performance-value">{Math.round(stats.tauxTraitementMoyen)}%</div>
                   <div className="performance-bar">
                     <div
                       className="performance-bar-fill"
                       style={{
-                        width: `${Math.min(stats.tauxCompletionMoyen, 100)}%`,
-                        background: stats.tauxCompletionMoyen > 70 ? '#10b981' : '#f59e0b'
+                        width: `${Math.min(stats.tauxTraitementMoyen, 100)}%`,
+                        background: stats.tauxTraitementMoyen > 70 ? '#10b981' : '#f59e0b'
                       }}
                     />
                   </div>

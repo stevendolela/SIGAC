@@ -86,7 +86,7 @@ public class DashboardService : IDashboardService
             var timelineCompleted = BuildTimelineData(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList());
 
             // === Indicateurs de performance ===
-            var tauxCompletion = totalDossiers > 0 
+            var tauxTraitement = totalDossiers > 0 
                 ? (valides / (double)totalDossiers) * 100 
                 : 0;
 
@@ -148,7 +148,7 @@ public class DashboardService : IDashboardService
                 DossiersCompletesParMois = timelineCompleted,
 
                 // Performance
-                TauxCompletionMoyen = tauxCompletion,
+                TauxTraitementMoyen = tauxTraitement,
                 TempsTraitementMoyenJours = tempsTraitement,
                 DossiersEnRetard = 0,
                 TachesEnAttente = nouveaux + enCours + enValidation,

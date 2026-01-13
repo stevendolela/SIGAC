@@ -25,7 +25,7 @@ public class DashboardStatisticsDto
     public List<TimelineDataDto> DossiersCompletesParMois { get; set; } = new();
     
     // === Indicateurs de Performance ===
-    public double TauxCompletionMoyen { get; set; } // %
+    public double TauxTraitementMoyen { get; set; } // %
     public double TempsTraitementMoyenJours { get; set; }
     public int DossiersEnRetard { get; set; } // Basé sur deadline vs status
     public int TachesEnAttente { get; set; }

@@ -23,7 +23,7 @@ export interface DashboardStatisticsDto {
   dossiersCompletesParMois: TimelineDataDto[]
 
   // Performance
-  tauxCompletionMoyen: number
+  tauxTraitementMoyen: number
   tempsTraitementMoyenJours: number
   dossiersEnRetard: number
   tachesEnAttente: number
