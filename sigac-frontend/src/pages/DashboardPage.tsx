@@ -12,10 +12,6 @@ export default function DashboardPage() {
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(30) // Default: 30 days
-  const [customDateStart, setCustomDateStart] = useState<string>('')
-  const [customDateEnd, setCustomDateEnd] = useState<string>('')
-  const [showCustomPeriod, setShowCustomPeriod] = useState(false)
-  const [isCustomPeriodActive, setIsCustomPeriodActive] = useState(false) // Track custom period mode
 
   // Déterminer le rôle admin
   useEffect(() => {
@@ -48,58 +44,13 @@ export default function DashboardPage() {
 
   // Effect pour charger les stats au changement du filtre
   useEffect(() => {
-    // Skip loading if custom period is active - we already have the data
-    if (isCustomPeriodActive) {
-      return
-    }
-    
     const mounted = { current: true }
     loadStats(mounted)
 
     return () => {
       mounted.current = false
     }
-  }, [refreshKey, periodFilter, isCustomPeriodActive])
-
-  const handleCustomPeriod = async () => {
-    if (!customDateStart || !customDateEnd) {
-      setError('Veuillez sélectionner les deux dates')
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    try {
-      const start = new Date(customDateStart)
-      const end = new Date(customDateEnd)
-      const statsData = await dashboardApi.getStatisticsForPeriod(start, end)
-      setStats(statsData)
-      setShowCustomPeriod(false)
-      setIsCustomPeriodActive(true) // Mark custom period as active
-      setLastRefresh(new Date())
-    } catch (e: any) {
-      setError(e?.message || 'Erreur lors du chargement des statistiques')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handlePresetPeriod = (period: PeriodFilter) => {
-    setPeriodFilter(period)
-    setIsCustomPeriodActive(false) // Disable custom period mode
-  }
-
-  const handleRefresh = async () => {
-    setRefreshKey(prev => prev + 1)
-  }
-
-  const handleResetToPreset = () => {
-    setIsCustomPeriodActive(false)
-    setCustomDateStart('')
-    setCustomDateEnd('')
-    setShowCustomPeriod(false)
-    setPeriodFilter(30)
-  }
+  }, [refreshKey, periodFilter])
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
@@ -152,12 +103,8 @@ export default function DashboardPage() {
           <div className="dashboard-actions">
             <div className="period-filters">
               <select
-                value={isCustomPeriodActive ? 'custom' : periodFilter}
-                onChange={(e) => {
-                  if (e.target.value !== 'custom') {
-                    handlePresetPeriod(Number(e.target.value) as PeriodFilter)
-                  }
-                }}
+                value={periodFilter}
+                onChange={(e) => setPeriodFilter(Number(e.target.value) as PeriodFilter)}
                 className="filter-select"
               >
                 <option value={7}>Derniers 7 jours</option>
@@ -165,81 +112,20 @@ export default function DashboardPage() {
                 <option value={90}>Dernier trimestre</option>
                 <option value={365}>Dernière année</option>
                 <option value={0}>Tous les temps</option>
-                {isCustomPeriodActive && <option value="custom">Période personnalisée</option>}
               </select>
-              <button
-                className="btn-secondary"
-                onClick={() => setShowCustomPeriod(!showCustomPeriod)}
-              >
-                📅 Période perso...
-              </button>
-              {isCustomPeriodActive && (
-                <button
-                  className="btn-secondary"
-                  onClick={handleResetToPreset}
-                  title="Réinitialiser au filtre par défaut"
-                >
-                  ✕ Réinitialiser
-                </button>
-              )}
             </div>
             <span className="last-update">
               Maj: {lastRefresh.toLocaleTimeString()}
             </span>
             <button
               className="btn"
-              onClick={() => {
-                if (isCustomPeriodActive) {
-                  handleCustomPeriod() // Refresh custom period
-                } else {
-                  handleRefresh() // Refresh preset period
-                }
-              }}
+              onClick={() => setRefreshKey(k => k + 1)}
               disabled={loading}
             >
               🔄 {loading ? 'Chargement...' : 'Actualiser'}
             </button>
           </div>
         </div>
-
-        {/* Période personnalisée */}
-        {isCustomPeriodActive && (
-          <div className="active-filter-indicator">
-            📅 Filtre personnalisé actif: {customDateStart} à {customDateEnd}
-          </div>
-        )}
-
-        {showCustomPeriod && (
-          <div className="custom-period-panel">
-            <div className="period-inputs">
-              <div className="input-group">
-                <label>Début:</label>
-                <input
-                  type="date"
-                  value={customDateStart}
-                  onChange={(e) => setCustomDateStart(e.target.value)}
-                />
-              </div>
-              <div className="input-group">
-                <label>Fin:</label>
-                <input
-                  type="date"
-                  value={customDateEnd}
-                  onChange={(e) => setCustomDateEnd(e.target.value)}
-                />
-              </div>
-              <button className="btn" onClick={handleCustomPeriod}>
-                Appliquer
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={() => setShowCustomPeriod(false)}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        )}
 
         {error && <div className="error">{error}</div>}
 
