@@ -18,14 +18,14 @@ public interface IDossierRepository
     Task<DossierStatistics> GetStatisticsAsync(Guid? rapporteurId = null);
     
     // === Méthodes pour Dashboard ===
-    /// <summary>Récupère les dossiers créés depuis une date</summary>
-    Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+    /// <summary>Récupère les dossiers créés depuis une date (optionnel: filtrés par workspace)</summary>
+    Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null);
     
-    /// <summary>Récupère les dossiers complétés depuis une date</summary>
-    Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+    /// <summary>Récupère les dossiers complétés depuis une date (optionnel: filtrés par workspace)</summary>
+    Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null);
 
-    /// <summary>Récupère les dossiers modifiés depuis une date (incluant tous les statuts)</summary>
-    Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+    /// <summary>Récupère les dossiers modifiés depuis une date (optionnel: filtrés par workspace)</summary>
+    Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null);
     
     Task AddAsync(Dossier dossier);
     Task UpdateAsync(Dossier dossier);

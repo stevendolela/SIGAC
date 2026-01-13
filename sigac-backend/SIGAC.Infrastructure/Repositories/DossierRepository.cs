@@ -204,7 +204,7 @@ public class DossierRepository : IDossierRepository
 
     // === Méthodes pour Dashboard ===
 
-    public async Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    public async Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null)
     {
         var query = _context.Dossiers
             .Include(d => d.TypeAffaire)
@@ -216,10 +216,15 @@ public class DossierRepository : IDossierRepository
             query = query.Where(d => d.RapporteurId == rapporteurId.Value);
         }
 
+        if (workspaceId.HasValue)
+        {
+            query = query.Where(d => d.WorkspaceId == workspaceId.Value);
+        }
+
         return await query.ToListAsync();
     }
 
-    public async Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    public async Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null)
     {
         var query = _context.Dossiers
             .Include(d => d.TypeAffaire)
@@ -234,10 +239,15 @@ public class DossierRepository : IDossierRepository
             query = query.Where(d => d.RapporteurId == rapporteurId.Value);
         }
 
+        if (workspaceId.HasValue)
+        {
+            query = query.Where(d => d.WorkspaceId == workspaceId.Value);
+        }
+
         return await query.ToListAsync();
     }
 
-    public async Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    public async Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null, Guid? workspaceId = null)
     {
         var query = _context.Dossiers
             .Include(d => d.TypeAffaire)
@@ -249,6 +259,11 @@ public class DossierRepository : IDossierRepository
         if (rapporteurId.HasValue)
         {
             query = query.Where(d => d.RapporteurId == rapporteurId.Value);
+        }
+
+        if (workspaceId.HasValue)
+        {
+            query = query.Where(d => d.WorkspaceId == workspaceId.Value);
         }
 
         return await query.ToListAsync();

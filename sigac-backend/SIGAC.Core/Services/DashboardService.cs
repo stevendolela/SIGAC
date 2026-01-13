@@ -48,9 +48,9 @@ public class DashboardService : IDashboardService
             // Filtre par rapporteur pour les collaborateurs
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
 
-            // === Récupère TOUS les dossiers filtrés par période ===
+            // === Récupère TOUS les dossiers filtrés par période ET workspace ===
             var allDossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(
-                startDate, rapporteurFilter);
+                startDate, rapporteurFilter, workspaceId);
 
             if (allDossiers == null)
                 allDossiers = new List<Dossier>();
