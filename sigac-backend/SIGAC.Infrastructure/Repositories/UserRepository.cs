@@ -171,4 +171,31 @@ public class UserRepository : IUserRepository
 
         return result;
     }
+
+    public async Task<List<UserConnectionDto>> GetWorkspaceUserConnectionsAsync(Guid workspaceId)
+    {
+        var users = await _context.Users
+            .Include(u => u.WorkspaceMemberships)
+            .Where(u => u.WorkspaceMemberships.Any(w => w.WorkspaceId == workspaceId) && u.IsActive)
+            .OrderByDescending(u => u.LastLogin)
+            .ToListAsync();
+
+        var result = new List<UserConnectionDto>();
+        foreach (var user in users)
+        {
+            var joursDepuis = user.LastLogin.HasValue 
+                ? (int)(DateTime.UtcNow - user.LastLogin.Value).TotalDays 
+                : int.MaxValue;
+
+            result.Add(new UserConnectionDto
+            {
+                UserId = user.Id,
+                NomUtilisateur = user.NomComplet ?? user.Username,
+                DerniereConnexion = user.LastLogin,
+                JoursDepuisDerniereConnexion = joursDepuis
+            });
+        }
+
+        return result;
+    }
 }

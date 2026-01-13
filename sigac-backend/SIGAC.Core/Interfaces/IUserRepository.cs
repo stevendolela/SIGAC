@@ -25,4 +25,7 @@ public interface IUserRepository
     
     /// <summary>Récupère le top des utilisateurs les plus actifs</summary>
     Task<List<UserActivityDto>> GetTopActiveUsersAsync(int limit = 5);
+
+    /// <summary>Récupère les temps de connexion des utilisateurs d'un workspace</summary>
+    Task<List<UserConnectionDto>> GetWorkspaceUserConnectionsAsync(Guid workspaceId);
 }

@@ -46,10 +46,11 @@ public class DashboardController : ControllerBase
     /// Récupère les statistiques complètes du tableau de bord
     /// </summary>
     /// <param name="periodeDays">Nombre de jours à analyser (0 = tous les temps)</param>
+    /// <param name="workspaceId">ID du workspace (optionnel)</param>
     /// <returns>Statistiques enrichies du dashboard</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(DashboardStatisticsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<DashboardStatisticsDto>> GetStatistics([FromQuery] int periodeDays = 0)
+    public async Task<ActionResult<DashboardStatisticsDto>> GetStatistics([FromQuery] int periodeDays = 0, [FromQuery] Guid? workspaceId = null)
     {
         try
         {
@@ -59,7 +60,7 @@ public class DashboardController : ControllerBase
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
-            var stats = await _dashboardService.GetStatisticsAsync(userId, userRole, periodeDays);
+            var stats = await _dashboardService.GetStatisticsAsync(userId, userRole, periodeDays, workspaceId);
             
             _logger.LogInformation(
                 "Utilisateur {UserId} a consulté les statistiques du dashboard (période: {PeriodeDays}j)",

@@ -42,6 +42,7 @@ public class DashboardStatisticsDto
     // === Activité Utilisateurs ===
     public int UtilisateursActifs { get; set; }
     public List<UserActivityDto> TopUtilisateurs { get; set; } = new();
+    public List<UserConnectionDto> UserConnections { get; set; } = new(); // Admin/Manager only
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 }
 
@@ -65,6 +66,17 @@ public class UserActivityDto
     public int NombreDossiersTraites { get; set; }
     public int NombreDocumentsUpload { get; set; }
     public DateTime DerniereActivite { get; set; }
+}
+
+/// <summary>
+/// Temps de connexion des utilisateurs du workspace
+/// </summary>
+public class UserConnectionDto
+{
+    public Guid UserId { get; set; }
+    public string NomUtilisateur { get; set; }
+    public DateTime? DerniereConnexion { get; set; }
+    public int JoursDepuisDerniereConnexion { get; set; }
 }
 
 // === Anciennes DTOs (compatibilité) ===

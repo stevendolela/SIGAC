@@ -15,11 +15,13 @@ public interface IDashboardService
     /// <param name="userId">Utilisateur connecté</param>
     /// <param name="userRole">Rôle de l'utilisateur (pour RBAC)</param>
     /// <param name="periodeDays">Nombre de jours à analyser (0 = tous les temps)</param>
+    /// <param name="workspaceId">ID du workspace (optionnel, pour Admin/Manager)</param>
     /// <returns>Statistiques enrichies</returns>
     Task<DashboardStatisticsDto> GetStatisticsAsync(
         Guid userId, 
         UserRole userRole, 
-        int periodeDays = 0);
+        int periodeDays = 0,
+        Guid? workspaceId = null);
 
     /// <summary>
     /// Récupère les statistiques pour une période spécifique

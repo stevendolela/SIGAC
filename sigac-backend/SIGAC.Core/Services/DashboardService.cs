@@ -36,7 +36,8 @@ public class DashboardService : IDashboardService
     public async Task<DashboardStatisticsDto> GetStatisticsAsync(
         Guid userId, 
         UserRole userRole, 
-        int periodeDays = 0)
+        int periodeDays = 0,
+        Guid? workspaceId = null)
     {
         try
         {
@@ -113,17 +114,26 @@ public class DashboardService : IDashboardService
             // === Utilisateurs actifs (Admin only) ===
             var activeUsers = 0;
             var topUsers = new List<UserActivityDto>();
-            if (userRole == UserRole.Admin)
+            var userConnections = new List<UserConnectionDto>();
+            
+            if (userRole == UserRole.Admin || userRole == UserRole.Manager)
             {
                 try
                 {
                     activeUsers = await _userRepository.GetActiveUsersCountAsync();
                     topUsers = await _userRepository.GetTopActiveUsersAsync(5);
+                    
+                    // Récupère les connexions du workspace si disponible
+                    if (workspaceId.HasValue)
+                    {
+                        userConnections = await _userRepository.GetWorkspaceUserConnectionsAsync(workspaceId.Value);
+                    }
                 }
                 catch
                 {
                     activeUsers = 0;
                     topUsers = new List<UserActivityDto>();
+                    userConnections = new List<UserConnectionDto>();
                 }
             }
 
@@ -162,6 +172,7 @@ public class DashboardService : IDashboardService
                 // Activité
                 UtilisateursActifs = activeUsers,
                 TopUtilisateurs = topUsers,
+                UserConnections = userConnections,
                 LastUpdated = DateTime.UtcNow
             };
         }
