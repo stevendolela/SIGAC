@@ -24,6 +24,7 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByUsernameAsync(string username)
     {
         return await _context.Users
+            .Include(u => u.WorkspaceMemberships)
             .FirstOrDefaultAsync(u => u.Username == username);
     }
 
