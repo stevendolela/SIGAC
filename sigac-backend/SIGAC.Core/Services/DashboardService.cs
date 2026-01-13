@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace SIGAC.Core.Services;
 
@@ -46,25 +47,12 @@ public class DashboardService : IDashboardService
             // Filtre par rapporteur pour les collaborateurs
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
 
-            // === Dossiers filtrés par période (source de vérité) ===
-            var dossiersCreated = await _dossierRepository.GetDossiersCreatedSinceAsync(
-                startDate, rapporteurFilter) ?? new List<Dossier>();
-            var dossiersCompleted = await _dossierRepository.GetDossiersCompletedSinceAsync(
-                startDate, rapporteurFilter) ?? new List<Dossier>();
-            var dossiersModified = await _dossierRepository.GetDossiersModifiedSinceAsync(
-                startDate, rapporteurFilter) ?? new List<Dossier>();
-            
-            // Combine en HashSet pour éviter les doublons efficacement
-            var allDossierIds = new HashSet<Guid>();
-            var allDossiers = new List<Dossier>();
-            
-            foreach (var d in dossiersCreated.Concat(dossiersCompleted).Concat(dossiersModified))
-            {
-                if (d != null && allDossierIds.Add(d.Id))
-                {
-                    allDossiers.Add(d);
-                }
-            }
+            // === Récupère TOUS les dossiers filtrés par période ===
+            var allDossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(
+                startDate, rapporteurFilter);
+
+            if (allDossiers == null)
+                allDossiers = new List<Dossier>();
 
             // === KPIs filtrés par période ===
             var totalDossiers = allDossiers.Count;
@@ -75,28 +63,35 @@ public class DashboardService : IDashboardService
             var termines = allDossiers.Count(d => d.Status == StatusDossier.Termine);
 
             // === Distributions filtrées par période ===
-            var parType = allDossiers
-                .Where(d => d?.TypeAffaire != null)
-                .GroupBy(d => d.TypeAffaire?.Nom ?? "Non spécifié")
-                .Where(g => !string.IsNullOrEmpty(g.Key))
-                .ToDictionary(g => g.Key, g => g.Count());
+            var parType = new Dictionary<string, int>();
+            var parPriorite = new Dictionary<string, int>();
 
-            var parPriorite = allDossiers
-                .Where(d => d != null)
-                .GroupBy(d => d.Priorite.ToString() ?? "Non spécifiée")
-                .Where(g => !string.IsNullOrEmpty(g.Key))
-                .ToDictionary(g => g.Key, g => g.Count());
+            if (allDossiers.Any())
+            {
+                parType = allDossiers
+                    .Where(d => d?.TypeAffaire != null)
+                    .GroupBy(d => d.TypeAffaire.Nom ?? "Non spécifié")
+                    .Where(g => !string.IsNullOrEmpty(g.Key))
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                parPriorite = allDossiers
+                    .Where(d => d != null)
+                    .GroupBy(d => d.Priorite.ToString() ?? "Non spécifiée")
+                    .Where(g => !string.IsNullOrEmpty(g.Key))
+                    .ToDictionary(g => g.Key, g => g.Count());
+            }
 
             // === Timeline (derniers 6 mois) ===
-            var timelineCreated = BuildTimelineData(dossiersCreated);
-            var timelineCompleted = BuildTimelineData(dossiersCompleted);
+            var timelineCreated = BuildTimelineData(allDossiers.Where(d => d.CreatedAt >= startDate).ToList());
+            var timelineCompleted = BuildTimelineData(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList());
 
             // === Indicateurs de performance ===
             var tauxCompletion = totalDossiers > 0 
                 ? (valides / (double)totalDossiers) * 100 
                 : 0;
 
-            var tempsTraitement = CalculateAverageProcessingTime(dossiersCompleted);
+            var dossiersCompletes = allDossiers.Where(d => d.Status == StatusDossier.Valide).ToList();
+            var tempsTraitement = CalculateAverageProcessingTime(dossiersCompletes);
 
             // === Documents ===
             DocumentStatsDto? docsStats = null;
@@ -144,9 +139,9 @@ public class DashboardService : IDashboardService
                 Archives = 0,
 
                 // Distributions filtrées par période
-                ParType = parType ?? new Dictionary<string, int>(),
-                ParPriorite = parPriorite ?? new Dictionary<string, int>(),
-                ParRapporteur = parType ?? new Dictionary<string, int>(),
+                ParType = parType,
+                ParPriorite = parPriorite,
+                ParRapporteur = parType,
 
                 // Timeline
                 DossiersCreesParMois = timelineCreated,
@@ -172,8 +167,7 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            // Log l'erreur exacte pour debug
-            System.Diagnostics.Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}");
+            Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}");
             throw;
         }
     }
