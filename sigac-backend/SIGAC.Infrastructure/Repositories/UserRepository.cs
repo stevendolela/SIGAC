@@ -176,8 +176,7 @@ public class UserRepository : IUserRepository
     public async Task<List<UserConnectionDto>> GetWorkspaceUserConnectionsAsync(Guid workspaceId)
     {
         var users = await _context.Users
-            .Include(u => u.WorkspaceMemberships)
-            .Where(u => u.WorkspaceMemberships.Any(w => w.WorkspaceId == workspaceId) && u.IsActive)
+            .Where(u => u.IsActive && u.WorkspaceMemberships.Any(w => w.WorkspaceId == workspaceId))
             .OrderByDescending(u => u.LastLogin)
             .ToListAsync();
 
