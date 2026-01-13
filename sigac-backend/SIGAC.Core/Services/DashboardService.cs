@@ -128,17 +128,25 @@ public class DashboardService : IDashboardService
                     
                     if (workspaceId.HasValue)
                     {
-                        userConnections = await _userRepository.GetWorkspaceUserConnectionsAsync(workspaceId.Value);
-                        System.Diagnostics.Debug.WriteLine($"[Dashboard] Fetched {userConnections.Count} user connections for workspace {workspaceId}");
+                        try
+                        {
+                            userConnections = await _userRepository.GetWorkspaceUserConnectionsAsync(workspaceId.Value);
+                            System.Diagnostics.Debug.WriteLine($"[Dashboard] ✓ Fetched {userConnections.Count} user connections for workspace {workspaceId}");
+                        }
+                        catch (Exception connEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[Dashboard] ✗ Error fetching connections: {connEx.GetType().Name}: {connEx.Message}");
+                            throw;
+                        }
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("[Dashboard] WARNING: workspaceId is null/empty - no user connections will be fetched!");
+                        System.Diagnostics.Debug.WriteLine("[Dashboard] ⚠ WARNING: workspaceId is null/empty - no user connections will be fetched!");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Error fetching user connections: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] ✗ Exception in user connections block: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
                     activeUsers = 0;
                     topUsers = new List<UserActivityDto>();
                     userConnections = new List<UserConnectionDto>();
