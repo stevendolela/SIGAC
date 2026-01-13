@@ -669,8 +669,10 @@ public class UsersController : ControllerBase
     /// <param name="dto">Données à mettre à jour</param>
     /// <returns>Profil utilisateur mis à jour</returns>
     [HttpPut("profile")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
         try

@@ -44,7 +44,8 @@ export function setApiBaseUrl(url: string) {
 // Attach Bearer token if present
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  if (token && config.headers) {
+  if (token) {
+    if (!config.headers) config.headers = {} as any
     config.headers['Authorization'] = `Bearer ${token}`
   }
   return config
