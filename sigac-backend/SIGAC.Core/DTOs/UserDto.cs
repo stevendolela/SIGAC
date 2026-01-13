@@ -20,4 +20,9 @@ public class UserDto
     public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastLogin { get; set; }
+    
+    /// <summary>
+    /// ID du workspace par défaut (premier workspace auquel l'utilisateur appartient)
+    /// </summary>
+    public Guid? DefaultWorkspaceId { get; set; }
 }

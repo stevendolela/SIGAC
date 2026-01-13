@@ -22,7 +22,8 @@ export default function DashboardPage() {
       const user = userStr ? JSON.parse(userStr) : null
       setIsAdmin(user?.role === 'Admin')
       setIsManager(user?.role === 'Manager')
-      setWorkspaceId(user?.workspaceId || null)
+      // Utiliser defaultWorkspaceId pour les connexions des utilisateurs
+      setWorkspaceId(user?.defaultWorkspaceId || null)
     } catch {
       setIsAdmin(false)
       setIsManager(false)

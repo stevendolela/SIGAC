@@ -21,6 +21,7 @@ export interface UserDto {
   lastLogin?: string
   createdAt?: string
   updatedAt?: string
+  defaultWorkspaceId?: string
 }
 
 export interface UpdateUserDto {
