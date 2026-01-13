@@ -124,13 +124,21 @@ public class DashboardService : IDashboardService
                     topUsers = await _userRepository.GetTopActiveUsersAsync(5);
                     
                     // Récupère les connexions du workspace si disponible
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Admin/Manager detected. WorkspaceId={workspaceId}, HasValue={workspaceId.HasValue}");
+                    
                     if (workspaceId.HasValue)
                     {
                         userConnections = await _userRepository.GetWorkspaceUserConnectionsAsync(workspaceId.Value);
+                        System.Diagnostics.Debug.WriteLine($"[Dashboard] Fetched {userConnections.Count} user connections for workspace {workspaceId}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("[Dashboard] WARNING: workspaceId is null/empty - no user connections will be fetched!");
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Error fetching user connections: {ex.Message}");
                     activeUsers = 0;
                     topUsers = new List<UserActivityDto>();
                     userConnections = new List<UserConnectionDto>();
