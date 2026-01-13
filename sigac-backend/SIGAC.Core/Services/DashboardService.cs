@@ -51,9 +51,15 @@ public class DashboardService : IDashboardService
                 startDate, rapporteurFilter);
             var dossiersCompleted = await _dossierRepository.GetDossiersCompletedSinceAsync(
                 startDate, rapporteurFilter);
+            var dossiersModified = await _dossierRepository.GetDossiersModifiedSinceAsync(
+                startDate, rapporteurFilter);
             
-            // Combine pour avoir tous les dossiers dans la période
-            var allDossiers = dossiersCreated.Union(dossiersCompleted).Distinct().ToList();
+            // Combine: dossiers créés, complétés OU modifiés dans la période
+            var allDossiers = dossiersCreated
+                .Union(dossiersCompleted)
+                .Union(dossiersModified)
+                .Distinct()
+                .ToList();
 
             // === KPIs filtrés par période ===
             var totalDossiers = allDossiers.Count;

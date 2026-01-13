@@ -234,4 +234,20 @@ public class DossierRepository : IDossierRepository
 
         return await query.ToListAsync();
     }
+
+    public async Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    {
+        var query = _context.Dossiers
+            .Where(d => 
+                (d.ModifiedAt.HasValue && d.ModifiedAt.Value >= dateDebut) || 
+                d.CreatedAt >= dateDebut)
+            .AsQueryable();
+
+        if (rapporteurId.HasValue)
+        {
+            query = query.Where(d => d.RapporteurId == rapporteurId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
 }

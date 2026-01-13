@@ -23,6 +23,9 @@ public interface IDossierRepository
     
     /// <summary>Récupère les dossiers complétés depuis une date</summary>
     Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+
+    /// <summary>Récupère les dossiers modifiés depuis une date (incluant tous les statuts)</summary>
+    Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
     
     Task AddAsync(Dossier dossier);
     Task UpdateAsync(Dossier dossier);
