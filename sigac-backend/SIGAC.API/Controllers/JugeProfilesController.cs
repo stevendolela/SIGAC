@@ -34,7 +34,7 @@ public class JugeProfilesController : ControllerBase
     }
 
     [HttpPut("me")]
-    [Authorize(Roles = "Collaborateur")]
+    [Authorize]
     public async Task<ActionResult<JugeProfileDto>> UpdateMine([FromBody] UpdateJugeProfileDto dto)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
