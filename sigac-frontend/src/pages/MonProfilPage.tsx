@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { JugeApi } from '../api/jugeApi'
 import { dossierApi } from '../api/dossierApi'
-import { userApi } from '../api/userApi'
 import type { JugeProfileDto } from '../types/juge'
 import type { DossierListDto } from '../types/dossier'
-import type { UserDto } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
 
 export default function MonProfilPage() {
@@ -14,23 +12,15 @@ export default function MonProfilPage() {
   const [loadingDossiers, setLoadingDossiers] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'profile' | 'parametres' | 'dossiers'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'dossiers'>('profile')
   
-  // Champs éditables - Profil Professionnel
+  // Champs éditables
   const [grade, setGrade] = useState('')
   const [specialisations, setSpecialisations] = useState('')
   const [biographie, setBiographie] = useState('')
   const [dateNomination, setDateNomination] = useState('')
   const [telephone, setTelephone] = useState('')
   const [adresse, setAdresse] = useState('')
-  
-  // Champs éditables - Paramètres Généraux
-  const [currentUser, setCurrentUser] = useState<UserDto | null>(null)
-  const [editingParams, setEditingParams] = useState(false)
-  const [savingParams, setSavingParams] = useState(false)
-  const [nomComplet, setNomComplet] = useState('')
-  const [email, setEmail] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
   
   const { notify } = useToast()
   const userStr = localStorage.getItem('user')
@@ -74,59 +64,9 @@ export default function MonProfilPage() {
     }
   }
 
-  async function loadCurrentUser() {
-    if (!user?.id) return
-    try {
-      const userData = await userApi.getCurrentProfile()
-      setCurrentUser(userData)
-      setNomComplet(userData.nomComplet || '')
-      setEmail(userData.email || '')
-      setPhoneNumber(userData.phoneNumber || '')
-    } catch (e: any) {
-      console.error('Erreur loadCurrentUser:', e)
-      notify({ type: 'error', message: e?.response?.data?.message || 'Erreur chargement paramètres' })
-    }
-  }
-
-  async function handleSaveParams() {
-    setSavingParams(true)
-    try {
-      const payload = {
-        nomComplet: nomComplet.trim() || undefined,
-        email: email.trim() || undefined,
-        phoneNumber: phoneNumber.trim() || undefined
-      }
-      console.log('Saving profile with:', payload)
-      const updated = await userApi.updateProfile(payload)
-      console.log('Profile saved successfully:', updated)
-      setCurrentUser(updated)
-      // Mettre à jour localStorage
-      localStorage.setItem('user', JSON.stringify(updated))
-      setEditingParams(false)
-      notify({ type: 'success', message: '✅ Paramètres mis à jour avec succès' })
-    } catch (e: any) {
-      console.error('Error saving profile:', e)
-      console.error('Response data:', e?.response?.data)
-      const errorMsg = e?.response?.data?.message || e?.message || 'Erreur mise à jour paramètres'
-      notify({ type: 'error', message: errorMsg })
-    } finally {
-      setSavingParams(false)
-    }
-  }
-
-  function handleCancelParams() {
-    if (currentUser) {
-      setNomComplet(currentUser.nomComplet || '')
-      setEmail(currentUser.email || '')
-      setPhoneNumber(currentUser.phoneNumber || '')
-    }
-    setEditingParams(false)
-  }
-
   useEffect(() => { 
     loadProfile()
     loadMesDossiers()
-    loadCurrentUser()
   }, [])
 
   async function handleSave() {
@@ -226,22 +166,7 @@ export default function MonProfilPage() {
             transition: 'all 0.2s'
           }}
         >
-          📝 Informations Professionnelles
-        </button>
-        <button
-          onClick={() => setActiveTab('parametres')}
-          style={{
-            padding: '12px 24px',
-            background: activeTab === 'parametres' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'parametres' ? 'white' : '#64748b',
-            border: 'none',
-            borderRadius: '8px 8px 0 0',
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.2s'
-          }}
-        >
-          ⚙️ Paramètres Généraux
+          📝 Informations Personnelles
         </button>
         <button
           onClick={() => setActiveTab('dossiers')}
@@ -482,138 +407,6 @@ export default function MonProfilPage() {
             </>
           )}
         </>
-      )}
-
-      {/* Tab: Paramètres Généraux */}
-      {activeTab === 'parametres' && (
-        <div style={{ maxWidth: 600 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, color: '#1e293b' }}>⚙️ Paramètres Généraux</h2>
-
-          {!editingParams && (
-            <button 
-              className="btn"
-              onClick={() => setEditingParams(true)}
-              style={{ background: '#3b82f6', marginBottom: 24 }}
-            >
-              ✏️ Modifier mes informations
-            </button>
-          )}
-
-          {editingParams ? (
-            <>
-              {/* Formulaire édition */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1e293b' }}>
-                  📝 Nom Complet
-                </label>
-                <input
-                  type="text"
-                  value={nomComplet}
-                  onChange={(e) => setNomComplet(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                  placeholder="Nom complet"
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1e293b' }}>
-                  📧 Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                  placeholder="Email"
-                />
-              </div>
-
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1e293b' }}>
-                  📱 Numéro de Téléphone
-                </label>
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                  placeholder="Téléphone"
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button 
-                  className="btn"
-                  onClick={handleSaveParams}
-                  disabled={savingParams}
-                  style={{ background: '#10b981' }}
-                >
-                  {savingParams ? '⏳ Enregistrement...' : '💾 Enregistrer'}
-                </button>
-                <button 
-                  className="btn"
-                  onClick={handleCancelParams}
-                  style={{ background: '#64748b' }}
-                >
-                  ❌ Annuler
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Affichage */}
-              <div style={{ 
-                padding: 16, 
-                background: '#f8fafc', 
-                borderRadius: 8, 
-                border: '1px solid #e2e8f0',
-                marginBottom: 16
-              }}>
-                <div style={{ marginBottom: 16 }}>
-                  <span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>NOM COMPLET</span>
-                  <p style={{ margin: '8px 0 0 0', fontSize: 16, color: '#1e293b', fontWeight: 500 }}>
-                    {nomComplet || '-'}
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: 16 }}>
-                  <span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>EMAIL</span>
-                  <p style={{ margin: '8px 0 0 0', fontSize: 16, color: '#1e293b', fontWeight: 500 }}>
-                    {email || '-'}
-                  </p>
-                </div>
-
-                <div>
-                  <span style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>TÉLÉPHONE</span>
-                  <p style={{ margin: '8px 0 0 0', fontSize: 16, color: '#1e293b', fontWeight: 500 }}>
-                    {phoneNumber || '-'}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
       )}
 
       {/* Tab: Mes Dossiers */}
