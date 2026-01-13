@@ -153,11 +153,8 @@ export default function DashboardPage() {
                 <div className="kpi-description">📝 En traitement</div>
               </div>
 
-              <div className="kpi-card" style={{ '--accent-color': '#ef4444' } as React.CSSProperties}>
-                <div className="kpi-label">En Retard</div>
-                <div className="kpi-value">{stats.dossiersEnRetard}</div>
-                <div className="kpi-description">⚠️ Pas à jour</div>
-              </div>
+              {/* KPI "En Retard" caché - statut non implémenté pour maintenant */}
+              {/* Voir documentation/DASHBOARD_KPIs_FUTURE.md pour les KPIs à développer */}
 
               {isAdmin && (
                 <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
