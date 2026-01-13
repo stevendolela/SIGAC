@@ -26,7 +26,21 @@ public class DashboardController : ControllerBase
     }
 
     private Guid GetCurrentUserId() => Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
-    private UserRole GetCurrentUserRole() => Enum.Parse<UserRole>(User.FindFirst("role")?.Value ?? UserRole.Collaborateur.ToString());
+    
+    private UserRole GetCurrentUserRole()
+    {
+        try
+        {
+            var roleClaim = User.FindFirst("role")?.Value 
+                         ?? User.FindFirst(ClaimTypes.Role)?.Value 
+                         ?? UserRole.Collaborateur.ToString();
+            return Enum.Parse<UserRole>(roleClaim);
+        }
+        catch
+        {
+            return UserRole.Collaborateur;
+        }
+    }
 
     /// <summary>
     /// Récupère les statistiques complètes du tableau de bord
