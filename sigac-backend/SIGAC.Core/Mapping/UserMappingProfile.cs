@@ -20,9 +20,9 @@ namespace SIGAC.Core.Mapping
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => src.LastLogin))
                 .ForMember(dest => dest.DefaultWorkspaceId, opt => opt.MapFrom(src => 
-                    src.WorkspaceMemberships != null && src.WorkspaceMemberships.Count > 0 
-                        ? src.WorkspaceMemberships.FirstOrDefault()!.WorkspaceId 
-                        : null as Guid?));
+                    src.WorkspaceMemberships != null && src.WorkspaceMemberships.Any()
+                        ? src.WorkspaceMemberships.First().WorkspaceId 
+                        : (Guid?)null));
                 // Ne PAS mapper DossiersRapporteur pour éviter les références circulaires!
 
             // Reverse mappings (si nécessaire)
