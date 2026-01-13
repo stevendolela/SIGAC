@@ -220,10 +220,10 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Répartition par Statut + Connexions Utilisateurs (côte à côte) */}
-            <div className="chart-section-double">
+            {/* Répartition par Statut des Dossiers */}
+            <div className="chart-section">
               <div className="chart-wrapper">
-                <div className="chart-title">📊 Répartition par Statut</div>
+                <div className="chart-title">📊 Répartition par Statut des Dossiers</div>
                 <div className="status-breakdown">
                   {[
                     { key: 'Nouveau', value: stats.nouveauxDossiers },
@@ -257,70 +257,6 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
-
-              {/* Connexions Utilisateurs (visible uniquement pour Admin/Manager) */}
-              {(isAdmin || isManager) && (
-                <div className="chart-wrapper">
-                  <div className="chart-title">🔗 Dernières Connexions GED</div>
-                  {stats.userConnections && stats.userConnections.length > 0 ? (
-                    <div className="connections-breakdown">
-                    {stats.userConnections.slice(0, 8).map((user) => {
-                      const days = user.joursDepuisDerniereConnexion
-                      let connectionStatus = 'recent'
-                      let statusColor = '#10b981'
-                      let statusLabel = 'Actif aujourd\'hui'
-
-                      if (days === null || days > 30) {
-                        connectionStatus = 'inactive'
-                        statusColor = '#6b7280'
-                        statusLabel = 'Inactif'
-                      } else if (days > 7) {
-                        connectionStatus = 'warning'
-                        statusColor = '#f59e0b'
-                        statusLabel = `Il y a ${days}j`
-                      } else if (days > 0) {
-                        statusLabel = `Il y a ${days}j`
-                      }
-
-                      return (
-                        <div key={user.userId} className="connection-item">
-                          <div className="connection-label">
-                            <span className="connection-indicator" style={{ background: statusColor }} />
-                            <span className="connection-name">{user.nomUtilisateur}</span>
-                          </div>
-                          <div className="connection-bar-container">
-                            <div
-                              className={`connection-bar connection-${connectionStatus}`}
-                              style={{
-                                width: days === null || days > 30 ? '5%' : `${Math.max(100 - (days * 3), 10)}%`,
-                                background: statusColor
-                              }}
-                            >
-                              {days !== null && days <= 7 && <span className="connection-days">{statusLabel}</span>}
-                            </div>
-                          </div>
-                          <div className="connection-date">{statusLabel}</div>
-                        </div>
-                      )
-                    })}
-                    {stats.userConnections.length > 8 && (
-                      <div className="connection-more">
-                        +{stats.userConnections.length - 8} autres utilisateurs
-                      </div>
-                    )}
-                  </div>
-                  ) : (
-                    <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
-                      <p>Aucune donnée de connexion disponible</p>
-                      {!stats.userConnections ? (
-                        <p style={{ fontSize: '12px' }}>Les données de connexions ne sont pas disponibles</p>
-                      ) : (
-                        <p style={{ fontSize: '12px' }}>Pas d'utilisateurs à afficher</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Top Utilisateurs */}
