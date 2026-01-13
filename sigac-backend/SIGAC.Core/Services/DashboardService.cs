@@ -54,12 +54,17 @@ public class DashboardService : IDashboardService
             var dossiersModified = await _dossierRepository.GetDossiersModifiedSinceAsync(
                 startDate, rapporteurFilter);
             
-            // Combine: dossiers créés, complétés OU modifiés dans la période
-            var allDossiers = dossiersCreated
-                .Union(dossiersCompleted)
-                .Union(dossiersModified)
-                .Distinct()
-                .ToList();
+            // Combine en HashSet pour éviter les doublons efficacement
+            var allDossierIds = new HashSet<Guid>();
+            var allDossiers = new List<Dossier>();
+            
+            foreach (var d in dossiersCreated.Concat(dossiersCompleted).Concat(dossiersModified))
+            {
+                if (allDossierIds.Add(d.Id))
+                {
+                    allDossiers.Add(d);
+                }
+            }
 
             // === KPIs filtrés par période ===
             var totalDossiers = allDossiers.Count;
@@ -163,8 +168,10 @@ public class DashboardService : IDashboardService
                 LastUpdated = DateTime.UtcNow
             };
         }
-        catch
+        catch (Exception ex)
         {
+            // Log l'erreur exacte pour debug
+            System.Diagnostics.Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}");
             throw;
         }
     }
