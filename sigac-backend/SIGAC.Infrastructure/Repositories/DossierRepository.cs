@@ -207,6 +207,7 @@ public class DossierRepository : IDossierRepository
     public async Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
     {
         var query = _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Where(d => d.CreatedAt >= dateDebut)
             .AsQueryable();
 
@@ -221,6 +222,7 @@ public class DossierRepository : IDossierRepository
     public async Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
     {
         var query = _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Where(d => 
                 d.Status == StatusDossier.Valide && 
                 d.ModifiedAt.HasValue && 
@@ -238,6 +240,7 @@ public class DossierRepository : IDossierRepository
     public async Task<List<Dossier>> GetDossiersModifiedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
     {
         var query = _context.Dossiers
+            .Include(d => d.TypeAffaire)
             .Where(d => 
                 (d.ModifiedAt.HasValue && d.ModifiedAt.Value >= dateDebut) || 
                 d.CreatedAt >= dateDebut)

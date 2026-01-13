@@ -48,11 +48,11 @@ public class DashboardService : IDashboardService
 
             // === Dossiers filtrés par période (source de vérité) ===
             var dossiersCreated = await _dossierRepository.GetDossiersCreatedSinceAsync(
-                startDate, rapporteurFilter);
+                startDate, rapporteurFilter) ?? new List<Dossier>();
             var dossiersCompleted = await _dossierRepository.GetDossiersCompletedSinceAsync(
-                startDate, rapporteurFilter);
+                startDate, rapporteurFilter) ?? new List<Dossier>();
             var dossiersModified = await _dossierRepository.GetDossiersModifiedSinceAsync(
-                startDate, rapporteurFilter);
+                startDate, rapporteurFilter) ?? new List<Dossier>();
             
             // Combine en HashSet pour éviter les doublons efficacement
             var allDossierIds = new HashSet<Guid>();
@@ -60,7 +60,7 @@ public class DashboardService : IDashboardService
             
             foreach (var d in dossiersCreated.Concat(dossiersCompleted).Concat(dossiersModified))
             {
-                if (allDossierIds.Add(d.Id))
+                if (d != null && allDossierIds.Add(d.Id))
                 {
                     allDossiers.Add(d);
                 }
@@ -76,12 +76,14 @@ public class DashboardService : IDashboardService
 
             // === Distributions filtrées par période ===
             var parType = allDossiers
-                .GroupBy(d => d.TypeAffaire.ToString())
+                .Where(d => d?.TypeAffaire != null)
+                .GroupBy(d => d.TypeAffaire?.Nom ?? "Non spécifié")
                 .Where(g => !string.IsNullOrEmpty(g.Key))
                 .ToDictionary(g => g.Key, g => g.Count());
 
             var parPriorite = allDossiers
-                .GroupBy(d => d.Priorite.ToString())
+                .Where(d => d != null)
+                .GroupBy(d => d.Priorite.ToString() ?? "Non spécifiée")
                 .Where(g => !string.IsNullOrEmpty(g.Key))
                 .ToDictionary(g => g.Key, g => g.Count());
 
