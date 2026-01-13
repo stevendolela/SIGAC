@@ -46,22 +46,41 @@ public class DashboardService : IDashboardService
             // Filtre par rapporteur pour les collaborateurs
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
 
-            // === KPIs de base ===
-            var stats = await _dossierRepository.GetStatisticsAsync(rapporteurFilter);
-
-            // === Dossiers filtrés par période ===
+            // === Dossiers filtrés par période (source de vérité) ===
             var dossiersCreated = await _dossierRepository.GetDossiersCreatedSinceAsync(
                 startDate, rapporteurFilter);
             var dossiersCompleted = await _dossierRepository.GetDossiersCompletedSinceAsync(
                 startDate, rapporteurFilter);
+            
+            // Combine pour avoir tous les dossiers dans la période
+            var allDossiers = dossiersCreated.Union(dossiersCompleted).Distinct().ToList();
+
+            // === KPIs filtrés par période ===
+            var totalDossiers = allDossiers.Count;
+            var nouveaux = allDossiers.Count(d => d.Status == StatusDossier.Nouveau);
+            var enCours = allDossiers.Count(d => d.Status == StatusDossier.EnCours);
+            var enValidation = allDossiers.Count(d => d.Status == StatusDossier.EnValidation);
+            var valides = allDossiers.Count(d => d.Status == StatusDossier.Valide);
+            var termines = allDossiers.Count(d => d.Status == StatusDossier.Termine);
+
+            // === Distributions filtrées par période ===
+            var parType = allDossiers
+                .GroupBy(d => d.TypeAffaire.ToString())
+                .Where(g => !string.IsNullOrEmpty(g.Key))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var parPriorite = allDossiers
+                .GroupBy(d => d.Priorite.ToString())
+                .Where(g => !string.IsNullOrEmpty(g.Key))
+                .ToDictionary(g => g.Key, g => g.Count());
 
             // === Timeline (derniers 6 mois) ===
             var timelineCreated = BuildTimelineData(dossiersCreated);
             var timelineCompleted = BuildTimelineData(dossiersCompleted);
 
             // === Indicateurs de performance ===
-            var tauxCompletion = stats.TotalDossiers > 0 
-                ? (stats.Valides / (double)stats.TotalDossiers) * 100 
+            var tauxCompletion = totalDossiers > 0 
+                ? (valides / (double)totalDossiers) * 100 
                 : 0;
 
             var tempsTraitement = CalculateAverageProcessingTime(dossiersCompleted);
@@ -102,19 +121,19 @@ public class DashboardService : IDashboardService
 
             return new DashboardStatisticsDto
             {
-                // KPIs
-                TotalDossiers = stats.TotalDossiers,
-                NouveauxDossiers = stats.NouveauxDossiers,
-                EnCours = stats.EnCours,
-                EnValidation = stats.EnValidation,
-                Valides = stats.Valides,
-                Termines = stats.Termines,
+                // KPIs - tous filtrés par période
+                TotalDossiers = totalDossiers,
+                NouveauxDossiers = nouveaux,
+                EnCours = enCours,
+                EnValidation = enValidation,
+                Valides = valides,
+                Termines = termines,
                 Archives = 0,
 
-                // Distributions
-                ParType = stats.ParType ?? new Dictionary<string, int>(),
-                ParPriorite = stats.ParPriorite ?? new Dictionary<string, int>(),
-                ParRapporteur = stats.ParType ?? new Dictionary<string, int>(),
+                // Distributions filtrées par période
+                ParType = parType ?? new Dictionary<string, int>(),
+                ParPriorite = parPriorite ?? new Dictionary<string, int>(),
+                ParRapporteur = parType ?? new Dictionary<string, int>(),
 
                 // Timeline
                 DossiersCreesParMois = timelineCreated,
@@ -124,7 +143,7 @@ public class DashboardService : IDashboardService
                 TauxCompletionMoyen = tauxCompletion,
                 TempsTraitementMoyenJours = tempsTraitement,
                 DossiersEnRetard = 0,
-                TachesEnAttente = stats.NouveauxDossiers + stats.EnCours + stats.EnValidation,
+                TachesEnAttente = nouveaux + enCours + enValidation,
 
                 // Documents & Storage
                 TotalDocuments = docsStats?.TotalDocuments ?? 0,
@@ -138,7 +157,7 @@ public class DashboardService : IDashboardService
                 LastUpdated = DateTime.UtcNow
             };
         }
-        catch (Exception ex)
+        catch
         {
             throw;
         }
