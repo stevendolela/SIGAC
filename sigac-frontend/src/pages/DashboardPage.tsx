@@ -161,11 +161,13 @@ export default function DashboardPage() {
               Maj: {lastRefresh.toLocaleTimeString()}
             </span>
             <button
-              className="btn"
+              className={`refresh-icon-btn ${loading ? 'loading' : ''}`}
               onClick={() => setRefreshKey(k => k + 1)}
               disabled={loading}
+              title="Actualiser les données"
+              aria-label="Actualiser les données"
             >
-              🔄 {loading ? 'Chargement...' : 'Actualiser'}
+              🔄
             </button>
           </div>
         </div>
