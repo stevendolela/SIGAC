@@ -152,6 +152,7 @@ builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();

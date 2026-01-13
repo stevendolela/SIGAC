@@ -201,4 +201,37 @@ public class DossierRepository : IDossierRepository
     {
         return await _context.SaveChangesAsync();
     }
+
+    // === Méthodes pour Dashboard ===
+
+    public async Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    {
+        var query = _context.Dossiers
+            .Where(d => d.CreatedAt >= dateDebut)
+            .AsQueryable();
+
+        if (rapporteurId.HasValue)
+        {
+            query = query.Where(d => d.RapporteurId == rapporteurId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null)
+    {
+        var query = _context.Dossiers
+            .Where(d => 
+                d.Status == StatusDossier.Valide && 
+                d.ModifiedAt.HasValue && 
+                d.ModifiedAt.Value >= dateDebut)
+            .AsQueryable();
+
+        if (rapporteurId.HasValue)
+        {
+            query = query.Where(d => d.RapporteurId == rapporteurId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
 }

@@ -18,4 +18,11 @@ public interface IUserRepository
     void Update(User user);
     void Delete(User user);
     Task SaveChangesAsync();
+    
+    // === Méthodes pour Dashboard ===
+    /// <summary>Récupère le nombre d'utilisateurs actifs (connectés dernièrement)</summary>
+    Task<int> GetActiveUsersCountAsync();
+    
+    /// <summary>Récupère le top des utilisateurs les plus actifs</summary>
+    Task<List<UserActivityDto>> GetTopActiveUsersAsync(int limit = 5);
 }

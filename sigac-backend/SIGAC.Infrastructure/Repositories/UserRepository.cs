@@ -134,4 +134,41 @@ public class UserRepository : IUserRepository
 
         return (users, pagination);
     }
+
+    // === Méthodes pour Dashboard ===
+
+    public async Task<int> GetActiveUsersCountAsync()
+    {
+        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+        return await _context.Users
+            .Where(u => u.ModifiedAt.HasValue && u.ModifiedAt.Value >= sevenDaysAgo)
+            .CountAsync();
+    }
+
+    public async Task<List<UserActivityDto>> GetTopActiveUsersAsync(int limit = 5)
+    {
+        var users = await _context.Users
+            .OrderByDescending(u => u.ModifiedAt)
+            .Take(limit)
+            .ToListAsync();
+
+        var result = new List<UserActivityDto>();
+        foreach (var user in users)
+        {
+            var dossierCount = await _context.Dossiers
+                .Where(d => d.RapporteurId == user.Id)
+                .CountAsync();
+
+            result.Add(new UserActivityDto
+            {
+                UserId = user.Id,
+                NomUtilisateur = user.Username,
+                NombreDossiersTraites = dossierCount,
+                NombreDocumentsUpload = 0,
+                DerniereActivite = user.ModifiedAt ?? DateTime.UtcNow
+            });
+        }
+
+        return result;
+    }
 }

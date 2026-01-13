@@ -11,4 +11,20 @@ public interface IDocumentRepository
     void Update(Document document);
     void Delete(Document document);
     Task SaveChangesAsync();
+    
+    // === Méthodes pour Dashboard ===
+    /// <summary>Récupère les statistiques de stockage pour un workspace</summary>
+    Task<StorageStatisticsDto> GetStorageStatisticsAsync(Guid workspaceId);
+    
+    /// <summary>Récupère les statistiques globales de documents</summary>
+    Task<DocumentStatsDto> GetStatisticsAsync(Guid? rapporteurId = null);
+}
+
+/// <summary>DTO pour statistiques globales de documents</summary>
+public class DocumentStatsDto
+{
+    public int TotalDocuments { get; set; }
+    public int DocumentsThisMonth { get; set; }
+    public long StorageUtilizedBytes { get; set; }
+    public long StorageQuotaBytes { get; set; }
 }

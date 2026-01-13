@@ -16,6 +16,14 @@ public interface IDossierRepository
     Task<Dossier?> GetByNumeroDossierAsync(string numeroDossier);
     Task<int> GetLastDossierNumberForYearAsync(int year);
     Task<DossierStatistics> GetStatisticsAsync(Guid? rapporteurId = null);
+    
+    // === Méthodes pour Dashboard ===
+    /// <summary>Récupère les dossiers créés depuis une date</summary>
+    Task<List<Dossier>> GetDossiersCreatedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+    
+    /// <summary>Récupère les dossiers complétés depuis une date</summary>
+    Task<List<Dossier>> GetDossiersCompletedSinceAsync(DateTime dateDebut, Guid? rapporteurId = null);
+    
     Task AddAsync(Dossier dossier);
     Task UpdateAsync(Dossier dossier);
     Task DeleteAsync(Guid id);

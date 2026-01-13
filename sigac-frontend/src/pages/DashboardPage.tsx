@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
-import { dossierApi } from '../api/dossierApi'
-import { userApi } from '../api/userApi'
-import type { DossierStatisticsDto } from '../types/dossierStatistics'
+import { dashboardApi } from '../api/dashboardApi'
+import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
+import { PERIOD_LABELS } from '../types/dashboard'
 import './Dashboard.css'
 
 export default function DashboardPage() {
-  const [dossierStats, setDossierStats] = useState<DossierStatisticsDto | null>(null)
-  const [userStats, setUserStats] = useState<any | null>(null)
+  const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(30) // Default: 30 days
+  const [customDateStart, setCustomDateStart] = useState<string>('')
+  const [customDateEnd, setCustomDateEnd] = useState<string>('')
+  const [showCustomPeriod, setShowCustomPeriod] = useState(false)
 
+  // Déterminer le rôle admin
   useEffect(() => {
     try {
       const userStr = localStorage.getItem('user')
@@ -23,41 +27,71 @@ export default function DashboardPage() {
     }
   }, [])
 
+  // Charger les statistiques
   const loadStats = async (mounted: { current: boolean }) => {
     setLoading(true)
     setError(null)
     try {
-      const promises: Promise<any>[] = [dossierApi.statistiques()]
-      if (isAdmin) promises.push(userApi.statsAdmin())
-      const results = await Promise.allSettled(promises)
+      const statsData = await dashboardApi.getStatistics(periodFilter)
       if (!mounted.current) return
-      const ds = results[0]
-      const us = results[1]
-      if (ds?.status === 'fulfilled') setDossierStats(ds.value)
-      if (isAdmin && us && us.status === 'fulfilled') setUserStats(us.value)
-      if (ds?.status === 'rejected' && (!isAdmin || (us && us.status === 'rejected'))) setError('Impossible de charger les statistiques')
+      setStats(statsData)
       setLastRefresh(new Date())
     } catch (e: any) {
-      if (mounted.current) setError(e?.message || 'Erreur')
+      if (mounted.current) {
+        setError(e?.message || 'Erreur lors du chargement des statistiques')
+      }
     } finally {
       if (mounted.current) setLoading(false)
     }
   }
 
+  // Effect pour charger les stats au changement du filtre
   useEffect(() => {
     const mounted = { current: true }
     loadStats(mounted)
-    
-    // Auto-refresh toutes les 1 heure (évite les clignotements d'écran)
-    const interval = setInterval(() => {
-      if (mounted.current) loadStats(mounted)
-    }, 3600000)
-    
-    return () => { 
+
+    return () => {
       mounted.current = false
-      clearInterval(interval)
     }
-  }, [refreshKey, isAdmin])
+  }, [refreshKey, periodFilter])
+
+  const handleCustomPeriod = async () => {
+    if (!customDateStart || !customDateEnd) {
+      setError('Veuillez sélectionner les deux dates')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const start = new Date(customDateStart)
+      const end = new Date(customDateEnd)
+      const statsData = await dashboardApi.getStatisticsForPeriod(start, end)
+      setStats(statsData)
+      setShowCustomPeriod(false)
+      setLastRefresh(new Date())
+    } catch (e: any) {
+      setError(e?.message || 'Erreur lors du chargement des statistiques')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return ((bytes / Math.pow(k, i)) * 100 | 0) / 100 + ' ' + sizes[i]
+  }
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 
   const statusColors: Record<string, string> = {
     'Nouveau': '#3b82f6',
@@ -65,10 +99,10 @@ export default function DashboardPage() {
     'En Cours': '#f59e0b',
     'EnValidation': '#6366f1',
     'En Validation': '#6366f1',
-    'Valide': '#10b981',
     'Validé': '#10b981',
-    'Termine': '#6b7280',
-    'Terminé': '#6b7280'
+    'Valide': '#10b981',
+    'Terminé': '#6b7280',
+    'Termine': '#6b7280'
   }
 
   const statusIcons: Record<string, string> = {
@@ -77,25 +111,45 @@ export default function DashboardPage() {
     'En Cours': '📝',
     'EnValidation': '💭',
     'En Validation': '💭',
-    'Valide': '✅',
     'Validé': '✅',
-    'Termine': '📦',
-    'Terminé': '📦'
+    'Valide': '✅',
+    'Terminé': '📦',
+    'Termine': '📦'
   }
 
   return (
     <div className="dashboard-container">
       <div className="panel">
+        {/* Header avec filtres */}
         <div className="dashboard-header">
           <div className="dashboard-title">
             📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
           </div>
           <div className="dashboard-actions">
+            <div className="period-filters">
+              <select
+                value={periodFilter}
+                onChange={(e) => setPeriodFilter(Number(e.target.value) as PeriodFilter)}
+                className="filter-select"
+              >
+                <option value={7}>Derniers 7 jours</option>
+                <option value={30}>Dernier mois</option>
+                <option value={90}>Dernier trimestre</option>
+                <option value={365}>Dernière année</option>
+                <option value={0}>Tous les temps</option>
+              </select>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowCustomPeriod(!showCustomPeriod)}
+              >
+                📅 Période perso...
+              </button>
+            </div>
             <span className="last-update">
-              Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
+              Maj: {lastRefresh.toLocaleTimeString()}
             </span>
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               onClick={() => setRefreshKey(k => k + 1)}
               disabled={loading}
             >
@@ -103,80 +157,159 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* Période personnalisée */}
+        {showCustomPeriod && (
+          <div className="custom-period-panel">
+            <div className="period-inputs">
+              <div className="input-group">
+                <label>Début:</label>
+                <input
+                  type="date"
+                  value={customDateStart}
+                  onChange={(e) => setCustomDateStart(e.target.value)}
+                />
+              </div>
+              <div className="input-group">
+                <label>Fin:</label>
+                <input
+                  type="date"
+                  value={customDateEnd}
+                  onChange={(e) => setCustomDateEnd(e.target.value)}
+                />
+              </div>
+              <button className="btn" onClick={handleCustomPeriod}>
+                Appliquer
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowCustomPeriod(false)}
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+
         {error && <div className="error">{error}</div>}
-        
+
         {loading ? (
           <div className="dashboard-loading">⏳ Chargement des statistiques...</div>
-        ) : (
+        ) : stats ? (
           <>
-            {/* KPI Cards */}
+            {/* KPI Cards - Row 1 */}
             <div className="kpi-grid">
               <div className="kpi-card" style={{ '--accent-color': '#3b82f6' } as React.CSSProperties}>
-                <div className="kpi-label">{isAdmin ? 'Total des Dossiers' : 'Mes Dossiers'}</div>
-                <div className="kpi-value">
-                  {dossierStats?.totalDossiers ?? 0}
-                </div>
-                <div className="kpi-description">📁 {isAdmin ? 'Tous les dossiers' : 'Dossiers assignés'}</div>
+                <div className="kpi-label">Total Dossiers</div>
+                <div className="kpi-value">{stats.totalDossiers}</div>
+                <div className="kpi-description">📁 Tous les dossiers</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
-                <div className="kpi-label">{isAdmin ? 'Dossiers Validés' : 'Mes Validés'}</div>
-                <div className="kpi-value">
-                  {dossierStats?.valides ?? 0}
-                </div>
-                <div className="kpi-description">✅ {isAdmin ? 'Dossiers validés' : 'Mes dossiers validés'}</div>
+                <div className="kpi-label">Validés</div>
+                <div className="kpi-value">{stats.valides}</div>
+                <div className="kpi-description">✅ Dossiers validés</div>
               </div>
 
               <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
-                <div className="kpi-label">{isAdmin ? 'En Cours' : 'Mes En Cours'}</div>
-                <div className="kpi-value">
-                  {dossierStats?.enCours ?? 0}
-                </div>
-                <div className="kpi-description">📝 {isAdmin ? 'En cours de traitement' : 'Mes dossiers en cours'}</div>
+                <div className="kpi-label">En Cours</div>
+                <div className="kpi-value">{stats.enCours + stats.enValidation}</div>
+                <div className="kpi-description">📝 En traitement</div>
               </div>
 
-              {/* KPI Utilisateurs Actifs - Admin uniquement */}
+              <div className="kpi-card" style={{ '--accent-color': '#ef4444' } as React.CSSProperties}>
+                <div className="kpi-label">En Retard</div>
+                <div className="kpi-value">{stats.dossiersEnRetard}</div>
+                <div className="kpi-description">⚠️ Pas à jour</div>
+              </div>
+
               {isAdmin && (
                 <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
                   <div className="kpi-label">Utilisateurs Actifs</div>
-                  <div className="kpi-value">
-                    {userStats?.activeUsers ?? '-'}
-                  </div>
-                  <div className="kpi-description">👥 Utilisateurs connectés</div>
+                  <div className="kpi-value">{stats.utilisateursActifs}</div>
+                  <div className="kpi-description">👥 Connectés</div>
                 </div>
               )}
             </div>
 
+            {/* Performance Indicators - Row 2 */}
+            <div className="chart-section">
+              <div className="chart-title">🎯 Indicateurs de Performance</div>
+              <div className="performance-grid">
+                <div className="performance-card">
+                  <div className="performance-label">Taux Complétion</div>
+                  <div className="performance-value">{Math.round(stats.tauxCompletionMoyen)}%</div>
+                  <div className="performance-bar">
+                    <div
+                      className="performance-bar-fill"
+                      style={{
+                        width: `${Math.min(stats.tauxCompletionMoyen, 100)}%`,
+                        background: stats.tauxCompletionMoyen > 70 ? '#10b981' : '#f59e0b'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="performance-card">
+                  <div className="performance-label">Temps Traitement Moyen</div>
+                  <div className="performance-value">{Math.round(stats.tempsTraitementMoyenJours)}</div>
+                  <div className="performance-description">jours</div>
+                </div>
+
+                <div className="performance-card">
+                  <div className="performance-label">Documents Upload (mois)</div>
+                  <div className="performance-value">{stats.documentsUploadCeMois}</div>
+                  <div className="performance-description">{stats.totalDocuments} total</div>
+                </div>
+
+                <div className="performance-card">
+                  <div className="performance-label">Stockage Utilisé</div>
+                  <div className="performance-value">{Math.round(stats.storagePercentage)}%</div>
+                  <div className="performance-bar">
+                    <div
+                      className="performance-bar-fill"
+                      style={{
+                        width: `${Math.min(stats.storagePercentage, 100)}%`,
+                        background: stats.storagePercentage > 80 ? '#ef4444' : '#3b82f6'
+                      }}
+                    />
+                  </div>
+                  <div className="performance-description">
+                    {formatBytes(stats.storageUtilizedBytes)} / {formatBytes(stats.storageQuotaBytes)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Répartition par Statut */}
             <div className="chart-section">
-              <div className="chart-title">
-                📈 {isAdmin ? 'Répartition des Dossiers par Statut' : 'Répartition de Mes Dossiers par Statut'}
-              </div>
-              <div>
-                {dossierStats && [
-                  { key: 'Nouveau', value: dossierStats.nouveauxDossiers },
-                  { key: 'En Cours', value: dossierStats.enCours },
-                  { key: 'En Validation', value: dossierStats.enValidation },
-                  { key: 'Validé', value: dossierStats.valides },
-                  { key: 'Terminé', value: dossierStats.termines }
+              <div className="chart-title">📊 Répartition par Statut</div>
+              <div className="status-breakdown">
+                {[
+                  { key: 'Nouveau', value: stats.nouveauxDossiers },
+                  { key: 'En Cours', value: stats.enCours },
+                  { key: 'En Validation', value: stats.enValidation },
+                  { key: 'Validé', value: stats.valides },
+                  { key: 'Terminé', value: stats.termines }
                 ].map(({ key, value }) => {
-                  const total = dossierStats.totalDossiers || 1
+                  const total = stats.totalDossiers || 1
                   const percentage = Math.round((value / total) * 100)
                   return (
                     <div key={key} className="status-item">
                       <div className="status-label">
                         <span className="status-icon">{statusIcons[key] || '📋'}</span>
                         <span className="status-name">{key}</span>
+                        <span className="status-count">({value})</span>
                       </div>
                       <div className="status-bar-container">
-                        <div 
+                        <div
                           className="status-bar"
-                          style={{ 
-                            width: `${percentage}%`, 
-                            background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`,
+                          style={{
+                            width: `${percentage}%`,
+                            background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`
                           }}
                         >
-                          {value} ({percentage}%)
+                          {percentage > 5 && <span>{percentage}%</span>}
                         </div>
                       </div>
                     </div>
@@ -185,63 +318,69 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Indicateurs de Performance */}
-            <div className="chart-section">
-              <div className="chart-title">
-                🎯 {isAdmin ? 'Indicateurs de Performance' : 'Mes Indicateurs de Performance'}
-              </div>
-              <div className="performance-grid">
-                <div className="performance-card" style={{ 
-                  '--bg-color': 'rgba(102, 126, 234, 0.05)',
-                  '--border-color': 'rgba(102, 126, 234, 0.1)',
-                  '--value-color': '#667eea'
-                } as React.CSSProperties}>
-                  <div className="performance-label">Taux de Traitement</div>
-                  <div className="performance-value">
-                    {dossierStats ? Math.round(((dossierStats.valides ?? 0) / (dossierStats.totalDossiers || 1)) * 100) : 0}%
+            {/* Top Utilisateurs */}
+            {isAdmin && stats.topUtilisateurs && stats.topUtilisateurs.length > 0 && (
+              <div className="chart-section">
+                <div className="chart-title">👥 Utilisateurs les Plus Actifs</div>
+                <div className="users-table">
+                  <div className="table-header">
+                    <div className="col-name">Utilisateur</div>
+                    <div className="col-dossiers">Dossiers</div>
+                    <div className="col-docs">Documents</div>
+                    <div className="col-date">Dernière Activité</div>
                   </div>
-                  <div className="performance-description">Dossiers validés / Total</div>
-                </div>
-
-                <div className="performance-card" style={{ 
-                  '--bg-color': 'rgba(245, 158, 11, 0.05)',
-                  '--border-color': 'rgba(245, 158, 11, 0.1)',
-                  '--value-color': '#f59e0b'
-                } as React.CSSProperties}>
-                  <div className="performance-label">Dossiers en Cours</div>
-                  <div className="performance-value">
-                    {(dossierStats?.enCours ?? 0) + (dossierStats?.enValidation ?? 0)}
-                  </div>
-                  <div className="performance-description">En cours + En validation</div>
-                </div>
-
-                <div className="performance-card" style={{ 
-                  '--bg-color': 'rgba(59, 130, 246, 0.05)',
-                  '--border-color': 'rgba(59, 130, 246, 0.1)',
-                  '--value-color': '#3b82f6'
-                } as React.CSSProperties}>
-                  <div className="performance-label">Nouveaux Dossiers</div>
-                  <div className="performance-value">
-                    {dossierStats?.nouveauxDossiers ?? 0}
-                  </div>
-                  <div className="performance-description">En attente d'attribution</div>
-                </div>
-
-                <div className="performance-card" style={{ 
-                  '--bg-color': 'rgba(107, 114, 128, 0.05)',
-                  '--border-color': 'rgba(107, 114, 128, 0.1)',
-                  '--value-color': '#6b7280'
-                } as React.CSSProperties}>
-                  <div className="performance-label">Dossiers Terminés</div>
-                  <div className="performance-value">
-                    {dossierStats?.termines ?? 0}
-                  </div>
-                  <div className="performance-description">Clôturés</div>
+                  {stats.topUtilisateurs.map((user) => (
+                    <div key={user.userId} className="table-row">
+                      <div className="col-name">{user.nomUtilisateur}</div>
+                      <div className="col-dossiers">{user.nombreDossiersTraites}</div>
+                      <div className="col-docs">{user.nombreDocumentsUpload}</div>
+                      <div className="col-date">{formatDate(user.derniereActivite)}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Répartition par Type d'Affaire */}
+            {stats.parType && Object.keys(stats.parType).length > 0 && (
+              <div className="chart-section">
+                <div className="chart-title">📋 Répartition par Type d'Affaire</div>
+                <div className="distribution-grid">
+                  {Object.entries(stats.parType).map(([type, count]) => (
+                    <div key={type} className="distribution-card">
+                      <div className="distribution-type">{type}</div>
+                      <div className="distribution-count">{count}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Timeline */}
+            {stats.dossiersCreesParMois && stats.dossiersCreesParMois.length > 0 && (
+              <div className="chart-section">
+                <div className="chart-title">📈 Évolution des Créations (6 derniers mois)</div>
+                <div className="timeline-chart">
+                  {stats.dossiersCreesParMois.map((data) => (
+                    <div key={data.mois} className="timeline-bar-wrapper">
+                      <div className="timeline-label">{data.mois}</div>
+                      <div className="timeline-bar-container">
+                        <div
+                          className="timeline-bar"
+                          style={{
+                            height: `${Math.max(data.valeur * 5, 20)}px`,
+                            background: '#3b82f6'
+                          }}
+                        />
+                        <div className="timeline-value">{data.valeur}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
-        )}
+        ) : null}
       </div>
     </div>
   )
