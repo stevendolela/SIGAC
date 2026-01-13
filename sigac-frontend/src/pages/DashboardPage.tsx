@@ -258,10 +258,11 @@ export default function DashboardPage() {
               </div>
 
               {/* Connexions Utilisateurs (visible uniquement pour Admin/Manager) */}
-              {(isAdmin || isManager) && stats.userConnections && stats.userConnections.length > 0 && (
+              {(isAdmin || isManager) && (
                 <div className="chart-wrapper">
                   <div className="chart-title">🔗 Dernières Connexions GED</div>
-                  <div className="connections-breakdown">
+                  {stats.userConnections && stats.userConnections.length > 0 ? (
+                    <div className="connections-breakdown">
                     {stats.userConnections.slice(0, 8).map((user) => {
                       const days = user.joursDepuisDerniereConnexion
                       let connectionStatus = 'recent'
@@ -307,6 +308,16 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
+                  ) : (
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                      <p>Aucune donnée de connexion disponible</p>
+                      {!stats.userConnections ? (
+                        <p style={{ fontSize: '12px' }}>Les données de connexions ne sont pas disponibles</p>
+                      ) : (
+                        <p style={{ fontSize: '12px' }}>Pas d'utilisateurs à afficher</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
