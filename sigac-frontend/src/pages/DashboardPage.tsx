@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { dashboardApi } from '../api/dashboardApi'
 import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
 import { PERIOD_LABELS } from '../types/dashboard'
+import type { WorkspaceDto } from '../types/workspace'
+import workspaceApi from '../api/workspaceApi'
 import './Dashboard.css'
 
 export default function DashboardPage() {
@@ -13,6 +15,8 @@ export default function DashboardPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [isManager, setIsManager] = useState<boolean>(false)
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null) // Pour le sélecteur Admin
+  const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([])
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(30) // Default: 30 days
 
   // Déterminer le rôle et workspace
@@ -24,18 +28,32 @@ export default function DashboardPage() {
       setIsManager(user?.role === 'Manager')
       // Utiliser defaultWorkspaceId pour les connexions des utilisateurs
       setWorkspaceId(user?.defaultWorkspaceId || null)
+      setSelectedWorkspace(user?.defaultWorkspaceId || null)
     } catch {
       setIsAdmin(false)
       setIsManager(false)
     }
   }, [])
 
+  // Charger les workspaces pour les Admin
+  useEffect(() => {
+    if (isAdmin) {
+      workspaceApi.getWorkspaces(1, 100)
+        .then((result) => {
+          setWorkspaces(result.data || [])
+        })
+        .catch(err => console.error('Erreur chargement workspaces:', err))
+    }
+  }, [isAdmin])
+
   // Charger les statistiques
   const loadStats = async (mounted: { current: boolean }) => {
     setLoading(true)
     setError(null)
     try {
-      const statsData = await dashboardApi.getStatistics(periodFilter, workspaceId || undefined)
+      // Pour Admin, utiliser selectedWorkspace; pour les autres, utiliser workspaceId
+      const wsId = isAdmin ? selectedWorkspace : workspaceId
+      const statsData = await dashboardApi.getStatistics(periodFilter, wsId || undefined)
       if (!mounted.current) return
       setStats(statsData)
       setLastRefresh(new Date())
@@ -48,7 +66,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Effect pour charger les stats au changement du filtre
+  // Effect pour charger les stats au changement du filtre ou workspace
   useEffect(() => {
     const mounted = { current: true }
     loadStats(mounted)
@@ -56,7 +74,7 @@ export default function DashboardPage() {
     return () => {
       mounted.current = false
     }
-  }, [refreshKey, periodFilter])
+  }, [refreshKey, periodFilter, selectedWorkspace, isAdmin])
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
@@ -107,6 +125,25 @@ export default function DashboardPage() {
             📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
           </div>
           <div className="dashboard-actions">
+            {/* Sélecteur de Workspace pour Admin */}
+            {isAdmin && workspaces.length > 0 && (
+              <div className="workspace-selector">
+                <label htmlFor="workspace-select">Workspace:</label>
+                <select
+                  id="workspace-select"
+                  value={selectedWorkspace || ''}
+                  onChange={(e) => setSelectedWorkspace(e.target.value || null)}
+                  className="filter-select"
+                >
+                  <option value="">📍 Tous les workspaces</option>
+                  {workspaces.map(ws => (
+                    <option key={ws.id} value={ws.id}>
+                      {ws.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="period-filters">
               <select
                 value={periodFilter}

@@ -173,6 +173,42 @@ public class UserRepository : IUserRepository
         return result;
     }
 
+    public async Task<List<UserActivityDto>> GetTopActiveUsersByWorkspaceAsync(Guid? workspaceId, int limit = 5)
+    {
+        IQueryable<User> usersQuery = _context.Users;
+
+        // Si workspaceId est fourni, filtrer par workspace
+        if (workspaceId.HasValue)
+        {
+            usersQuery = usersQuery
+                .Where(u => u.WorkspaceMemberships.Any(w => w.WorkspaceId == workspaceId.Value));
+        }
+
+        var users = await usersQuery
+            .OrderByDescending(u => u.ModifiedAt)
+            .Take(limit)
+            .ToListAsync();
+
+        var result = new List<UserActivityDto>();
+        foreach (var user in users)
+        {
+            var dossierCount = await _context.Dossiers
+                .Where(d => d.RapporteurId == user.Id)
+                .CountAsync();
+
+            result.Add(new UserActivityDto
+            {
+                UserId = user.Id,
+                NomUtilisateur = user.NomComplet ?? user.Username,
+                NombreDossiersTraites = dossierCount,
+                NombreDocumentsUpload = 0,
+                DerniereActivite = user.ModifiedAt ?? DateTime.UtcNow
+            });
+        }
+
+        return result;
+    }
+
     public async Task<List<UserConnectionDto>> GetWorkspaceUserConnectionsAsync(Guid workspaceId)
     {
         var users = await _context.WorkspaceUsers

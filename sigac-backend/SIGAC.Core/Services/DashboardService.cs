@@ -121,32 +121,15 @@ public class DashboardService : IDashboardService
                 try
                 {
                     activeUsers = await _userRepository.GetActiveUsersCountAsync();
-                    topUsers = await _userRepository.GetTopActiveUsersAsync(5);
+                    // Récupère les top utilisateurs du workspace si disponible
+                    topUsers = await _userRepository.GetTopActiveUsersByWorkspaceAsync(workspaceId, 5);
                     
-                    // Récupère les connexions du workspace si disponible
                     System.Diagnostics.Debug.WriteLine($"[Dashboard] Admin/Manager detected. WorkspaceId={workspaceId}, HasValue={workspaceId.HasValue}");
-                    
-                    if (workspaceId.HasValue)
-                    {
-                        try
-                        {
-                            userConnections = await _userRepository.GetWorkspaceUserConnectionsAsync(workspaceId.Value);
-                            System.Diagnostics.Debug.WriteLine($"[Dashboard] ✓ Fetched {userConnections.Count} user connections for workspace {workspaceId}");
-                        }
-                        catch (Exception connEx)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[Dashboard] ✗ Error fetching connections: {connEx.GetType().Name}: {connEx.Message}");
-                            throw;
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("[Dashboard] ⚠ WARNING: workspaceId is null/empty - no user connections will be fetched!");
-                    }
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] ✓ Fetched {topUsers.Count} top active users");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Dashboard] ✗ Exception in user connections block: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] ✗ Exception in top users block: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
                     activeUsers = 0;
                     topUsers = new List<UserActivityDto>();
                     userConnections = new List<UserConnectionDto>();
