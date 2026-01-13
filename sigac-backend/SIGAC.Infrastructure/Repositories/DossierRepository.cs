@@ -153,7 +153,7 @@ public class DossierRepository : IDossierRepository
             EnValidation = await query.CountAsync(d => d.Status == StatusDossier.EnValidation),
             Valides = await query.CountAsync(d => d.Status == StatusDossier.Valide),
             Termines = await query.CountAsync(d => d.Status == StatusDossier.Termine),
-            ParType = await _context.Dossiers
+            ParType = await query
                 .GroupBy(d => d.TypeAffaireId)
                 .Select(g => new {
                     TypeNom = _context.TypeAffaires
