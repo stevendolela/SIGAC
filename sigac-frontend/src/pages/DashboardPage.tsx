@@ -11,16 +11,21 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [isManager, setIsManager] = useState<boolean>(false)
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null)
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(30) // Default: 30 days
 
-  // Déterminer le rôle admin
+  // Déterminer le rôle et workspace
   useEffect(() => {
     try {
       const userStr = localStorage.getItem('user')
       const user = userStr ? JSON.parse(userStr) : null
       setIsAdmin(user?.role === 'Admin')
+      setIsManager(user?.role === 'Manager')
+      setWorkspaceId(user?.workspaceId || null)
     } catch {
       setIsAdmin(false)
+      setIsManager(false)
     }
   }, [])
 
@@ -29,7 +34,7 @@ export default function DashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const statsData = await dashboardApi.getStatistics(periodFilter)
+      const statsData = await dashboardApi.getStatistics(periodFilter, workspaceId || undefined)
       if (!mounted.current) return
       setStats(statsData)
       setLastRefresh(new Date())
@@ -214,41 +219,96 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Répartition par Statut */}
-            <div className="chart-section">
-              <div className="chart-title">📊 Répartition par Statut</div>
-              <div className="status-breakdown">
-                {[
-                  { key: 'Nouveau', value: stats.nouveauxDossiers },
-                  { key: 'En Cours', value: stats.enCours },
-                  { key: 'En Validation', value: stats.enValidation },
-                  { key: 'Validé', value: stats.valides },
-                  { key: 'Terminé', value: stats.termines }
-                ].map(({ key, value }) => {
-                  const total = stats.totalDossiers || 1
-                  const percentage = Math.round((value / total) * 100)
-                  return (
-                    <div key={key} className="status-item">
-                      <div className="status-label">
-                        <span className="status-icon">{statusIcons[key] || '📋'}</span>
-                        <span className="status-name">{key}</span>
-                        <span className="status-count">({value})</span>
-                      </div>
-                      <div className="status-bar-container">
-                        <div
-                          className="status-bar"
-                          style={{
-                            width: `${percentage}%`,
-                            background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`
-                          }}
-                        >
-                          {percentage > 5 && <span>{percentage}%</span>}
+            {/* Répartition par Statut + Connexions Utilisateurs (côte à côte) */}
+            <div className="chart-section-double">
+              <div className="chart-wrapper">
+                <div className="chart-title">📊 Répartition par Statut</div>
+                <div className="status-breakdown">
+                  {[
+                    { key: 'Nouveau', value: stats.nouveauxDossiers },
+                    { key: 'En Cours', value: stats.enCours },
+                    { key: 'En Validation', value: stats.enValidation },
+                    { key: 'Validé', value: stats.valides },
+                    { key: 'Terminé', value: stats.termines }
+                  ].map(({ key, value }) => {
+                    const total = stats.totalDossiers || 1
+                    const percentage = Math.round((value / total) * 100)
+                    return (
+                      <div key={key} className="status-item">
+                        <div className="status-label">
+                          <span className="status-icon">{statusIcons[key] || '📋'}</span>
+                          <span className="status-name">{key}</span>
+                          <span className="status-count">({value})</span>
+                        </div>
+                        <div className="status-bar-container">
+                          <div
+                            className="status-bar"
+                            style={{
+                              width: `${percentage}%`,
+                              background: `linear-gradient(90deg, ${statusColors[key] || '#94a3b8'}, ${statusColors[key] || '#94a3b8'}dd)`
+                            }}
+                          >
+                            {percentage > 5 && <span>{percentage}%</span>}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
+
+              {/* Connexions Utilisateurs (visible uniquement pour Admin/Manager) */}
+              {(isAdmin || isManager) && stats.userConnections && stats.userConnections.length > 0 && (
+                <div className="chart-wrapper">
+                  <div className="chart-title">🔗 Dernières Connexions GED</div>
+                  <div className="connections-breakdown">
+                    {stats.userConnections.slice(0, 8).map((user) => {
+                      const days = user.joursDepuisDerniereConnexion
+                      let connectionStatus = 'recent'
+                      let statusColor = '#10b981'
+                      let statusLabel = 'Actif aujourd\'hui'
+
+                      if (days === null || days > 30) {
+                        connectionStatus = 'inactive'
+                        statusColor = '#6b7280'
+                        statusLabel = 'Inactif'
+                      } else if (days > 7) {
+                        connectionStatus = 'warning'
+                        statusColor = '#f59e0b'
+                        statusLabel = `Il y a ${days}j`
+                      } else if (days > 0) {
+                        statusLabel = `Il y a ${days}j`
+                      }
+
+                      return (
+                        <div key={user.userId} className="connection-item">
+                          <div className="connection-label">
+                            <span className="connection-indicator" style={{ background: statusColor }} />
+                            <span className="connection-name">{user.nomUtilisateur}</span>
+                          </div>
+                          <div className="connection-bar-container">
+                            <div
+                              className={`connection-bar connection-${connectionStatus}`}
+                              style={{
+                                width: days === null || days > 30 ? '5%' : `${Math.max(100 - (days * 3), 10)}%`,
+                                background: statusColor
+                              }}
+                            >
+                              {days !== null && days <= 7 && <span className="connection-days">{statusLabel}</span>}
+                            </div>
+                          </div>
+                          <div className="connection-date">{statusLabel}</div>
+                        </div>
+                      )
+                    })}
+                    {stats.userConnections.length > 8 && (
+                      <div className="connection-more">
+                        +{stats.userConnections.length - 8} autres utilisateurs
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Top Utilisateurs */}

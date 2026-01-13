@@ -38,6 +38,7 @@ export interface DashboardStatisticsDto {
   // Activité
   utilisateursActifs: number
   topUtilisateurs: UserActivityDto[]
+  userConnections: UserConnectionDto[]
   lastUpdated: string
 }
 
@@ -53,6 +54,13 @@ export interface UserActivityDto {
   nombreDossiersTraites: number
   nombreDocumentsUpload: number
   derniereActivite: string
+}
+
+export interface UserConnectionDto {
+  userId: string
+  nomUtilisateur: string
+  derniereConnexion: string | null
+  joursDepuisDerniereConnexion: number
 }
 
 export interface StorageStatisticsDto {

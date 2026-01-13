@@ -31,13 +31,18 @@ export class DashboardApi {
   /**
    * Récupère les statistiques complètes du dashboard
    */
-  async getStatistics(periodeDays: number = 0): Promise<DashboardStatisticsDto> {
+  async getStatistics(periodeDays: number = 0, workspaceId?: string): Promise<DashboardStatisticsDto> {
     try {
+      const params: Record<string, any> = { periodeDays }
+      if (workspaceId) {
+        params.workspaceId = workspaceId
+      }
+      
       const response = await axios.get<DashboardStatisticsDto>(
         `${API_URL}/dashboard/statistics`,
         {
           headers: this.getHeaders(),
-          params: { periodeDays }
+          params
         }
       )
       return response.data
