@@ -31,3 +31,9 @@ export interface UpdateUserDto {
   isActive?: boolean
   matricule?: string
 }
+
+export interface UpdateProfileDto {
+  nomComplet?: string
+  email?: string
+  phoneNumber?: string
+}
