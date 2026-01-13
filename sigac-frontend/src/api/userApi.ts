@@ -50,6 +50,10 @@ export const userApi = {
     const resp = await api.get<UserDto[]>(`/Users/juges`)
     return resp.data
   },
+  async getCurrentProfile() {
+    const resp = await api.get<UserDto>(`/Users/profile/current`)
+    return resp.data
+  },
   async updateProfile(payload: UpdateProfileDto) {
     const resp = await api.put<UserDto>(`/Users/profile`, payload)
     return resp.data

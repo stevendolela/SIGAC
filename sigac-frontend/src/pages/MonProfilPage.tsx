@@ -77,12 +77,13 @@ export default function MonProfilPage() {
   async function loadCurrentUser() {
     if (!user?.id) return
     try {
-      const userData = await userApi.get(user.id)
+      const userData = await userApi.getCurrentProfile()
       setCurrentUser(userData)
       setNomComplet(userData.nomComplet || '')
       setEmail(userData.email || '')
       setPhoneNumber(userData.phoneNumber || '')
     } catch (e: any) {
+      console.error('Erreur loadCurrentUser:', e)
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur chargement paramètres' })
     }
   }
@@ -90,18 +91,24 @@ export default function MonProfilPage() {
   async function handleSaveParams() {
     setSavingParams(true)
     try {
-      const updated = await userApi.updateProfile({
+      const payload = {
         nomComplet: nomComplet.trim() || undefined,
         email: email.trim() || undefined,
         phoneNumber: phoneNumber.trim() || undefined
-      })
+      }
+      console.log('Saving profile with:', payload)
+      const updated = await userApi.updateProfile(payload)
+      console.log('Profile saved successfully:', updated)
       setCurrentUser(updated)
       // Mettre à jour localStorage
       localStorage.setItem('user', JSON.stringify(updated))
       setEditingParams(false)
       notify({ type: 'success', message: '✅ Paramètres mis à jour avec succès' })
     } catch (e: any) {
-      notify({ type: 'error', message: e?.response?.data?.message || 'Erreur mise à jour paramètres' })
+      console.error('Error saving profile:', e)
+      console.error('Response data:', e?.response?.data)
+      const errorMsg = e?.response?.data?.message || e?.message || 'Erreur mise à jour paramètres'
+      notify({ type: 'error', message: errorMsg })
     } finally {
       setSavingParams(false)
     }
