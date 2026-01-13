@@ -38,9 +38,9 @@ export default function DashboardPage() {
   // Charger les workspaces pour les Admin
   useEffect(() => {
     if (isAdmin) {
-      workspaceApi.getWorkspaces(1, 100)
-        .then((result) => {
-          setWorkspaces(result.data || [])
+      workspaceApi.getUserWorkspaces()
+        .then((workspaces) => {
+          setWorkspaces(workspaces || [])
         })
         .catch(err => console.error('Erreur chargement workspaces:', err))
     }
