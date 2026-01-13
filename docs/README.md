@@ -4,7 +4,30 @@ Ce dossier contient toute la documentation technique et historique du projet SIG
 
 ## 📂 Structure
 
-### 💬 [chat/](chat/) - Documentation Chat (15 fichiers)
+### � [dashboard-phase1/](dashboard-phase1/) - Dashboard Phase 1: Graphique Connexions (8 fichiers) ⭐ NEW
+**Nouvelle feature: Graphique "Dernières Connexions GED" pour Admin/Manager**
+
+Vue d'ensemble de l'implémentation du graphique de suivi des connexions utilisateurs:
+- Description complète du feature
+- Guide de déploiement
+- Checklist complète de test (6 scénarios)
+- Guide quickstart (5 étapes)
+- Guide de débogage complet
+- Résumé d'implémentation avec métriques
+
+**Fichiers clés:**
+- `00-index.md` - Point d'entrée, navigation par rôle
+- `status.txt` - One-page quick reference
+- `01-feature.md` - Description complète du feature
+- `02-deployment.md` - Guide de déploiement avec vérifications post-deploy
+- `03-testing.md` - Checklist complète de test avec 6 scénarios
+- `04-quickstart.md` - Guide 5 étapes + test API curl
+- `05-debugging.md` - Guide de débogage avec troubleshooting
+- `06-summary.md` - Résumé d'implémentation avec métriques
+
+**Status:** ✅ Production-Ready (0 build errors)
+
+### �💬 [chat/](chat/) - Documentation Chat (15 fichiers)
 Toute la documentation liée à la fonctionnalité de chat intégré:
 - Guides de débogage du chat
 - Résumés d'implémentation
