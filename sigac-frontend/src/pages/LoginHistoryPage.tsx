@@ -58,7 +58,7 @@ export default function LoginHistoryPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/api/LoginHistory/my-history?limit=${limit}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/LoginHistory/my-history?limit=${limit}`,
         {
           method: 'GET',
           headers: {
