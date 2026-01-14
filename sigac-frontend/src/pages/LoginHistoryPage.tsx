@@ -20,12 +20,14 @@ export default function LoginHistoryPage() {
   const [limit, setLimit] = useState(50);
   const [showDetails, setShowDetails] = useState<string | null>(null);
   const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
 
   useEffect(() => {
     if (token) {
       loadLoginHistory();
     }
-  }, [limit, token]);
+  }, [limit, token, isAdmin]);
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     // Simple notification using browser alert
@@ -57,8 +59,10 @@ export default function LoginHistoryPage() {
   const loadLoginHistory = async () => {
     setLoading(true);
     try {
+      // Détermine l'endpoint selon le rôle
+      const endpoint = isAdmin ? 'LoginHistory/all' : 'LoginHistory/my-history';
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/LoginHistory/my-history?limit=${limit}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/${endpoint}?limit=${limit}`,
         {
           method: 'GET',
           headers: {
