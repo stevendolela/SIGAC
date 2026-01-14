@@ -15,12 +15,22 @@ interface LoginHistory {
 }
 
 export default function LoginHistoryPage() {
-  const [history, setHistory] = useState<LoginHistory[]>([]);
+  const [allHistory, setAllHistory] = useState<LoginHistory[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<LoginHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(50);
   const [showDetails, setShowDetails] = useState<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [users, setUsers] = useState<Map<string, {userName: string, nomComplet: string}>>(new Map()); // userId -> {userName, nomComplet}
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  
+  // Filtres de recherche avancée
+  const [searchUsername, setSearchUsername] = useState('');
+  const [searchDateFrom, setSearchDateFrom] = useState('');
+  const [searchDateTo, setSearchDateTo] = useState('');
+  const [searchDevice, setSearchDevice] = useState('');
+  const [searchBrowser, setSearchBrowser] = useState('');
+  const [searchOS, setSearchOS] = useState('');
+  const [searchIP, setSearchIP] = useState('');
+  
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
@@ -29,7 +39,11 @@ export default function LoginHistoryPage() {
     if (token) {
       loadLoginHistory();
     }
-  }, [limit, token, isAdmin, selectedUserId]);
+  }, [limit, token, isAdmin]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [allHistory, searchUsername, searchDateFrom, searchDateTo, searchDevice, searchBrowser, searchOS, searchIP]);
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     // Simple notification using browser alert
@@ -63,13 +77,9 @@ export default function LoginHistoryPage() {
     try {
       let endpoint = 'LoginHistory/my-history';
       
-      // Détermine l'endpoint selon le rôle et filtre
+      // Détermine l'endpoint selon le rôle
       if (isAdmin) {
-        if (selectedUserId) {
-          endpoint = `LoginHistory/user/${selectedUserId}`;
-        } else {
-          endpoint = 'LoginHistory/all';
-        }
+        endpoint = 'LoginHistory/all';
       }
       
       const response = await fetch(
@@ -85,22 +95,7 @@ export default function LoginHistoryPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setHistory(data);
-        
-        // Extrait les utilisateurs uniques et les ajoute à la liste (sans doublons)
-        if (isAdmin && data.length > 0) {
-          const userMap = new Map<string, {userName: string, nomComplet: string}>();
-          data.forEach((entry: LoginHistory) => {
-            // Utilise userId comme clé pour éviter les doublons
-            if (entry.id && entry.userName) {
-              userMap.set(entry.id, {
-                userName: entry.userName,
-                nomComplet: entry.nomComplet || entry.userName
-              });
-            }
-          });
-          setUsers(userMap);
-        }
+        setAllHistory(data);
       } else {
         showNotification('Erreur lors de la récupération de l\'historique', 'error');
       }
@@ -110,6 +105,66 @@ export default function LoginHistoryPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...allHistory];
+
+    // Filtre par utilisateur (username ou nom complet)
+    if (searchUsername.trim()) {
+      const search = searchUsername.toLowerCase();
+      filtered = filtered.filter(entry =>
+        entry.userName.toLowerCase().includes(search) ||
+        entry.nomComplet.toLowerCase().includes(search)
+      );
+    }
+
+    // Filtre par date
+    if (searchDateFrom) {
+      const dateFrom = new Date(searchDateFrom);
+      filtered = filtered.filter(entry => new Date(entry.timestamp) >= dateFrom);
+    }
+    if (searchDateTo) {
+      const dateTo = new Date(searchDateTo);
+      dateTo.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(entry => new Date(entry.timestamp) <= dateTo);
+    }
+
+    // Filtre par device
+    if (searchDevice) {
+      filtered = filtered.filter(entry => entry.device === searchDevice);
+    }
+
+    // Filtre par navigateur
+    if (searchBrowser) {
+      filtered = filtered.filter(entry => entry.browser === searchBrowser);
+    }
+
+    // Filtre par OS
+    if (searchOS) {
+      filtered = filtered.filter(entry => entry.os === searchOS);
+    }
+
+    // Filtre par IP
+    if (searchIP.trim()) {
+      filtered = filtered.filter(entry => entry.ipAddress.includes(searchIP.trim()));
+    }
+
+    setFilteredHistory(filtered);
+  };
+
+  const resetFilters = () => {
+    setSearchUsername('');
+    setSearchDateFrom('');
+    setSearchDateTo('');
+    setSearchDevice('');
+    setSearchBrowser('');
+    setSearchOS('');
+    setSearchIP('');
+  };
+
+  const getUniqueValues = (key: 'device' | 'browser' | 'os') => {
+    return [...new Set(allHistory.map(entry => entry[key]))].sort();
   };
 
   const formatDate = (dateString: string) => {
@@ -150,20 +205,14 @@ export default function LoginHistoryPage() {
       </div>
 
       <div className="login-history-controls">
-        {isAdmin && (
-          <select 
-            value={selectedUserId} 
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            className="limit-selector"
-          >
-            <option value="">📊 Tous les utilisateurs</option>
-            {Array.from(users.entries()).map(([userId, userInfo]) => (
-              <option key={userId} value={userId}>
-                👤 {userInfo.userName} - {userInfo.nomComplet}
-              </option>
-            ))}
-          </select>
-        )}
+        <button 
+          onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+          className="search-toggle-btn"
+          title="Afficher/Masquer la recherche avancée"
+        >
+          {showAdvancedSearch ? '🔍 Masquer la recherche' : '🔍 Recherche avancée'}
+        </button>
+        
         <select 
           value={limit} 
           onChange={(e) => setLimit(Number(e.target.value))}
@@ -174,6 +223,7 @@ export default function LoginHistoryPage() {
           <option value={50}>Les 50 dernières</option>
           <option value={100}>Les 100 dernières</option>
         </select>
+        
         <button 
           onClick={loadLoginHistory}
           className="refresh-btn"
@@ -183,14 +233,120 @@ export default function LoginHistoryPage() {
         </button>
       </div>
 
+      {showAdvancedSearch && (
+        <div className="advanced-search-panel">
+          <div className="search-row">
+            <div className="search-field">
+              <label>Utilisateur</label>
+              <input
+                type="text"
+                placeholder="Nom ou prénom..."
+                value={searchUsername}
+                onChange={(e) => setSearchUsername(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            <div className="search-field">
+              <label>IP Address</label>
+              <input
+                type="text"
+                placeholder="Entrer une IP..."
+                value={searchIP}
+                onChange={(e) => setSearchIP(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+
+          <div className="search-row">
+            <div className="search-field">
+              <label>Date de début</label>
+              <input
+                type="date"
+                value={searchDateFrom}
+                onChange={(e) => setSearchDateFrom(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            <div className="search-field">
+              <label>Date de fin</label>
+              <input
+                type="date"
+                value={searchDateTo}
+                onChange={(e) => setSearchDateTo(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+
+          <div className="search-row">
+            <div className="search-field">
+              <label>Device</label>
+              <select
+                value={searchDevice}
+                onChange={(e) => setSearchDevice(e.target.value)}
+                className="search-input"
+              >
+                <option value="">Tous les devices</option>
+                {getUniqueValues('device').map(device => (
+                  <option key={device} value={device}>{device}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="search-field">
+              <label>Navigateur</label>
+              <select
+                value={searchBrowser}
+                onChange={(e) => setSearchBrowser(e.target.value)}
+                className="search-input"
+              >
+                <option value="">Tous les navigateurs</option>
+                {getUniqueValues('browser').map(browser => (
+                  <option key={browser} value={browser}>{browser}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="search-field">
+              <label>OS</label>
+              <select
+                value={searchOS}
+                onChange={(e) => setSearchOS(e.target.value)}
+                className="search-input"
+              >
+                <option value="">Tous les OS</option>
+                {getUniqueValues('os').map(os => (
+                  <option key={os} value={os}>{os}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="search-actions">
+            <button onClick={resetFilters} className="reset-btn">
+              ↺ Réinitialiser les filtres
+            </button>
+            <span className="results-count">
+              {filteredHistory.length} résultats trouvés
+            </span>
+          </div>
+        </div>
+      )}
       {loading ? (
         <div className="login-history-loading">
           <div className="spinner"></div>
           <p>Chargement en cours...</p>
         </div>
-      ) : history.length === 0 ? (
+      ) : allHistory.length === 0 ? (
         <div className="login-history-empty">
           <p>Aucune connexion enregistrée</p>
+        </div>
+      ) : filteredHistory.length === 0 ? (
+        <div className="login-history-empty">
+          <p>Aucune connexion ne correspond à vos critères de recherche</p>
         </div>
       ) : (
         <div className="login-history-table-wrapper">
@@ -207,7 +363,7 @@ export default function LoginHistoryPage() {
               </tr>
             </thead>
             <tbody>
-              {history.map((entry, index) => (
+              {filteredHistory.map((entry, index) => (
                 <React.Fragment key={entry.id}>
                   <tr className="login-history-row">
                     <td>
