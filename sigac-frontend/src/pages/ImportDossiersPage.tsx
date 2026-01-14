@@ -104,8 +104,9 @@ export default function ImportDossiersPage() {
 
     setLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5210/api';
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5210/api'}/Import/dossiers`,
+        `${apiUrl}/Import/dossiers`,
         {
           method: 'POST',
           headers: {
