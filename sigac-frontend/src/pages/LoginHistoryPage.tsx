@@ -154,6 +154,7 @@ export default function LoginHistoryPage() {
             <thead>
               <tr>
                 <th>Date & Heure</th>
+                <th>Utilisateur</th>
                 <th>Adresse IP</th>
                 <th>Device</th>
                 <th>Navigateur</th>
@@ -169,6 +170,15 @@ export default function LoginHistoryPage() {
                       <div className="timestamp-cell">
                         <span className="time-icon">🕐</span>
                         <span>{formatDate(entry.timestamp)}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="user-cell">
+                        <span className="user-badge">👤</span>
+                        <div className="user-info">
+                          <span className="username">{entry.userName}</span>
+                          <span className="fullname">{entry.nomComplet}</span>
+                        </div>
                       </div>
                     </td>
                     <td>
