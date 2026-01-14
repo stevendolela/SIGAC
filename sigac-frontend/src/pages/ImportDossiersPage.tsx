@@ -203,11 +203,11 @@ export default function ImportDossiersPage() {
             <h3>📋 Template CSV</h3>
             <pre className="template-code">
 {`NumeroDossier,Titre,Description,TypeAffaire,Priorite,Responsable,Status,Documents
-2024-001,Affaire A,Description affaire A,Contentieux,Haute,admin,Nouveau,
-2024-002,Affaire B,Description affaire B,Constitutionnel,Normale,admin,Nouveau,`}
+2024-001,Affaire A,Description affaire A,Contentieux,Haute,admin,Nouveau,https://doc1.pdf;https://doc2.pdf
+2024-002,Affaire B,Description affaire B,Constitutionnel,Normale,admin,Nouveau,https://doc3.pdf`}
             </pre>
             <p className="template-note">
-              <strong>Documents:</strong> URLs séparées par des points-virgules (;)
+              <strong>⚠️ Important - Documents:</strong> URLs séparées par des <strong>points-virgules (;)</strong> - PAS des virgules
             </p>
           </div>
         </div>
