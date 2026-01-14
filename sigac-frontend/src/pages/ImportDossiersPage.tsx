@@ -207,7 +207,10 @@ export default function ImportDossiersPage() {
 2024-002,Affaire B,Description affaire B,Constitutionnel,Normale,admin,Nouveau,https://doc3.pdf`}
             </pre>
             <p className="template-note">
-              <strong>⚠️ Important - Documents:</strong> URLs séparées par des <strong>points-virgules (;)</strong> - PAS des virgules
+              <strong>⚠️ IMPORTANT - Séparateur Documents:</strong><br/>
+              • Utilisez <strong>points-virgules (;)</strong> pour séparer les URLs<br/>
+              • ❌ MAUVAIS: <code>https://doc1.pdf,https://doc2.pdf</code><br/>
+              • ✅ BON: <code>https://doc1.pdf;https://doc2.pdf</code>
             </p>
           </div>
         </div>
