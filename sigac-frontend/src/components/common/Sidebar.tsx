@@ -39,6 +39,7 @@ type ViewType =
   | 'mon-profil'
   | 'document-logs'
   | 'login-history'
+  | 'import-dossiers'
 
 interface MenuItem {
   view: ViewType
@@ -150,6 +151,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           label: 'Historique Connexions',
           icon: UserCircle,
           color: '#f97316'
+        },
+        {
+          view: 'import-dossiers' as ViewType,
+          label: 'Import en masse',
+          icon: UserCircle,
+          color: '#3b82f6'
         },
         {
           view: 'profils' as ViewType,
