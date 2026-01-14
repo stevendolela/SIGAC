@@ -105,7 +105,7 @@ export default function ImportDossiersPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/Dossiers/import-bulk`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5210/api'}/Import/dossiers`,
         {
           method: 'POST',
           headers: {
@@ -118,34 +118,28 @@ export default function ImportDossiersPage() {
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setResult({
-          success: true,
-          message: 'Import réussi!',
-          dossiersCreated: data.dossiersCreated,
-          documentsCreated: data.documentsCreated,
-          errors: data.errors || [],
-        });
-      } else {
-        setResult({
-          success: false,
-          message: data.message || 'Erreur lors de l\'import',
-          dossiersCreated: 0,
-          documentsCreated: 0,
-          errors: data.errors || [],
-        });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
+      const data = await response.json();
+
+      setResult({
+        success: true,
+        message: 'Import réussi!',
+        dossiersCreated: data.dossiersCreated || 0,
+        documentsCreated: data.documentsCreated || 0,
+        errors: data.errors || [],
+      });
       setStep('result');
     } catch (error) {
       setResult({
         success: false,
-        message: 'Erreur de connexion',
+        message: error instanceof Error ? error.message : 'Erreur de connexion',
         dossiersCreated: 0,
         documentsCreated: 0,
-        errors: [String(error)],
+        errors: [error instanceof Error ? error.message : String(error)],
       });
       setStep('result');
     } finally {
