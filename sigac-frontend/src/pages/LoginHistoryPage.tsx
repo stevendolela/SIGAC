@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/authStore';
-import toast from 'react-hot-toast';
 import './LoginHistoryPage.css';
 
 interface LoginHistory {
@@ -17,15 +15,44 @@ interface LoginHistory {
 }
 
 export default function LoginHistoryPage() {
-  const { token, user } = useAuthStore();
   const [history, setHistory] = useState<LoginHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(50);
   const [showDetails, setShowDetails] = useState<string | null>(null);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    loadLoginHistory();
-  }, [limit]);
+    if (token) {
+      loadLoginHistory();
+    }
+  }, [limit, token]);
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    // Simple notification using browser alert
+    // A more polished version could use a notification component library
+    const bgColor = type === 'success' ? '#4caf50' : '#f44336';
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${bgColor};
+      color: white;
+      padding: 16px 24px;
+      border-radius: 4px;
+      z-index: 10000;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  };
 
   const loadLoginHistory = async () => {
     setLoading(true);
@@ -45,11 +72,11 @@ export default function LoginHistoryPage() {
         const data = await response.json();
         setHistory(data);
       } else {
-        toast.error('Erreur lors de la récupération de l\'historique');
+        showNotification('Erreur lors de la récupération de l\'historique', 'error');
       }
     } catch (error) {
       console.error('Error loading login history:', error);
-      toast.error('Erreur de connexion');
+      showNotification('Erreur de connexion', 'error');
     } finally {
       setLoading(false);
     }
@@ -82,7 +109,7 @@ export default function LoginHistoryPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié!');
+    showNotification('Copié!', 'success');
   };
 
   return (
