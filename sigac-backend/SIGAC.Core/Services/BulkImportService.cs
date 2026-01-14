@@ -109,16 +109,16 @@ public class BulkImportService : IBulkImportService
                     errors.Add($"Ligne {row.NumeroDossier}: Status invalide, utilisation de 'Nouveau'");
                 }
 
-                // Cherche le Rapporteur
-                User? rapporteur = null;
-                if (!string.IsNullOrWhiteSpace(row.Rapporteur))
+                // Cherche le Responsable
+                User? responsable = null;
+                if (!string.IsNullOrWhiteSpace(row.Responsable))
                 {
-                    rapporteur = users.FirstOrDefault(u =>
-                        u.Username.Equals(row.Rapporteur, StringComparison.OrdinalIgnoreCase));
+                    responsable = users.FirstOrDefault(u =>
+                        u.Username.Equals(row.Responsable, StringComparison.OrdinalIgnoreCase));
                     
-                    if (rapporteur == null)
+                    if (responsable == null)
                     {
-                        errors.Add($"Ligne {row.NumeroDossier}: Rapporteur '{row.Rapporteur}' non trouvé");
+                        errors.Add($"Ligne {row.NumeroDossier}: Responsable '{row.Responsable}' non trouvé");
                     }
                 }
 
@@ -131,7 +131,7 @@ public class BulkImportService : IBulkImportService
                     Status = status,
                     Priorite = priorite,
                     TypeAffaireId = typeAffaire.Id,
-                    RapporteurId = rapporteur?.Id,
+                    RapporteurId = responsable?.Id,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId
                 };

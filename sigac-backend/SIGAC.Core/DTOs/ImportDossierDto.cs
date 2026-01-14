@@ -10,7 +10,7 @@ public class ImportDossierDto
     public string Description { get; set; } = string.Empty;
     public string TypeAffaire { get; set; } = string.Empty;
     public string Priorite { get; set; } = "Normale";
-    public string Rapporteur { get; set; } = string.Empty;
+    public string Responsable { get; set; } = string.Empty;
     public string Status { get; set; } = "Nouveau";
     public string Documents { get; set; } = string.Empty; // URLs séparées par des points-virgules
 }

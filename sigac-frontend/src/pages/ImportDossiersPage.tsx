@@ -7,7 +7,7 @@ interface ImportRow {
   description: string;
   typeAffaire: string;
   priorite: string;
-  rapporteur: string;
+  responsable: string;
   status: string;
   documents?: string; // URLs séparées par des points-virgules
 }
@@ -72,7 +72,7 @@ export default function ImportDossiersPage() {
             description: values[headers.indexOf('description')] || '',
             typeAffaire: values[headers.indexOf('typeaffaire')] || '',
             priorite: values[headers.indexOf('priorite')] || 'Normale',
-            rapporteur: values[headers.indexOf('rapporteur')] || '',
+            responsable: values[headers.indexOf('responsable')] || '',
             status: values[headers.indexOf('status')] || 'Nouveau',
             documents: values[headers.indexOf('documents')] || '',
           };
@@ -173,7 +173,7 @@ export default function ImportDossiersPage() {
           <div className="upload-box">
             <div className="upload-icon">📄</div>
             <h2>Sélectionnez un fichier CSV</h2>
-            <p>Format: NumeroDossier, Titre, Description, TypeAffaire, Priorite, Rapporteur, Status, Documents</p>
+            <p>Format: NumeroDossier, Titre, Description, TypeAffaire, Priorite, Responsable, Status, Documents</p>
             
             <label className="file-input-label">
               <input
@@ -202,7 +202,7 @@ export default function ImportDossiersPage() {
           <div className="template-section">
             <h3>📋 Template CSV</h3>
             <pre className="template-code">
-{`NumeroDossier,Titre,Description,TypeAffaire,Priorite,Rapporteur,Status,Documents
+{`NumeroDossier,Titre,Description,TypeAffaire,Priorite,Responsable,Status,Documents
 2024-001,Affaire A,Description affaire A,Contentieux,Haute,admin,Nouveau,
 2024-002,Affaire B,Description affaire B,Constitutionnel,Normale,admin,Nouveau,`}
             </pre>
