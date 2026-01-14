@@ -20,7 +20,7 @@ export default function LoginHistoryPage() {
   const [limit, setLimit] = useState(50);
   const [showDetails, setShowDetails] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [users, setUsers] = useState<Map<string, string>>(new Map()); // userId -> userName
+  const [users, setUsers] = useState<Map<string, {userName: string, nomComplet: string}>>(new Map()); // userId -> {userName, nomComplet}
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
@@ -87,12 +87,16 @@ export default function LoginHistoryPage() {
         const data = await response.json();
         setHistory(data);
         
-        // Extrait les utilisateurs uniques et les ajoute à la liste
+        // Extrait les utilisateurs uniques et les ajoute à la liste (sans doublons)
         if (isAdmin && data.length > 0) {
-          const userMap = new Map<string, string>();
+          const userMap = new Map<string, {userName: string, nomComplet: string}>();
           data.forEach((entry: LoginHistory) => {
+            // Utilise userId comme clé pour éviter les doublons
             if (entry.id && entry.userName) {
-              userMap.set(entry.id, entry.userName);
+              userMap.set(entry.id, {
+                userName: entry.userName,
+                nomComplet: entry.nomComplet || entry.userName
+              });
             }
           });
           setUsers(userMap);
@@ -153,12 +157,10 @@ export default function LoginHistoryPage() {
             className="limit-selector"
           >
             <option value="">📊 Tous les utilisateurs</option>
-            {Array.from(history).map((entry) => (
-              entry.id && (
-                <option key={entry.id} value={entry.id}>
-                  👤 {entry.userName}
-                </option>
-              )
+            {Array.from(users.entries()).map(([userId, userInfo]) => (
+              <option key={userId} value={userId}>
+                👤 {userInfo.userName} - {userInfo.nomComplet}
+              </option>
             ))}
           </select>
         )}
