@@ -32,5 +32,6 @@ public class BulkImportResultDto
     public string Message { get; set; } = string.Empty;
     public int DossiersCreated { get; set; }
     public int DocumentsCreated { get; set; }
+    public List<string> TypeAffairesCreated { get; set; } = new();
     public List<string> Errors { get; set; } = new();
 }

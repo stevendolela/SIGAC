@@ -41,6 +41,7 @@ public class BulkImportService : IBulkImportService
     {
         var result = new BulkImportResultDto { Success = true };
         var errors = new List<string>();
+        var typeAffairesCreated = new List<string>();
         int dossiersCreated = 0;
         int documentsCreated = 0;
 
@@ -64,8 +65,9 @@ public class BulkImportService : IBulkImportService
             };
         }
 
-        // Précharge les données de référence
+        // Précharge les données de référence (cache mutable)
         var typeAffaires = await _typeAffaireRepository.GetAllAsync();
+        var typeAffairesDict = typeAffaires.ToDictionary(t => t.Nom.ToLower(), t => t);
         var (users, _) = await _userRepository.GetUsersAsync(1, 1000);
 
         foreach (var row in importData.Dossiers)
@@ -85,14 +87,30 @@ public class BulkImportService : IBulkImportService
                     continue;
                 }
 
-                // Cherche le TypeAffaire
-                var typeAffaire = typeAffaires.FirstOrDefault(t =>
-                    t.Nom.Equals(row.TypeAffaire, StringComparison.OrdinalIgnoreCase));
-
-                if (typeAffaire == null)
+                // Cherche le TypeAffaire ou le crée s'il n'existe pas
+                var typeAffaireKey = row.TypeAffaire.ToLower();
+                TypeAffaire typeAffaire;
+                
+                if (typeAffairesDict.ContainsKey(typeAffaireKey))
                 {
-                    errors.Add($"Ligne {row.NumeroDossier}: TypeAffaire '{row.TypeAffaire}' non trouvé");
-                    continue;
+                    typeAffaire = typeAffairesDict[typeAffaireKey];
+                }
+                else
+                {
+                    // Crée un nouveau TypeAffaire
+                    typeAffaire = new TypeAffaire
+                    {
+                        Nom = row.TypeAffaire,
+                        Description = $"Type d'affaire importé automatiquement le {DateTime.UtcNow:dd/MM/yyyy HH:mm}",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    
+                    await _typeAffaireRepository.AddAsync(typeAffaire);
+                    await _typeAffaireRepository.SaveChangesAsync();
+                    
+                    // Ajoute au cache et à la liste de suivi
+                    typeAffairesDict[typeAffaireKey] = typeAffaire;
+                    typeAffairesCreated.Add(typeAffaire.Nom);
                 }
 
                 // Parse Priorite
@@ -180,8 +198,15 @@ public class BulkImportService : IBulkImportService
 
         result.DossiersCreated = dossiersCreated;
         result.DocumentsCreated = documentsCreated;
+        result.TypeAffairesCreated = typeAffairesCreated;
         result.Errors = errors;
-        result.Message = $"Import terminé: {dossiersCreated} dossiers créés";
+        
+        var message = $"Import terminé: {dossiersCreated} dossiers créés";
+        if (typeAffairesCreated.Any())
+        {
+            message += $", {typeAffairesCreated.Count} types d'affaires créés";
+        }
+        result.Message = message;
         result.Success = dossiersCreated > 0;
 
         return result;
