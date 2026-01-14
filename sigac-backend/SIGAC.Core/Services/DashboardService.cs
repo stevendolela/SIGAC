@@ -45,7 +45,7 @@ public class DashboardService : IDashboardService
                 ? DateTime.UtcNow.AddDays(-periodeDays) 
                 : new DateTime(2000, 1, 1);
 
-            // Filtre par rapporteur pour les collaborateurs
+            // Filtre par responsable pour les collaborateurs
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
 
             // === Récupère TOUS les dossiers filtrés par période ET workspace ===
@@ -150,7 +150,7 @@ public class DashboardService : IDashboardService
                 // Distributions filtrées par période
                 ParType = parType,
                 ParPriorite = parPriorite,
-                ParRapporteur = parType,
+                ParResponsable = new Dictionary<string, int>(),
 
                 // Timeline
                 DossiersCreesParMois = timelineCreated,
@@ -189,13 +189,14 @@ public class DashboardService : IDashboardService
         Guid userId,
         UserRole userRole,
         DateTime dateDebut,
-        DateTime dateFin)
+        DateTime dateFin,
+        Guid? workspaceId = null)
     {
         if (dateDebut >= dateFin)
             throw new ArgumentException("La date de début doit être antérieure à la date de fin");
 
         var days = (int)(dateFin - dateDebut).TotalDays;
-        return await GetStatisticsAsync(userId, userRole, days);
+        return await GetStatisticsAsync(userId, userRole, days, workspaceId);
     }
 
     /// <summary>

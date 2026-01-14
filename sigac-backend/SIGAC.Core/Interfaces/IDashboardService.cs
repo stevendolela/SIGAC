@@ -30,7 +30,8 @@ public interface IDashboardService
         Guid userId,
         UserRole userRole,
         DateTime dateDebut,
-        DateTime dateFin);
+        DateTime dateFin,
+        Guid? workspaceId = null);
 
     /// <summary>
     /// Récupère la timeline des dossiers créés (derniers 6 mois)

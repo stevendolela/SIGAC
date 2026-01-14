@@ -18,7 +18,7 @@ public class DashboardStatisticsDto
     // === Distributions ===
     public Dictionary<string, int> ParType { get; set; } = new();
     public Dictionary<string, int> ParPriorite { get; set; } = new();
-    public Dictionary<string, int> ParRapporteur { get; set; } = new();
+    public Dictionary<string, int> ParResponsable { get; set; } = new();
     
     // === Métriques Temporelles (6 derniers mois) ===
     public List<TimelineDataDto> DossiersCreesParMois { get; set; } = new();

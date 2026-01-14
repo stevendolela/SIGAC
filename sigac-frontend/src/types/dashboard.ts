@@ -16,7 +16,7 @@ export interface DashboardStatisticsDto {
   // Distributions
   parType: Record<string, number>
   parPriorite: Record<string, number>
-  parRapporteur: Record<string, number>
+  parResponsable: Record<string, number>
 
   // Timeline
   dossiersCreesParMois: TimelineDataDto[]
