@@ -19,6 +19,8 @@ export default function LoginHistoryPage() {
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(50);
   const [showDetails, setShowDetails] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [users, setUsers] = useState<Map<string, string>>(new Map()); // userId -> userName
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
@@ -27,7 +29,7 @@ export default function LoginHistoryPage() {
     if (token) {
       loadLoginHistory();
     }
-  }, [limit, token, isAdmin]);
+  }, [limit, token, isAdmin, selectedUserId]);
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     // Simple notification using browser alert
@@ -59,8 +61,17 @@ export default function LoginHistoryPage() {
   const loadLoginHistory = async () => {
     setLoading(true);
     try {
-      // Détermine l'endpoint selon le rôle
-      const endpoint = isAdmin ? 'LoginHistory/all' : 'LoginHistory/my-history';
+      let endpoint = 'LoginHistory/my-history';
+      
+      // Détermine l'endpoint selon le rôle et filtre
+      if (isAdmin) {
+        if (selectedUserId) {
+          endpoint = `LoginHistory/user/${selectedUserId}`;
+        } else {
+          endpoint = 'LoginHistory/all';
+        }
+      }
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:5210'}/${endpoint}?limit=${limit}`,
         {
@@ -75,6 +86,17 @@ export default function LoginHistoryPage() {
       if (response.ok) {
         const data = await response.json();
         setHistory(data);
+        
+        // Extrait les utilisateurs uniques et les ajoute à la liste
+        if (isAdmin && data.length > 0) {
+          const userMap = new Map<string, string>();
+          data.forEach((entry: LoginHistory) => {
+            if (entry.id && entry.userName) {
+              userMap.set(entry.id, entry.userName);
+            }
+          });
+          setUsers(userMap);
+        }
       } else {
         showNotification('Erreur lors de la récupération de l\'historique', 'error');
       }
@@ -124,6 +146,22 @@ export default function LoginHistoryPage() {
       </div>
 
       <div className="login-history-controls">
+        {isAdmin && (
+          <select 
+            value={selectedUserId} 
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="limit-selector"
+          >
+            <option value="">📊 Tous les utilisateurs</option>
+            {Array.from(history).map((entry) => (
+              entry.id && (
+                <option key={entry.id} value={entry.id}>
+                  👤 {entry.userName}
+                </option>
+              )
+            ))}
+          </select>
+        )}
         <select 
           value={limit} 
           onChange={(e) => setLimit(Number(e.target.value))}
