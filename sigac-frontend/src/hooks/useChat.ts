@@ -50,7 +50,10 @@ export function useChatConversations() {
         setError(err.message || 'Erreur lors du chargement des conversations');
         setConversations([]); // Tableau vide en cas d'erreur
         if (err.response?.status === 401) {
-          window.location.href = '/login';
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/';
         }
       }
       setLoading(false);
@@ -209,7 +212,10 @@ export function useChatGroups() {
         setError(err.message || 'Erreur lors du chargement des groupes');
         setGroups([]); // Tableau vide en cas d'erreur
         if (err.response?.status === 401) {
-          window.location.href = '/login';
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/';
         }
       }
       setLoading(false);
