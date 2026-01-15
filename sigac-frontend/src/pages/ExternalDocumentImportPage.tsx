@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ExternalDocumentImportPage.css';
 
 type ImportTab = 'ftp' | 'http';
 type DossierMappingStrategy = 0 | 1 | 2 | 3;
+
+interface DossierOption {
+  id: string;
+  numeroDossier: string;
+  titre: string;
+}
 
 interface FTPConfig {
   host: string;
@@ -97,6 +103,43 @@ const ExternalDocumentImportPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [testConnectionLoading, setTestConnectionLoading] = useState(false);
   const [testConnectionResult, setTestConnectionResult] = useState<string>('');
+  const [dossiers, setDossiers] = useState<DossierOption[]>([]);
+  const [loadingDossiers, setLoadingDossiers] = useState(true);
+
+  // Charger les dossiers au démarrage
+  useEffect(() => {
+    const fetchDossiers = async () => {
+      try {
+        const response = await fetch(
+          'https://sigac-api.onrender.com/api/Dossiers?page=1&pageSize=100',
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const dossiersOptions: DossierOption[] = (data.data || []).map((d: any) => ({
+            id: d.id,
+            numeroDossier: d.numeroDossier,
+            titre: d.titre,
+          }));
+          setDossiers(dossiersOptions);
+        }
+      } catch (err) {
+        console.error('Erreur chargement dossiers:', err);
+      } finally {
+        setLoadingDossiers(false);
+      }
+    };
+
+    if (token) {
+      fetchDossiers();
+    } else {
+      setLoadingDossiers(false);
+    }
+  }, [token]);
 
   // Test FTP Connection
   const handleTestFTPConnection = async () => {
@@ -190,6 +233,24 @@ const ExternalDocumentImportPage: React.FC = () => {
     setError('');
     setResult(null);
 
+    // Validation
+    if (!ftpConfig.host) {
+      setError('❌ Veuillez entrer l\'hôte FTP');
+      setLoading(false);
+      return;
+    }
+
+    if (!ftpConfig.username || !ftpConfig.password) {
+      setError('❌ Veuillez entrer les identifiants FTP');
+      setLoading(false);
+      return;
+    }
+
+    if (importConfig.dossierMappingStrategy === 0 && !importConfig.defaultDossierId) {
+      setError('❌ Veuillez sélectionner un dossier par défaut pour la stratégie 0');
+      setLoading(false);
+      return;
+    }
     if (!token) {
       setError('❌ Token manquant - Reconnexion requise');
       setLoading(false);
@@ -236,6 +297,19 @@ const ExternalDocumentImportPage: React.FC = () => {
     setLoading(true);
     setError('');
     setResult(null);
+
+    // Validation
+    if (!httpConfig.baseUrl) {
+      setError('❌ Veuillez entrer l\'URL de base HTTP');
+      setLoading(false);
+      return;
+    }
+
+    if (importConfig.dossierMappingStrategy === 0 && !importConfig.defaultDossierId) {
+      setError('❌ Veuillez sélectionner un dossier par défaut pour la stratégie 0');
+      setLoading(false);
+      return;
+    }
 
     if (!token) {
       setError('❌ Token manquant - Reconnexion requise');
@@ -506,19 +580,31 @@ const ExternalDocumentImportPage: React.FC = () => {
           {/* Default Dossier Selection (shown when strategy is DefaultDossier) */}
           {importConfig.dossierMappingStrategy === 0 && (
             <div className="form-group">
-              <label>Dossier par défaut (requis pour stratégie 0)</label>
-              <input
-                type="text"
-                placeholder="UUID du dossier"
-                value={importConfig.defaultDossierId || ''}
-                onChange={(e) =>
-                  setImportConfig({
-                    ...importConfig,
-                    defaultDossierId: e.target.value,
-                  })
-                }
-              />
-              <small>Entrez l'UUID du dossier où importer les documents</small>
+              <label>Dossier par défaut (requis pour stratégie 0) *</label>
+              {loadingDossiers ? (
+                <p className="text-muted">Chargement des dossiers...</p>
+              ) : dossiers.length === 0 ? (
+                <p className="text-error">❌ Aucun dossier disponible</p>
+              ) : (
+                <select
+                  value={importConfig.defaultDossierId || ''}
+                  onChange={(e) =>
+                    setImportConfig({
+                      ...importConfig,
+                      defaultDossierId: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">-- Sélectionnez un dossier --</option>
+                  {dossiers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.numeroDossier} - {d.titre}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <small>Sélectionnez le dossier cible pour l'import</small>
             </div>
           )}
 
