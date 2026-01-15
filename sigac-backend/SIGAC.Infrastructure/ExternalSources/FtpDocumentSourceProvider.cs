@@ -122,7 +122,7 @@ public class FtpDocumentSourceProvider : IExternalDocumentSourceProvider
             {
                 using (var ms = new MemoryStream())
                 {
-                    var result = await client.DownloadStream(ms, remoteFilePath, cancellationToken: cancellationToken);
+                    var result = await client.DownloadStream(ms, remoteFilePath);
                     if (!result)
                         throw new InvalidOperationException($"Échec du téléchargement: {remoteFilePath}");
                     return ms.ToArray();
@@ -147,7 +147,7 @@ public class FtpDocumentSourceProvider : IExternalDocumentSourceProvider
             await client.AutoConnect(cancellationToken);
 
             var stream = new MemoryStream();
-            var result = await client.DownloadStream(stream, remoteFilePath, cancellationToken: cancellationToken);
+            var result = await client.DownloadStream(stream, remoteFilePath);
             if (!result)
             {
                 await client.Disconnect(cancellationToken);
