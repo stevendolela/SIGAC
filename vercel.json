@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "sigac-frontend",
-  "buildCommand": "cd sigac-frontend && rm -rf node_modules/.vite dist && npm ci && npm run build",
+  "buildCommand": "cd sigac-frontend && rm -rf node_modules/.vite dist .cache && npm ci --force && npm run build -- --force",
   "outputDirectory": "sigac-frontend/dist",
   "devCommand": "cd sigac-frontend && npm run dev",
   "framework": "vite",
