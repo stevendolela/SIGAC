@@ -22,6 +22,7 @@ interface HTTPConfig {
 interface ImportConfig {
   sourcePath: string;
   dossierMappingStrategy: DossierMappingStrategy;
+  defaultDossierId?: string;  // For DefaultDossier strategy
   maxFileSize?: number;
   allowedExtensions?: string[];
   filePattern?: string;
@@ -501,6 +502,25 @@ const ExternalDocumentImportPage: React.FC = () => {
               <option value={3}>3 - Créer nouveaux dossiers</option>
             </select>
           </div>
+
+          {/* Default Dossier Selection (shown when strategy is DefaultDossier) */}
+          {importConfig.dossierMappingStrategy === 0 && (
+            <div className="form-group">
+              <label>Dossier par défaut (requis pour stratégie 0)</label>
+              <input
+                type="text"
+                placeholder="UUID du dossier"
+                value={importConfig.defaultDossierId || ''}
+                onChange={(e) =>
+                  setImportConfig({
+                    ...importConfig,
+                    defaultDossierId: e.target.value,
+                  })
+                }
+              />
+              <small>Entrez l'UUID du dossier où importer les documents</small>
+            </div>
+          )}
 
           <div className="form-group">
             <label>Extensions autorisées (séparées par virgule)</label>
