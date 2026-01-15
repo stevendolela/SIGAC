@@ -49,6 +49,19 @@ const ExternalDocumentImportPage: React.FC = () => {
   // Get token from localStorage
   const token = localStorage.getItem('token');
 
+  // If no token, show error
+  if (!token) {
+    return (
+      <div className="external-import-page">
+        <div className="import-container">
+          <div className="alert alert-error">
+            ❌ Vous devez être authentifié pour accéder à cette page
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // FTP State
   const [ftpConfig, setFtpConfig] = useState<FTPConfig>({
     host: '',
@@ -87,6 +100,12 @@ const ExternalDocumentImportPage: React.FC = () => {
     setTestConnectionLoading(true);
     setTestConnectionResult('');
 
+    if (!token) {
+      setTestConnectionResult('❌ Token manquant - Reconnexion requise');
+      setTestConnectionLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(
         'https://sigac-api.onrender.com/api/ExternalDocumentImport/test-ftp-connection',
@@ -100,10 +119,16 @@ const ExternalDocumentImportPage: React.FC = () => {
         }
       );
 
+      if (response.status === 401) {
+        setTestConnectionResult('❌ Authentification expirée - Reconnexion requise');
+        return;
+      }
+
       if (response.ok) {
-        setTestConnectionResult('✅ Connexion FTP réussie !');
-      } else {
         const data = await response.json();
+        setTestConnectionResult(data.isConnected ? `✅ ${data.message}` : `❌ ${data.message}`);
+      } else {
+        const data = await response.json().catch(() => ({}));
         setTestConnectionResult(`❌ Erreur: ${data.message || 'Connexion échouée'}`);
       }
     } catch (err: any) {
@@ -118,6 +143,12 @@ const ExternalDocumentImportPage: React.FC = () => {
     setTestConnectionLoading(true);
     setTestConnectionResult('');
 
+    if (!token) {
+      setTestConnectionResult('❌ Token manquant - Reconnexion requise');
+      setTestConnectionLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(
         'https://sigac-api.onrender.com/api/ExternalDocumentImport/test-http-connection',
@@ -131,10 +162,16 @@ const ExternalDocumentImportPage: React.FC = () => {
         }
       );
 
+      if (response.status === 401) {
+        setTestConnectionResult('❌ Authentification expirée - Reconnexion requise');
+        return;
+      }
+
       if (response.ok) {
-        setTestConnectionResult('✅ Connexion HTTP réussie !');
-      } else {
         const data = await response.json();
+        setTestConnectionResult(data.isConnected ? `✅ ${data.message}` : `❌ ${data.message}`);
+      } else {
+        const data = await response.json().catch(() => ({}));
         setTestConnectionResult(`❌ Erreur: ${data.message || 'Connexion échouée'}`);
       }
     } catch (err: any) {
@@ -149,6 +186,12 @@ const ExternalDocumentImportPage: React.FC = () => {
     setLoading(true);
     setError('');
     setResult(null);
+
+    if (!token) {
+      setError('❌ Token manquant - Reconnexion requise');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -166,11 +209,16 @@ const ExternalDocumentImportPage: React.FC = () => {
         }
       );
 
+      if (response.status === 401) {
+        setError('❌ Authentification expirée - Reconnexion requise');
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         setResult(data);
       } else {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         setError(data.message || 'Erreur lors de l\'import FTP');
       }
     } catch (err: any) {
@@ -185,6 +233,12 @@ const ExternalDocumentImportPage: React.FC = () => {
     setLoading(true);
     setError('');
     setResult(null);
+
+    if (!token) {
+      setError('❌ Token manquant - Reconnexion requise');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -202,11 +256,16 @@ const ExternalDocumentImportPage: React.FC = () => {
         }
       );
 
+      if (response.status === 401) {
+        setError('❌ Authentification expirée - Reconnexion requise');
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         setResult(data);
       } else {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         setError(data.message || 'Erreur lors de l\'import HTTP');
       }
     } catch (err: any) {
