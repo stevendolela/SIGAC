@@ -14,7 +14,8 @@ import {
   Palette,
   FileType,
   DoorOpen,
-  History
+  History,
+  Download
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -40,6 +41,7 @@ type ViewType =
   | 'document-logs'
   | 'login-history'
   | 'import-dossiers'
+  | 'external-import'
 
 interface MenuItem {
   view: ViewType
@@ -157,6 +159,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           label: 'Import en masse',
           icon: UserCircle,
           color: '#3b82f6'
+        },
+        {
+          view: 'external-import' as ViewType,
+          label: 'Import FTP/HTTP',
+          icon: Download,
+          color: '#06b6d4'
         },
         {
           view: 'profils' as ViewType,

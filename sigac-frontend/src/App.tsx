@@ -27,6 +27,7 @@ import LogoManagementPage from './pages/LogoManagementPage'
 import HistoriqueDossiersPage from './pages/DocumentLogsPage'
 import LoginHistoryPage from './pages/LoginHistoryPage'
 import ImportDossiersPage from './pages/ImportDossiersPage'
+import ExternalDocumentImportPage from './pages/ExternalDocumentImportPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
@@ -45,7 +46,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings' | 'document-logs' | 'login-history' | 'import-dossiers'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'workspace-settings' | 'document-logs' | 'login-history' | 'import-dossiers' | 'external-import'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -215,6 +216,7 @@ export default function App() {
           {view === 'workspace-settings' && <WorkspaceSettings />}
           {view === 'login-history' && <LoginHistoryPage />}
           {view === 'import-dossiers' && <ImportDossiersPage />}
+          {view === 'external-import' && <ExternalDocumentImportPage />}
           
           {/* Routes additionnelles (édition avancée utilisateur) */}
           <Routes>
