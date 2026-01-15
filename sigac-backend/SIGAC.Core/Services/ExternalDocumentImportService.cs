@@ -263,7 +263,7 @@ public class ExternalDocumentImportService : IExternalDocumentImportService
         // Extension
         if (config.AllowedExtensions.Any())
         {
-            var ext = Path.GetExtension(remoteFile.FileName).ToLower();
+            var ext = Path.GetExtension(remoteFile.FileName).TrimStart('.').ToLower();
             if (!config.AllowedExtensions.Contains(ext))
             {
                 throw new InvalidOperationException(
@@ -352,7 +352,7 @@ public class ExternalDocumentImportService : IExternalDocumentImportService
         {
             filtered = filtered.Where(f =>
             {
-                var ext = Path.GetExtension(f.FileName).ToLower();
+                var ext = Path.GetExtension(f.FileName).TrimStart('.').ToLower();
                 return config.AllowedExtensions.Contains(ext);
             });
         }
