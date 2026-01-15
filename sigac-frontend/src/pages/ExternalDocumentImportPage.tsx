@@ -85,6 +85,8 @@ const ExternalDocumentImportPage: React.FC = () => {
     dossierMappingStrategy: 0,
     maxFileSize: 52428800,
     allowedExtensions: ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'jpg', 'png'],
+    filePattern: '',
+    excludePattern: '',
   });
 
   // UI State
@@ -588,22 +590,22 @@ const ExternalDocumentImportPage: React.FC = () => {
               </div>
 
               <div className="result-card">
-                <div className="result-value">{result.successRate.toFixed(2)}%</div>
+                <div className="result-value">{result.successRate ? result.successRate.toFixed(2) : 0}%</div>
                 <div className="result-label">Taux de succès</div>
               </div>
 
               <div className="result-card">
-                <div className="result-value">{result.totalSize}</div>
+                <div className="result-value">{result.totalSize || '0 B'}</div>
                 <div className="result-label">Taille totale</div>
               </div>
 
               <div className="result-card">
-                <div className="result-value">{result.durationSeconds.toFixed(2)}s</div>
+                <div className="result-value">{result.durationSeconds ? result.durationSeconds.toFixed(2) : 0}s</div>
                 <div className="result-label">Durée</div>
               </div>
             </div>
 
-            {result.errors.length > 0 && (
+            {result.errors && result.errors.length > 0 && (
               <div className="errors-section">
                 <h3>Erreurs ({result.errors.length})</h3>
                 <ul className="error-list">
