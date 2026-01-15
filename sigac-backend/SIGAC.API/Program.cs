@@ -155,6 +155,7 @@ builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBulkImportService, BulkImportService>();
+builder.Services.AddScoped<IBulkDocumentImportService, BulkDocumentImportService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
