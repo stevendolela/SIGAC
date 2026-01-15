@@ -46,6 +46,7 @@ interface ImportResult {
 }
 
 const ExternalDocumentImportPage: React.FC = () => {
+  // Get token from localStorage
   const token = localStorage.getItem('token');
 
   // FTP State
