@@ -197,6 +197,7 @@ export default function App() {
               )}
             </>
           )}
+          
           {view === 'create-dossier' && <CreateDossierPage onSuccess={() => setView('dossiers')} />}
           {view === 'recherche' && <RechercheAvanceePage />}
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}

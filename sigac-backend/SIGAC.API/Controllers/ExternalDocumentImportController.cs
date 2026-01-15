@@ -79,7 +79,7 @@ public class ExternalDocumentImportController : ControllerBase
                 request.FtpConfig.Port,
                 request.FtpConfig.Username,
                 request.FtpConfig.Password,
-                request.FtpConfig.UseSsl,
+                request.FtpConfig.UseSftp,
                 request.FtpConfig.BasePath);
 
             // Lance l'import
@@ -151,11 +151,16 @@ public class ExternalDocumentImportController : ControllerBase
 
             _logger.LogInformation($"[ExternalImport] Démarrage import HTTP pour l'utilisateur {userId}");
 
+            // Convertir les millisecondes en secondes (par défaut 30 secondes)
+            int timeoutSeconds = request.HttpConfig.Timeout.HasValue ? (request.HttpConfig.Timeout.Value / 1000) : 30;
+            if (timeoutSeconds < 1) timeoutSeconds = 1;
+            if (timeoutSeconds > 300) timeoutSeconds = 300; // Max 5 minutes
+
             // Crée le provider HTTP
             var httpProvider = new HttpDocumentSourceProvider(
                 request.HttpConfig.BaseUrl,
                 request.HttpConfig.Headers,
-                request.HttpConfig.Timeout);
+                timeoutSeconds);
 
             // Lance l'import
             var result = await _externalImportService.ImportFromSourceAsync(
@@ -204,7 +209,7 @@ public class ExternalDocumentImportController : ControllerBase
                 config.Port,
                 config.Username,
                 config.Password,
-                config.UseSsl,
+                config.UseSftp,
                 config.BasePath);
 
             var isConnected = await ftpProvider.TestConnectionAsync(cancellationToken);
@@ -212,7 +217,7 @@ public class ExternalDocumentImportController : ControllerBase
             return Ok(new TestConnectionResponseDto
             {
                 IsConnected = isConnected,
-                SourceType = "FTP",
+                SourceType = config.UseSftp ? "SFTP" : "FTP",
                 Message = isConnected ? "Connexion réussie" : "Impossible de se connecter"
             });
         }
@@ -235,10 +240,15 @@ public class ExternalDocumentImportController : ControllerBase
     {
         try
         {
+            // Convertir les millisecondes en secondes (par défaut 30 secondes)
+            int timeoutSeconds = config.Timeout.HasValue ? (config.Timeout.Value / 1000) : 30;
+            if (timeoutSeconds < 1) timeoutSeconds = 1;
+            if (timeoutSeconds > 300) timeoutSeconds = 300; // Max 5 minutes
+
             var httpProvider = new HttpDocumentSourceProvider(
                 config.BaseUrl,
                 config.Headers,
-                config.Timeout);
+                timeoutSeconds);
 
             var isConnected = await httpProvider.TestConnectionAsync(cancellationToken);
 
