@@ -9,24 +9,31 @@ namespace SIGAC.Core.DTOs;
 public class FtpConnectionConfigDto
 {
     /// <summary>Adresse IP ou domaine du serveur FTP</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("host")]
     public string Host { get; set; } = string.Empty;
 
     /// <summary>Port du serveur (21 pour FTP, 22 pour SFTP)</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("port")]
     public int Port { get; set; } = 21;
 
     /// <summary>Nom d'utilisateur</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("username")]
     public string Username { get; set; } = string.Empty;
 
     /// <summary>Mot de passe</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
 
     /// <summary>Utiliser SFTP à la place de FTP standard</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("useSftp")]
     public bool UseSftp { get; set; } = false;
 
     /// <summary>Chemin de base sur le serveur</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("basePath")]
     public string BasePath { get; set; } = "/";
 
     /// <summary>Timeout de connexion en secondes</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("timeoutSeconds")]
     public int TimeoutSeconds { get; set; } = 30;
 }
 
@@ -36,21 +43,27 @@ public class FtpConnectionConfigDto
 public class HttpConnectionConfigDto
 {
     /// <summary>URL de base du serveur HTTP</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("baseUrl")]
     public string BaseUrl { get; set; } = string.Empty;
 
     /// <summary>Headers HTTP personnalisés (ex: Authorization, API-Key)</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("headers")]
     public Dictionary<string, string>? Headers { get; set; }
 
     /// <summary>Timeout de requête en millisecondes</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("timeout")]
     public int? Timeout { get; set; }
 
     /// <summary>Authentification Bearer token</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("bearerToken")]
     public string? BearerToken { get; set; }
 
     /// <summary>Clé API personnalisée</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("apiKey")]
     public string? ApiKey { get; set; }
 
     /// <summary>Nom du header pour la clé API (ex: X-API-Key)</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("apiKeyHeaderName")]
     public string? ApiKeyHeaderName { get; set; }
 }
 
@@ -98,37 +111,44 @@ public class ExternalDocumentImportConfigDto
     /// <summary>
     /// Chemin ou pattern sur la source (ex: /uploads/dossiers, *.pdf)
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("sourcePath")]
     public string SourcePath { get; set; } = "/";
 
     /// <summary>
     /// Pattern regex pour filtrer les fichiers à importer
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("filePattern")]
     public string? FilePattern { get; set; }
 
     /// <summary>
     /// Extensions autorisées (ex: .pdf, .docx)
     /// Vide = toutes les extensions acceptées
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("allowedExtensions")]
     public List<string> AllowedExtensions { get; set; } = new();
 
     /// <summary>
     /// Patterns de fichiers à exclure (ex: "temp", "backup", ".tmp")
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("exclusionPatterns")]
     public List<string> ExclusionPatterns { get; set; } = new();
 
     /// <summary>
     /// Taille maximale des fichiers en MB
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("maxFileSizeMB")]
     public int MaxFileSizeMB { get; set; } = 500;
 
     /// <summary>
     /// Importer récursivement les sous-dossiers
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("recursiveImport")]
     public bool RecursiveImport { get; set; } = true;
 
     /// <summary>
     /// Ignorer les fichiers cachés/système
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("ignoreHiddenFiles")]
     public bool IgnoreHiddenFiles { get; set; } = true;
 
     /// <summary>
@@ -139,6 +159,7 @@ public class ExternalDocumentImportConfigDto
     /// <summary>
     /// Dossier par défaut pour DefaultDossier strategy
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("defaultDossierId")]
     public Guid? DefaultDossierId { get; set; }
 
     /// <summary>
