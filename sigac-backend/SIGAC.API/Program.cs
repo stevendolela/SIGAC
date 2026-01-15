@@ -152,6 +152,7 @@ builder.Services.AddScoped<ILoginHistoryService, LoginHistoryService>();
 builder.Services.AddScoped<ITypeAffaireService, TypeAffaireService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatGroupService, ChatGroupService>();
+builder.Services.AddScoped<IVideoCallService, VideoCallService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBulkImportService, BulkImportService>();
@@ -162,6 +163,7 @@ builder.Services.AddScoped<IExternalDocumentImportService, ExternalDocumentImpor
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IVideoCallRepository, VideoCallRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IPasswordChangeRequestRepository, PasswordChangeRequestRepository>();
 builder.Services.AddScoped<IChatGroupRepository, ChatGroupRepository>();

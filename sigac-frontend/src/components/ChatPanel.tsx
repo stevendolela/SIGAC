@@ -3,6 +3,7 @@ import { useChatConversations, useChatConversation, useUnreadCount } from '../ho
 import { chatApi } from '../api/chatApi';
 import { ChatConversationDto, ChatConversationDetailDto } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
+import { VideoCallModal } from './VideoCallModal';
 import '../styles/chat.css';
 import '../styles/create-chat-modal.css';
 
@@ -11,6 +12,9 @@ export const ChatPanel: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isVideoCallModalOpen, setIsVideoCallModalOpen] = useState(false);
+  const [videoCallReceiverId, setVideoCallReceiverId] = useState<string>('');
+  const [videoCallReceiverName, setVideoCallReceiverName] = useState<string>('');
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [prevConversationsRef, setPrevConversationsRef] = useState<string | null>(null);
   const [prevMessagesRef, setPrevMessagesRef] = useState<string | null>(null);
@@ -110,6 +114,21 @@ export const ChatPanel: React.FC = () => {
     refetchConversations();
   };
 
+  const handleStartVideoCall = () => {
+    if (!conversation) return;
+
+    // Déterminer l'ID et le nom de l'autre utilisateur
+    const currentUserId = localStorage.getItem('userId') || '';
+    const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
+    const otherUserName = conversation.user1Id === currentUserId 
+      ? `${conversation.user2Nom} ${conversation.user2Prenom}`
+      : `${conversation.user1Nom} ${conversation.user1Prenom}`;
+
+    setVideoCallReceiverId(otherUserId);
+    setVideoCallReceiverName(otherUserName);
+    setIsVideoCallModalOpen(true);
+  };
+
   const getOtherUserName = (conv: ChatConversationDto): string => {
     // À adapter selon l'ID de l'utilisateur connecté
     // Pour l'instant, on affiche les deux noms
@@ -180,13 +199,22 @@ export const ChatPanel: React.FC = () => {
               <div className="conversation-detail">
                 <div className="conversation-detail-header">
                   <h4>{getOtherUserName(conversations.find(c => c.id === selectedConversation) || {} as ChatConversationDto)}</h4>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteConversation(selectedConversation)}
-                    title="Supprimer la conversation"
-                  >
-                    🗑️
-                  </button>
+                  <div className="header-actions">
+                    <button
+                      className="video-call-btn"
+                      onClick={handleStartVideoCall}
+                      title="Appel vidéo"
+                    >
+                      📹
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteConversation(selectedConversation)}
+                      title="Supprimer la conversation"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
 
                 <div className="messages-container" ref={messagesContainerRef}>
@@ -240,6 +268,15 @@ export const ChatPanel: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onConversationCreated={handleConversationCreated}
+      />
+
+      {/* Modal pour appel vidéo */}
+      <VideoCallModal
+        isOpen={isVideoCallModalOpen}
+        onClose={() => setIsVideoCallModalOpen(false)}
+        receiverId={videoCallReceiverId}
+        receiverName={videoCallReceiverName}
+        conversationId={selectedConversation || undefined}
       />
     </div>
   );

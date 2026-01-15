@@ -32,6 +32,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ChatGroupMember> ChatGroupMembers { get; set; }
     public DbSet<GroupMessage> GroupMessages { get; set; }
     public DbSet<ChatAttachment> ChatAttachments { get; set; }
+    public DbSet<VideoCall> VideoCalls { get; set; }
     
     // Entities GED (transformation)
     public DbSet<Workspace> Workspaces { get; set; }
