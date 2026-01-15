@@ -204,7 +204,7 @@ export const ChatPanel: React.FC = () => {
                     <button
                       className="video-call-btn"
                       onClick={handleStartVideoCall}
-                      title="Appel vidéo"
+                      title="Démarrer un appel vidéo"
                     >
                       📹
                     </button>
