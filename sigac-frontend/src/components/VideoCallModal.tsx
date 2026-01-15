@@ -32,7 +32,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   // Configuration ICE servers (STUN/TURN)
   const iceServers: RTCConfiguration = {

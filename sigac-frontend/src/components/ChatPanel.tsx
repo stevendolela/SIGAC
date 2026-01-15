@@ -122,11 +122,11 @@ export const ChatPanel: React.FC = () => {
     const currentUserId = localStorage.getItem('userId') || '';
     const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
     const otherUserName = conversation.user1Id === currentUserId 
-      ? `${conversation.user2Nom} ${conversation.user2Prenom}`
-      : `${conversation.user1Nom} ${conversation.user1Prenom}`;
+      ? conversation.user2Username
+      : conversation.user1Username;
 
     setVideoCallReceiverId(otherUserId);
-    setVideoCallReceiverName(otherUserName);
+    setVideoCallReceiverName(otherUserName || 'Utilisateur inconnu');
     setIsVideoCallModalOpen(true);
   };
 
