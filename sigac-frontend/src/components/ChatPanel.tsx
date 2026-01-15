@@ -6,6 +6,7 @@ import { CreateChatModal } from './CreateChatModal';
 import { VideoCallModal } from './VideoCallModal';
 import '../styles/chat.css';
 import '../styles/create-chat-modal.css';
+import '../styles/video-call.css';
 
 export const ChatPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

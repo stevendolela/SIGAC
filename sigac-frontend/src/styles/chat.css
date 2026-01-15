@@ -237,15 +237,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
 
-  h4 {
-    margin: 0;
-    font-size: 14px;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.conversation-detail-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
@@ -267,16 +267,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  }
+.video-call-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
 
-  &:active {
-    transform: translateY(0);
-  }
+.video-call-btn:active {
+  transform: translateY(0);
 }
 
 .delete-btn {
@@ -287,6 +287,11 @@
   padding: 4px 8px;
   color: #999;
   transition: color 0.2s ease;
+}
+
+.delete-btn:hover {
+  color: #ff6b6b;
+}
 
   &:hover {
     color: #ff6b6b;
