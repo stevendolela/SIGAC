@@ -5,9 +5,11 @@ import { chatAttachmentApi } from '../api/chatAttachmentApi';
 import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
+import { VideoCallModal } from './VideoCallModal';
 import StatusSelector from './StatusSelector';
 import { AudioPlayer } from './AudioPlayer';
 import '../styles/unified-chat.css';
+import '../styles/video-call.css';
 
 type ChatTab = 'conversations' | 'groups';
 type ChatType = 'conversation' | 'group';
@@ -470,6 +472,9 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [messageInput, setMessageInput] = useState('');
   const [isCreateConvModalOpen, setIsCreateConvModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [isVideoCallModalOpen, setIsVideoCallModalOpen] = useState(false);
+  const [videoCallReceiverId, setVideoCallReceiverId] = useState<string>('');
+  const [videoCallReceiverName, setVideoCallReceiverName] = useState<string>('');
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
   const [searchQuery, setSearchQuery] = useState('');
@@ -775,6 +780,21 @@ const UnreadBadge: React.FC = React.memo(() => {
     } catch (error) {
       console.error('Erreur:', error);
     }
+  };
+
+  const handleStartVideoCall = () => {
+    if (!conversation || selectedChat?.type !== 'conversation') return;
+
+    // Déterminer l'ID et le nom de l'autre utilisateur
+    const currentUserId = localStorage.getItem('userId') || '';
+    const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
+    const otherUserName = conversation.user1Id === currentUserId 
+      ? `${conversation.user2Nom} ${conversation.user2Prenom}`
+      : `${conversation.user1Nom} ${conversation.user1Prenom}`;
+
+    setVideoCallReceiverId(otherUserId);
+    setVideoCallReceiverName(otherUserName);
+    setIsVideoCallModalOpen(true);
   };
 
   const handleConversationCreated = (convId: string) => {
@@ -1430,19 +1450,30 @@ const UnreadBadge: React.FC = React.memo(() => {
                     )}
                     {selectedChat.type === 'group' && groups.find(g => g.id === selectedChat.id)?.name}
                   </h3>
-                  <button
-                    className="delete-btn"
-                    onClick={() => {
-                      if (selectedChat.type === 'conversation') {
-                        handleDeleteConversation(selectedChat.id);
-                      } else {
-                        handleDeleteGroup(selectedChat.id);
-                      }
-                    }}
-                    title="Supprimer"
-                  >
-                    🗑️
-                  </button>
+                  <div className="header-actions">
+                    {selectedChat.type === 'conversation' && (
+                      <button
+                        className="video-call-btn"
+                        onClick={handleStartVideoCall}
+                        title="Démarrer un appel vidéo"
+                      >
+                        📹
+                      </button>
+                    )}
+                    <button
+                      className="delete-btn"
+                      onClick={() => {
+                        if (selectedChat.type === 'conversation') {
+                          handleDeleteConversation(selectedChat.id);
+                        } else {
+                          handleDeleteGroup(selectedChat.id);
+                        }
+                      }}
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
 
                 <div className="messages-container" ref={messagesContainerRef}>
@@ -1888,6 +1919,15 @@ const UnreadBadge: React.FC = React.memo(() => {
         isOpen={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
         onGroupCreated={handleGroupCreated}
+      />
+
+      {/* Modal pour appel vidéo */}
+      <VideoCallModal
+        isOpen={isVideoCallModalOpen}
+        onClose={() => setIsVideoCallModalOpen(false)}
+        receiverId={videoCallReceiverId}
+        receiverName={videoCallReceiverName}
+        conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
       />
 
       {/* Modal de prévisualisation des fichiers */}
