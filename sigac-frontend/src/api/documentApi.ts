@@ -29,6 +29,12 @@ export const documentApi = {
     return resp.data
   },
   async download(id: string) {
+    // Validation: UUID doit faire 36 caractères (avec tirets)
+    if (!id || id.length < 36) {
+      console.error('Invalid document ID format:', id, '(length:', id?.length, ')');
+      throw new Error('ID du document invalide');
+    }
+    console.log('Downloading document with ID:', id);
     const resp = await api.get(`/Documents/download/${id}`, { responseType: 'blob' })
     return resp.data as Blob
   },
