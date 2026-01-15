@@ -168,7 +168,7 @@ public class ExternalDocumentImportService : IExternalDocumentImportService
         if (dossier == null)
         {
             throw new InvalidOperationException(
-                $"Impossible d'associer le fichier à un dossier. Stratégie: {config.DossierMappingStrategy}");
+                $"Impossible d'associer le fichier à un dossier. Stratégie: {config.DossierMappingStrategy}, DefaultDossierId: {config.DefaultDossierId}");
         }
 
         // Télécharge le fichier
@@ -294,9 +294,13 @@ public class ExternalDocumentImportService : IExternalDocumentImportService
         if (config.DossierMappingStrategy == DossierMappingStrategy.DefaultDossier)
         {
             if (!config.DefaultDossierId.HasValue)
+            {
+                // DefaultDossierId is null or empty
                 return null;
+            }
 
-            return await _dossierRepository.GetByIdAsync(config.DefaultDossierId.Value);
+            var dossier = await _dossierRepository.GetByIdAsync(config.DefaultDossierId.Value);
+            return dossier;
         }
 
         if (config.DossierMappingStrategy == DossierMappingStrategy.FolderName)
