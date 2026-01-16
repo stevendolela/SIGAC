@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import api from './api-client';
 import { VideoCallDto, InitiateVideoCallDto, VideoCallSignalingDto } from '../types/videoCall';
 
 class VideoCallApi {
@@ -8,7 +8,7 @@ class VideoCallApi {
    * Initier un appel vidéo
    */
   async initiateCall(dto: InitiateVideoCallDto): Promise<VideoCallDto> {
-    const response = await apiClient.post(`${this.baseUrl}/initiate`, dto);
+    const response = await api.post(`${this.baseUrl}/initiate`, dto);
     return response.data;
   }
 
@@ -16,7 +16,7 @@ class VideoCallApi {
    * Répondre à un appel vidéo (accepter)
    */
   async answerCall(callId: string): Promise<VideoCallDto> {
-    const response = await apiClient.post(`${this.baseUrl}/${callId}/answer`);
+    const response = await api.post(`${this.baseUrl}/${callId}/answer`);
     return response.data;
   }
 
@@ -24,7 +24,7 @@ class VideoCallApi {
    * Rejeter un appel vidéo
    */
   async rejectCall(callId: string): Promise<VideoCallDto> {
-    const response = await apiClient.post(`${this.baseUrl}/${callId}/reject`);
+    const response = await api.post(`${this.baseUrl}/${callId}/reject`);
     return response.data;
   }
 
@@ -32,7 +32,7 @@ class VideoCallApi {
    * Terminer un appel vidéo en cours
    */
   async endCall(callId: string): Promise<VideoCallDto> {
-    const response = await apiClient.post(`${this.baseUrl}/${callId}/end`);
+    const response = await api.post(`${this.baseUrl}/${callId}/end`);
     return response.data;
   }
 
@@ -40,7 +40,7 @@ class VideoCallApi {
    * Annuler un appel vidéo (avant réponse)
    */
   async cancelCall(callId: string): Promise<VideoCallDto> {
-    const response = await apiClient.post(`${this.baseUrl}/${callId}/cancel`);
+    const response = await api.post(`${this.baseUrl}/${callId}/cancel`);
     return response.data;
   }
 
@@ -48,7 +48,7 @@ class VideoCallApi {
    * Obtenir les détails d'un appel
    */
   async getCallById(callId: string): Promise<VideoCallDto> {
-    const response = await apiClient.get(`${this.baseUrl}/${callId}`);
+    const response = await api.get(`${this.baseUrl}/${callId}`);
     return response.data;
   }
 
@@ -56,7 +56,7 @@ class VideoCallApi {
    * Obtenir l'historique des appels
    */
   async getCallHistory(page: number = 1, pageSize: number = 20): Promise<VideoCallDto[]> {
-    const response = await apiClient.get(`${this.baseUrl}/history?page=${page}&pageSize=${pageSize}`);
+    const response = await api.get(`${this.baseUrl}/history?page=${page}&pageSize=${pageSize}`);
     return response.data;
   }
 
@@ -64,16 +64,17 @@ class VideoCallApi {
    * Enregistrer des données de signalisation WebRTC
    */
   async saveSignalingData(dto: VideoCallSignalingDto): Promise<void> {
-    await apiClient.post(`${this.baseUrl}/signaling`, dto);
+    await api.post(`${this.baseUrl}/signaling`, dto);
   }
 
   /**
    * Récupérer les données de signalisation pour un appel
    */
   async getSignalingData(callId: string): Promise<string | null> {
-    const response = await apiClient.get(`${this.baseUrl}/${callId}/signaling`);
+    const response = await api.get(`${this.baseUrl}/${callId}/signaling`);
     return response.data.data;
   }
 }
 
 export const videoCallApi = new VideoCallApi();
+
