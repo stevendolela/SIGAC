@@ -6,7 +6,7 @@ import { videoCallApi } from '../api/videoCallApi';
 import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
-import { VideoCallModal } from './VideoCallModal';
+import { VideoCallModal, CallEndedInfo } from './VideoCallModal';
 import StatusSelector from './StatusSelector';
 import { AudioPlayer } from './AudioPlayer';
 import { 
@@ -50,6 +50,45 @@ const getStatusLabel = (status?: UserStatus): string => {
       return 'Absent';
     default:
       return 'Hors ligne';
+  }
+};
+
+// Fonction pour formater la durée d'appel
+const formatCallDuration = (seconds: number): string => {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) {
+    return remainingSeconds > 0 ? `${minutes}min ${remainingSeconds}s` : `${minutes}min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}min`;
+};
+
+// Fonction pour générer le message de trace d'appel
+const generateCallTraceMessage = (info: CallEndedInfo): string => {
+  const icon = '📹';
+  let statusText: string;
+  
+  switch (info.status) {
+    case 'completed':
+      statusText = info.isIncoming 
+        ? `Appel entrant de ${info.receiverName}` 
+        : `Appel sortant vers ${info.receiverName}`;
+      return `${icon} ${statusText} • Durée: ${formatCallDuration(info.duration)}`;
+    case 'missed':
+      return `${icon} Appel manqué ${info.isIncoming ? 'de' : 'vers'} ${info.receiverName}`;
+    case 'rejected':
+      return `${icon} Appel refusé ${info.isIncoming ? 'de' : 'vers'} ${info.receiverName}`;
+    case 'cancelled':
+      return `${icon} Appel annulé vers ${info.receiverName}`;
+    case 'failed':
+      return `${icon} Échec de l'appel ${info.isIncoming ? 'de' : 'vers'} ${info.receiverName}`;
+    default:
+      return `${icon} Appel ${info.isIncoming ? 'entrant' : 'sortant'}`;
   }
 };
 
@@ -586,54 +625,77 @@ const UnreadBadge: React.FC = React.memo(() => {
   }, [conversation?.messages.length, group?.messages.length, optimisticMessages.length, lastMessageCount, selectedChat]);
 
   // Composant Message mémorisé pour éviter les re-renders
-  const MessageItem = React.memo<{ msg: any }>(({ msg }) => (
-    <div className="message" style={{ willChange: 'auto' }}>
-      <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <StatusIndicator status={msg.senderStatus} />
-        <span>{msg.senderNomComplet || msg.senderUsername}</span>
-      </div>
-      
-      {/* Afficher les pièces jointes */}
-      {msg.attachments && msg.attachments.length > 0 ? (
-        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {msg.attachments.map((attachment: any) => (
-            <div key={attachment.id}>
-              {attachment.isVoiceNote ? (
-                <VoiceNoteCard 
-                  attachment={attachment}
-                  onDelete={() => handleDeleteAttachment(attachment.id)}
-                />
-              ) : attachment.fileType === 'Image' ? (
-                <ImageWithAuth 
-                  attachmentId={attachment.id}
-                  fileName={attachment.fileName}
-                  onImageClick={() => openFilePreview(attachment)}
-                  onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
-                  onDelete={() => handleDeleteAttachment(attachment.id)}
-                  getFileIcon={getFileIcon}
-                  mimeType={attachment.mimeType}
-                />
-              ) : (
-                <DocumentCard
-                  attachment={attachment}
-                  onPreview={() => openFilePreview(attachment)}
-                  onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
-                  onDelete={() => handleDeleteAttachment(attachment.id)}
-                  getFileIcon={getFileIcon}
-                />
-              )}
+  const MessageItem = React.memo<{ msg: any }>(({ msg }) => {
+    // Détecter si c'est un message de trace d'appel vidéo
+    const isCallTrace = msg.content && msg.content.startsWith('📹');
+    
+    // Déterminer le type d'appel pour le style
+    const getCallTraceClass = (content: string): string => {
+      if (content.includes('Durée:')) return 'call-completed';
+      if (content.includes('manqué')) return 'call-missed';
+      if (content.includes('refusé')) return 'call-rejected';
+      if (content.includes('annulé')) return 'call-cancelled';
+      if (content.includes('Échec')) return 'call-failed';
+      return '';
+    };
+
+    return (
+      <div className="message" style={{ willChange: 'auto' }}>
+        {!isCallTrace && (
+          <div className="message-sender" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <StatusIndicator status={msg.senderStatus} />
+            <span>{msg.senderNomComplet || msg.senderUsername}</span>
+          </div>
+        )}
+        
+        {/* Afficher les pièces jointes */}
+        {msg.attachments && msg.attachments.length > 0 ? (
+          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {msg.attachments.map((attachment: any) => (
+              <div key={attachment.id}>
+                {attachment.isVoiceNote ? (
+                  <VoiceNoteCard 
+                    attachment={attachment}
+                    onDelete={() => handleDeleteAttachment(attachment.id)}
+                  />
+                ) : attachment.fileType === 'Image' ? (
+                  <ImageWithAuth 
+                    attachmentId={attachment.id}
+                    fileName={attachment.fileName}
+                    onImageClick={() => openFilePreview(attachment)}
+                    onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                    onDelete={() => handleDeleteAttachment(attachment.id)}
+                    getFileIcon={getFileIcon}
+                    mimeType={attachment.mimeType}
+                  />
+                ) : (
+                  <DocumentCard
+                    attachment={attachment}
+                    onPreview={() => openFilePreview(attachment)}
+                    onDownload={() => handleDownloadAttachment(attachment.id, attachment.fileName)}
+                    onDelete={() => handleDeleteAttachment(attachment.id)}
+                    getFileIcon={getFileIcon}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : msg.content ? (
+          isCallTrace ? (
+            <div className={`message-call-trace ${getCallTraceClass(msg.content)}`}>
+              {msg.content}
             </div>
-          ))}
+          ) : (
+            <div className="message-content">{msg.content}</div>
+          )
+        ) : null}
+        
+        <div className="message-time">
+          {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
         </div>
-      ) : msg.content ? (
-        <div className="message-content">{msg.content}</div>
-      ) : null}
-      
-      <div className="message-time">
-        {new Date(msg.sentAt).toLocaleTimeString('fr-FR')}
       </div>
-    </div>
-  ), (prevProps, nextProps) => {
+    );
+  }, (prevProps, nextProps) => {
     // Ne re-render que si le message a réellement changé
     return prevProps.msg.id === nextProps.msg.id && 
            prevProps.msg.attachments?.length === nextProps.msg.attachments?.length &&
@@ -861,6 +923,53 @@ const UnreadBadge: React.FC = React.memo(() => {
     setVideoCallReceiverId(otherUserId);
     setVideoCallReceiverName(otherUserName);
     setIsVideoCallModalOpen(true);
+  };
+
+  // Callback quand un appel vidéo se termine - envoie un message trace
+  const handleCallEnded = async (info: CallEndedInfo) => {
+    console.log('📞 Call ended:', info);
+    
+    // Envoyer un message trace dans la conversation
+    if (selectedChat?.type === 'conversation' && selectedChat.id) {
+      try {
+        const traceMessage = generateCallTraceMessage(info);
+        await chatApi.sendMessage(selectedChat.id, traceMessage);
+        // Rafraîchir la conversation pour afficher le message
+        setTimeout(() => {
+          refetchConversation();
+        }, 500);
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi du message de trace d\'appel:', error);
+      }
+    }
+    
+    // Fermer la modal
+    setIsVideoCallModalOpen(false);
+  };
+
+  // Callback pour appel entrant terminé
+  const handleIncomingCallEnded = async (info: CallEndedInfo) => {
+    console.log('📞 Incoming call ended:', info);
+    
+    // Pour les appels entrants, on a besoin de la conversation correspondante
+    if (incomingCall?.conversationId) {
+      try {
+        const traceMessage = generateCallTraceMessage(info);
+        await chatApi.sendMessage(incomingCall.conversationId, traceMessage);
+        // Rafraîchir si c'est la conversation sélectionnée
+        if (selectedChat?.type === 'conversation' && selectedChat.id === incomingCall.conversationId) {
+          setTimeout(() => {
+            refetchConversation();
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi du message de trace d\'appel entrant:', error);
+      }
+    }
+    
+    // Fermer la modal et reset l'appel entrant
+    setIsIncomingCallModalOpen(false);
+    setIncomingCall(null);
   };
 
   const handleConversationCreated = (convId: string) => {
@@ -1992,6 +2101,7 @@ const UnreadBadge: React.FC = React.memo(() => {
       <VideoCallModal
         isOpen={isVideoCallModalOpen}
         onClose={() => setIsVideoCallModalOpen(false)}
+        onCallEnded={handleCallEnded}
         receiverId={videoCallReceiverId}
         receiverName={videoCallReceiverName}
         conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
@@ -2005,6 +2115,7 @@ const UnreadBadge: React.FC = React.memo(() => {
             setIsIncomingCallModalOpen(false);
             setIncomingCall(null);
           }}
+          onCallEnded={handleIncomingCallEnded}
           receiverId={incomingCall.initiatorId}
           receiverName="Appelant" // À améliorer avec le vrai nom
           conversationId={incomingCall.conversationId}

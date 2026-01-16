@@ -3,9 +3,17 @@ import { videoCallApi } from '../api/videoCallApi';
 import { VideoCallDto } from '../types/videoCall';
 import '../styles/video-call.css';
 
+export interface CallEndedInfo {
+  duration: number; // en secondes
+  status: 'completed' | 'missed' | 'rejected' | 'cancelled' | 'failed';
+  isIncoming: boolean;
+  receiverName: string;
+}
+
 interface VideoCallModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCallEnded?: (info: CallEndedInfo) => void;
   receiverId: string;
   receiverName: string;
   conversationId?: string;
@@ -16,6 +24,7 @@ interface VideoCallModalProps {
 export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   isOpen,
   onClose,
+  onCallEnded,
   receiverId,
   receiverName,
   conversationId,
@@ -278,6 +287,13 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
     try {
       await videoCallApi.rejectCall(incomingCallId);
+      // Notifier la fin de l'appel (rejeté)
+      onCallEnded?.({
+        duration: 0,
+        status: 'rejected',
+        isIncoming: true,
+        receiverName
+      });
       cleanup();
       onClose();
     } catch (error) {
@@ -286,6 +302,16 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   };
 
   const handleEndCall = async () => {
+    // Déterminer le statut de fin d'appel
+    let endStatus: CallEndedInfo['status'] = 'completed';
+    if (callStatus === 'ringing' && !isIncoming) {
+      endStatus = 'cancelled';
+    } else if (callStatus === 'connecting') {
+      endStatus = 'failed';
+    } else if (elapsedTime === 0) {
+      endStatus = 'missed';
+    }
+
     if (currentCall) {
       try {
         if (callStatus === 'ringing' && !isIncoming) {
@@ -297,6 +323,14 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         console.error('Erreur lors de la fin de l\'appel:', error);
       }
     }
+
+    // Notifier la fin de l'appel avec les infos
+    onCallEnded?.({
+      duration: elapsedTime,
+      status: endStatus,
+      isIncoming,
+      receiverName
+    });
 
     cleanup();
     onClose();

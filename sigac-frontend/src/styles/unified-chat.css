@@ -604,6 +604,47 @@
   font-weight: 500;
 }
 
+/* Message de trace d'appel vidéo */
+.message-call-trace {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: center;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--chat-primary);
+  font-weight: 500;
+}
+
+.message-call-trace::before {
+  display: none;
+}
+
+.message-call-trace.call-completed {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+.message-call-trace.call-missed,
+.message-call-trace.call-failed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+}
+
+.message-call-trace.call-cancelled,
+.message-call-trace.call-rejected {
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
 /* ============================================
    INPUT AREA - Design Premium
    ============================================ */
