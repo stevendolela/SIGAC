@@ -513,15 +513,15 @@
   background: transparent;
   border: 2px solid var(--chat-border);
   color: var(--chat-text-secondary);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--chat-transition-fast);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .delete-btn:hover {
