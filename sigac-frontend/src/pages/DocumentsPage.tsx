@@ -4,6 +4,39 @@ import type { DocumentDto } from '../types/document'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
 import DossierDetailModal from './DossierDetailModal'
+import '../styles/documents-page.css'
+
+// Icônes SVG modernes
+const Icons = {
+  folder: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
+  search: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+  upload: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+  camera: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+  eye: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+  download: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  trash: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+  file: <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  pdf: <svg width="48" height="48" viewBox="0 0 24 24" fill="#dc2626"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><text x="7" y="18" fontSize="6" fill="white" fontWeight="bold">PDF</text></svg>,
+  image: <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  close: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  docs: <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+}
+
+// Helper pour obtenir le type de fichier
+function getFileType(mimeType: string): 'pdf' | 'image' | 'word' | 'excel' | 'other' {
+  if (mimeType === 'application/pdf') return 'pdf'
+  if (mimeType?.startsWith('image/')) return 'image'
+  if (mimeType?.includes('word') || mimeType?.includes('document')) return 'word'
+  if (mimeType?.includes('excel') || mimeType?.includes('spreadsheet')) return 'excel'
+  return 'other'
+}
+
+// Helper pour formater la taille
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentDto[]>([])
@@ -320,163 +353,237 @@ export default function DocumentsPage() {
     }
   }
 
-  return (
-    <div className="panel">
-      <div className="panel-title">📄 Gestion des Documents</div>
+  // Statistiques
+  const pdfCount = filteredDocuments.filter(d => d.mimeType === 'application/pdf').length
+  const imageCount = filteredDocuments.filter(d => d.mimeType?.startsWith('image/')).length
+  const totalSize = filteredDocuments.reduce((acc, d) => acc + (d.tailleFichier || 0), 0)
 
-      {/* Sélection du dossier */}
-      <div style={{ marginBottom: 24, padding: 16, background: '#f0f9ff', borderRadius: 8 }}>
-        <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-          📁 Dossier (optionnel - laissez vide pour voir tous les documents):
-        </label>
+  return (
+    <div className="documents-page">
+      {/* Header */}
+      <div className="documents-header">
+        <div className="documents-title">
+          <div className="documents-title-icon">📄</div>
+          <h1>Gestion des Documents</h1>
+        </div>
+        <p className="documents-subtitle">Gérez, organisez et consultez tous vos documents en un seul endroit</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="documents-stats">
+        <div className="stat-card">
+          <div className="stat-icon blue">📁</div>
+          <div className="stat-info">
+            <h4>{filteredDocuments.length}</h4>
+            <p>Documents</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon green">📷</div>
+          <div className="stat-info">
+            <h4>{imageCount}</h4>
+            <p>Images</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon purple">📕</div>
+          <div className="stat-info">
+            <h4>{pdfCount}</h4>
+            <p>PDF</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon orange">💾</div>
+          <div className="stat-info">
+            <h4>{formatSize(totalSize)}</h4>
+            <p>Stockage total</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="documents-toolbar">
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Rechercher un document..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        
         <select
+          className="filter-select"
           value={selectedDossierId}
           onChange={(e) => setSelectedDossierId(e.target.value)}
-          style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #cbd5e1' }}
         >
-          <option value="">-- Tous les documents --</option>
+          <option value="">Tous les dossiers</option>
           {dossiers.map(d => (
             <option key={d.id} value={d.id}>
               {d.numeroDossier} - {d.titre}
             </option>
           ))}
         </select>
-        {!selectedDossierId && (
-          <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
-            💡 Affichage de tous les documents (avec ou sans dossier associé)
-          </div>
-        )}
-      </div>
 
-      {/* Boutons d'action */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center' }}>
-        <input
-          placeholder="🔍 Rechercher un document..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1 }}
-        />
         <button
-          className="btn"
+          className="action-btn success"
           onClick={() => setShowUploadModal(true)}
           disabled={!selectedDossierId}
-          style={{
-            background: selectedDossierId ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#ccc',
-            color: 'white',
-            border: 'none'
-          }}
         >
-          📤 Scanner/Uploader
+          {Icons.upload}
+          <span>Importer</span>
         </button>
+
         <button
-          className="btn"
+          className="action-btn purple"
           onClick={() => { setShowScannerModal(true); setShowUploadModal(false) }}
           disabled={!selectedDossierId}
-          style={{
-            background: selectedDossierId ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#ccc',
-            color: 'white',
-            border: 'none'
-          }}
-          title="Scanner un document avec votre caméra/scanner"
         >
-          📸 Scanner
+          {Icons.camera}
+          <span>Scanner</span>
         </button>
       </div>
 
-      {/* Modal Upload/Scanner */}
-      {showUploadModal && (
-        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
-          <div className="card" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0, marginBottom: 20 }}>📤 Scanner ou Uploader des Documents</h3>
-
-            {/* Zone drag-drop */}
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              style={{
-                border: dragActive ? '3px dashed #10b981' : '2px dashed #cbd5e1',
-                borderRadius: 8,
-                padding: 32,
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: dragActive ? '#ecfdf5' : '#f9fafb',
-                marginBottom: 16,
-                transition: 'all 0.2s'
-              }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
-              <p style={{ marginBottom: 8, fontWeight: 600 }}>
-                Glissez vos documents ici ou cliquez pour sélectionner
-              </p>
-              <p style={{ color: '#6b7280', fontSize: 12 }}>
-                Formats: PDF, Images (JPEG, PNG, TIFF), Word, Excel
-              </p>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e.target.files)}
-                style={{ display: 'none' }}
-                id="file-input"
-                disabled={uploading}
-              />
-              <label htmlFor="file-input" style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={uploading}
-                  style={{
-                    marginTop: 12,
-                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                    color: 'white',
-                    border: 'none'
-                  }}
-                  onClick={() => document.getElementById('file-input')?.click()}
-                >
-                  {uploading ? '⏳ Upload en cours...' : '📁 Choisir des fichiers'}
-                </button>
-              </label>
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button
-                className="btn"
-                onClick={() => setShowUploadModal(false)}
-                disabled={uploading}
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
+      {/* Loading */}
+      {loading && (
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p style={{ marginTop: 16, color: '#64748b' }}>Chargement des documents...</p>
         </div>
       )}
 
-      {/* Modal Assigner un document */}
-      {showAssignModal && (
-        <div className="modal-overlay" onClick={() => setShowAssignModal(false)}>
-          <div className="card" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
-              📎 Assigner "{selectedDocument?.nomFichier}" à un dossier
-            </h3>
+      {/* Empty State */}
+      {!loading && filteredDocuments.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-state-icon">📭</div>
+          <h3>Aucun document trouvé</h3>
+          <p>
+            {selectedDossierId 
+              ? "Ce dossier ne contient pas encore de documents. Importez-en un pour commencer."
+              : "Sélectionnez un dossier et importez vos premiers documents."}
+          </p>
+        </div>
+      )}
 
-            <select
-              onChange={(e) => handleAssignDocument(e.target.value)}
-              style={{ width: '100%', padding: 8, marginBottom: 16, borderRadius: 4, border: '1px solid #cbd5e1' }}
-              defaultValue=""
-            >
-              <option value="">-- Sélectionner un dossier --</option>
-              {dossiers.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.numeroDossier} - {d.titre}
-                </option>
-              ))}
-            </select>
+      {/* Documents Grid */}
+      {!loading && filteredDocuments.length > 0 && (
+        <div className="documents-grid">
+          {filteredDocuments.map(doc => {
+            const fileType = getFileType(doc.mimeType)
+            return (
+              <div key={doc.id} className="document-card">
+                <div className={`document-preview ${fileType}`}>
+                  <div className="document-icon">
+                    {fileType === 'pdf' && '📕'}
+                    {fileType === 'image' && '🖼️'}
+                    {fileType === 'word' && '📘'}
+                    {fileType === 'excel' && '📗'}
+                    {fileType === 'other' && '📄'}
+                  </div>
+                  <span className={`document-type-badge ${fileType}`}>
+                    {fileType.toUpperCase()}
+                  </span>
+                </div>
+                <div className="document-info">
+                  <div className="document-name" title={doc.nomFichier}>
+                    {doc.nomFichier}
+                  </div>
+                  <div className="document-meta">
+                    <span>{formatSize(doc.tailleFichier)}</span>
+                    <span>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <div className="document-actions">
+                    <button 
+                      className="doc-action-btn view"
+                      onClick={() => handlePreviewDocument(doc)}
+                      title="Ouvrir"
+                    >
+                      {Icons.eye}
+                      <span>Ouvrir</span>
+                    </button>
+                    <button 
+                      className="doc-action-btn download"
+                      onClick={async () => {
+                        try {
+                          const blob = await documentApi.download(doc.id)
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = doc.nomFichier
+                          a.click()
+                          URL.revokeObjectURL(url)
+                          notify({ type: 'success', message: 'Téléchargé' })
+                        } catch { notify({ type: 'error', message: 'Erreur' }) }
+                      }}
+                      title="Télécharger"
+                    >
+                      {Icons.download}
+                    </button>
+                    <button 
+                      className="doc-action-btn delete"
+                      onClick={async () => {
+                        if (!confirm(`Supprimer "${doc.nomFichier}" ?`)) return
+                        try {
+                          await documentApi.remove(doc.id)
+                          setDocuments(prev => prev.filter(d => d.id !== doc.id))
+                          notify({ type: 'success', message: 'Supprimé' })
+                        } catch { notify({ type: 'error', message: 'Erreur' }) }
+                      }}
+                      title="Supprimer"
+                    >
+                      {Icons.trash}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => { setShowAssignModal(false); setSelectedDocument(null) }}>
-                Annuler
+      {/* Modal Upload */}
+      {showUploadModal && (
+        <div className="modal-overlay-modern" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-modern" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <span style={{ fontSize: 24 }}>📤</span>
+                Importer des documents
+              </h2>
+              <button className="modal-close" onClick={() => setShowUploadModal(false)}>
+                {Icons.close}
               </button>
+            </div>
+            <div className="modal-body">
+              <div
+                className={`upload-zone ${dragActive ? 'active' : ''}`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('file-input')?.click()}
+              >
+                <div className="upload-zone-icon">📁</div>
+                <h4>Glissez vos fichiers ici</h4>
+                <p>ou cliquez pour sélectionner</p>
+                <p style={{ marginTop: 12, fontSize: 12, color: '#94a3b8' }}>
+                  PDF, Images, Word, Excel
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  style={{ display: 'none' }}
+                  id="file-input"
+                  disabled={uploading}
+                />
+              </div>
+              {uploading && (
+                <div style={{ textAlign: 'center', marginTop: 20 }}>
+                  <div className="loading-spinner" style={{ margin: '0 auto' }} />
+                  <p style={{ marginTop: 12, color: '#64748b' }}>Import en cours...</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
