@@ -1005,6 +1005,146 @@ public class DocumentsController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Diagnostic complet de l'état des documents
+    /// </summary>
+    [HttpGet("diagnostic")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDocumentDiagnostic()
+    {
+        try
+        {
+            await using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            // Compter les documents
+            await using var countCmd = conn.CreateCommand();
+            countCmd.CommandText = @"SELECT COUNT(*) FROM ""Documents""";
+            var totalDocuments = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+            
+            // Compter les documents avec FileData
+            await using var withDataCmd = conn.CreateCommand();
+            withDataCmd.CommandText = @"SELECT COUNT(*) FROM ""Documents"" WHERE ""FileData"" IS NOT NULL AND ""FileData"" != ''";
+            var documentsWithFileData = Convert.ToInt32(await withDataCmd.ExecuteScalarAsync());
+            
+            // Compter les documents sans FileData
+            await using var withoutDataCmd = conn.CreateCommand();
+            withoutDataCmd.CommandText = @"SELECT COUNT(*) FROM ""Documents"" WHERE ""FileData"" IS NULL OR ""FileData"" = ''";
+            var documentsWithoutFileData = Convert.ToInt32(await withoutDataCmd.ExecuteScalarAsync());
+            
+            // Récupérer quelques exemples de documents sans FileData
+            var orphanDocuments = new List<object>();
+            await using var orphanCmd = conn.CreateCommand();
+            orphanCmd.CommandText = @"
+                SELECT ""Id"", ""NomFichier"", ""CheminFichier"", ""MimeType"", ""UploadedAt"" 
+                FROM ""Documents"" 
+                WHERE ""FileData"" IS NULL OR ""FileData"" = ''
+                LIMIT 10";
+            await using var reader = await orphanCmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                orphanDocuments.Add(new {
+                    id = reader.GetGuid(0),
+                    nomFichier = reader.GetString(1),
+                    cheminFichier = reader.GetString(2),
+                    mimeType = reader.GetString(3),
+                    uploadedAt = reader.GetDateTime(4)
+                });
+            }
+            
+            // Vérifier le répertoire uploads
+            var uploadDir = GetBaseUploadDirectory();
+            var uploadDirExists = Directory.Exists(uploadDir);
+            var filesInUploadDir = 0;
+            if (uploadDirExists)
+            {
+                try
+                {
+                    filesInUploadDir = Directory.GetFiles(uploadDir, "*", SearchOption.AllDirectories).Length;
+                }
+                catch { }
+            }
+            
+            return Ok(new {
+                timestamp = DateTime.UtcNow,
+                summary = new {
+                    totalDocuments,
+                    documentsWithFileData,
+                    documentsWithoutFileData,
+                    percentageRecoverable = totalDocuments > 0 
+                        ? Math.Round((double)documentsWithFileData / totalDocuments * 100, 2) 
+                        : 0
+                },
+                fileSystem = new {
+                    uploadDirectory = uploadDir,
+                    directoryExists = uploadDirExists,
+                    filesCount = filesInUploadDir
+                },
+                orphanedDocuments = orphanDocuments,
+                diagnosis = documentsWithoutFileData > 0
+                    ? $"⚠️ {documentsWithoutFileData} documents sont irrécupérables (pas de FileData et fichiers perdus sur Render)"
+                    : "✅ Tous les documents ont leur contenu en base de données"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors du diagnostic");
+            return StatusCode(500, new { 
+                message = "Erreur lors du diagnostic",
+                error = ex.Message 
+            });
+        }
+    }
+
+    /// <summary>
+    /// Supprime tous les documents orphelins (sans FileData)
+    /// </summary>
+    [HttpDelete("cleanup-orphans")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CleanupOrphanDocuments()
+    {
+        try
+        {
+            await using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            // Compter avant suppression
+            await using var countCmd = conn.CreateCommand();
+            countCmd.CommandText = @"SELECT COUNT(*) FROM ""Documents"" WHERE ""FileData"" IS NULL OR ""FileData"" = ''";
+            var orphanCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+            
+            if (orphanCount == 0)
+            {
+                return Ok(new { 
+                    message = "Aucun document orphelin à supprimer",
+                    deletedCount = 0
+                });
+            }
+            
+            // Supprimer les documents orphelins
+            await using var deleteCmd = conn.CreateCommand();
+            deleteCmd.CommandText = @"DELETE FROM ""Documents"" WHERE ""FileData"" IS NULL OR ""FileData"" = ''";
+            var deletedCount = await deleteCmd.ExecuteNonQueryAsync();
+            
+            _logger.LogInformation("Suppression de {Count} documents orphelins", deletedCount);
+            
+            return Ok(new { 
+                message = $"✅ {deletedCount} documents orphelins supprimés",
+                deletedCount
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors du nettoyage des documents orphelins");
+            return StatusCode(500, new { 
+                message = "Erreur lors du nettoyage",
+                error = ex.Message 
+            });
+        }
+    }
 }
 
 public class TestScannerRequest
