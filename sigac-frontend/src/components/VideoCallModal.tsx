@@ -74,39 +74,71 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
   const initializeCall = async () => {
     try {
-      console.log('Requesting camera and microphone access...');
+      console.log('🎥 Requesting camera and microphone access...');
+      console.log('🌐 Protocol:', window.location.protocol);
+      console.log('🔒 Is secure context:', window.isSecureContext);
       
-      // Demander accès à la caméra et au micro avec des contraintes optimales
+      // Vérifier si l'API est disponible
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia not supported in this browser');
+      }
+
+      // Lister les périphériques disponibles
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log('📱 Périphériques disponibles:', devices);
+      const hasVideo = devices.some(d => d.kind === 'videoinput');
+      const hasAudio = devices.some(d => d.kind === 'audioinput');
+      console.log(`📹 Caméra: ${hasVideo ? 'Oui' : 'Non'}, 🎤 Micro: ${hasAudio ? 'Oui' : 'Non'}`);
+
+      // Demander accès - version simplifiée d'abord
+      console.log('⏳ Demande de permissions...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: { echoCancellation: true, noiseSuppression: true }
+        video: hasVideo ? {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        } : false,
+        audio: hasAudio ? {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } : false
       });
 
-      console.log('Media stream obtained successfully:', stream);
+      console.log('✅ Media stream obtained successfully:', stream);
+      console.log('📊 Video tracks:', stream.getVideoTracks().length);
+      console.log('📊 Audio tracks:', stream.getAudioTracks().length);
+      
       localStreamRef.current = stream;
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        console.log('📺 Local video element set');
       }
 
       if (isIncoming && incomingCallId) {
-        // Appel entrant
+        console.log('📞 Appel entrant, passage en mode ringing');
         setCallStatus('ringing');
       } else {
-        // Appel sortant
+        console.log('📞 Appel sortant, initiation...');
         await initiateOutgoingCall();
       }
     } catch (error: any) {
-      console.error('Erreur d\'accès aux médias:', error);
-      let errorMessage = 'Impossible d\'accéder à la caméra ou au microphone.';
+      console.error('❌ Erreur d\'accès aux médias:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = `❌ Impossible d'accéder à la caméra ou au microphone.\n\nErreur: ${error.name}`;
       
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        errorMessage += '\n\nVeuillez autoriser l\'accès dans les paramètres de votre navigateur.\n\nPour Chrome:\n1. Cliquez sur l\'icône 🔒 ou ⓘ à gauche de l\'URL\n2. Autorisez la caméra et le microphone\n3. Rechargez la page';
+        errorMessage += '\n\n🔒 Permissions refusées!\n\nSolutions:\n1. Cliquez sur l\'icône 🔒 ou ⓘ à gauche de l\'URL\n2. Autorisez "Caméra" et "Microphone"\n3. Rechargez la page (F5)\n\nSi le problème persiste:\n- Vérifiez les paramètres système (Confidentialité)\n- Essayez un autre navigateur (Chrome recommandé)';
       } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        errorMessage += '\n\nAucune caméra ou microphone détecté sur cet appareil.';
+        errorMessage += '\n\n📹 Aucune caméra ou microphone détecté.\n\nVérifiez que:\n- Votre caméra est bien connectée\n- Les pilotes sont installés\n- Le périphérique n\'est pas désactivé';
       } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        errorMessage += '\n\nLa caméra est peut-être utilisée par une autre application.\nFermez les autres applications utilisant la caméra et réessayez.';
-      } else if (error.name === 'NotSupportedError') {
-        errorMessage += '\n\nVotre navigateur ne supporte pas l\'accès aux médias.\nUtilisez Chrome, Firefox ou Edge en version récente.';
+        errorMessage += '\n\n⚠️ Caméra déjà utilisée!\n\nFermez ces applications:\n- Zoom, Teams, Skype\n- Autres onglets utilisant la caméra\n- Applications photo/vidéo';
+      } else if (error.name === 'NotSupportedError' || error.message.includes('getUserMedia')) {
+        errorMessage += '\n\n🌐 Navigateur non supporté!\n\nSolutions:\n- Utilisez HTTPS (pas HTTP)\n- Utilisez Chrome, Firefox ou Edge récent\n- Vérifiez que vous n\'êtes pas en navigation privée';
+      } else if (error.name === 'TypeError') {
+        errorMessage += '\n\n⚠️ Configuration non supportée.\n\nEssayez de:\n- Autoriser au moins l\'audio OU la vidéo\n- Vérifier les paramètres du navigateur';
       }
       
       alert(errorMessage);
