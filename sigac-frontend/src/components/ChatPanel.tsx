@@ -119,7 +119,13 @@ export const ChatPanel: React.FC = () => {
     if (!conversation) return;
 
     // Déterminer l'ID et le nom de l'autre utilisateur
-    const currentUserId = localStorage.getItem('userId') || '';
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      alert('❌ Utilisateur non connecté');
+      return;
+    }
+    const currentUser = JSON.parse(userStr);
+    const currentUserId = currentUser.id;
     const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
     const otherUserName = conversation.user1Id === currentUserId 
       ? conversation.user2Username

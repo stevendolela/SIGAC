@@ -813,7 +813,13 @@ const UnreadBadge: React.FC = React.memo(() => {
     if (!conversation || selectedChat?.type !== 'conversation') return;
 
     // Déterminer l'ID et le nom de l'autre utilisateur
-    const currentUserId = localStorage.getItem('userId') || '';
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      alert('❌ Utilisateur non connecté');
+      return;
+    }
+    const currentUser = JSON.parse(userStr);
+    const currentUserId = currentUser.id;
     
     // Logique explicite pour éviter les bugs
     let otherUserId: string;
