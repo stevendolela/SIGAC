@@ -163,7 +163,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
       // Créer la connexion WebRTC
       console.log('🔗 Création de la connexion WebRTC...');
-      const pc = createPeerConnection();
+      const pc = createPeerConnection(call.id);
       peerConnectionRef.current = pc;
 
       // Ajouter les tracks locaux
@@ -214,43 +214,60 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const handleAnswerCall = async () => {
     if (!incomingCallId) return;
 
+    console.log('📞 Acceptation de l\'appel:', incomingCallId);
+
     try {
       // Accepter l'appel côté serveur
       const call = await videoCallApi.answerCall(incomingCallId);
+      console.log('✅ Appel accepté côté serveur:', call);
       setCurrentCall(call);
       setCallStatus('active');
 
-      // Créer la connexion WebRTC
-      const pc = createPeerConnection();
+      // Créer la connexion WebRTC avec callId passé directement
+      const pc = createPeerConnection(incomingCallId);
       peerConnectionRef.current = pc;
 
       // Ajouter les tracks locaux
       localStreamRef.current?.getTracks().forEach(track => {
+        console.log('➕ [Receiver] Ajout track:', track.kind);
         pc.addTrack(track, localStreamRef.current!);
       });
 
       // Récupérer l'offre
+      console.log('📥 Récupération de l\'offre SDP...');
       const signalingData = await videoCallApi.getSignalingData(incomingCallId);
+      console.log('📥 SignalingData reçu:', signalingData?.substring(0, 100) + '...');
+      
       if (signalingData) {
         const offer = JSON.parse(signalingData);
+        console.log('📝 Offre parsée, type:', offer.type);
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        console.log('✅ RemoteDescription définie');
 
         // Créer la réponse
+        console.log('📝 Création de la réponse SDP...');
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
+        console.log('✅ LocalDescription (answer) définie');
 
         // Envoyer la réponse au serveur
+        console.log('📤 Envoi de la réponse au serveur...');
         await videoCallApi.saveSignalingData({
           callId: incomingCallId,
           type: 'answer',
           data: JSON.stringify(answer)
         });
+        console.log('✅ Réponse envoyée');
 
         // Démarrer le polling des ICE candidates de l'initiateur
+        console.log('🔄 Démarrage du polling ICE candidates...');
         pollForIceCandidates(incomingCallId, pc);
+      } else {
+        console.error('❌ Pas de signaling data (offre) trouvé!');
+        throw new Error('Offre SDP non trouvée');
       }
     } catch (error) {
-      console.error('Erreur lors de la réponse à l\'appel:', error);
+      console.error('❌ Erreur lors de la réponse à l\'appel:', error);
       alert('Erreur lors de la réponse à l\'appel');
       handleEndCall();
     }
@@ -285,34 +302,62 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     onClose();
   };
 
-  const createPeerConnection = (): RTCPeerConnection => {
+  const createPeerConnection = (callId: string): RTCPeerConnection => {
+    console.log('🔗 Création PeerConnection pour callId:', callId);
     const pc = new RTCPeerConnection(iceServers);
 
     pc.onicecandidate = async (event) => {
-      if (event.candidate && currentCall) {
-        // Envoyer le ICE candidate au serveur
-        await videoCallApi.saveSignalingData({
-          callId: currentCall.id,
-          type: 'ice-candidate',
-          data: JSON.stringify(event.candidate)
-        });
+      if (event.candidate) {
+        console.log('🧊 ICE candidate généré:', event.candidate.candidate?.substring(0, 50) + '...');
+        try {
+          // Envoyer le ICE candidate au serveur avec le callId passé directement
+          await videoCallApi.saveSignalingData({
+            callId: callId,
+            type: 'ice-candidate',
+            data: JSON.stringify(event.candidate)
+          });
+          console.log('✅ ICE candidate envoyé au serveur');
+        } catch (error) {
+          console.error('❌ Erreur envoi ICE candidate:', error);
+        }
+      } else {
+        console.log('🧊 ICE gathering terminé');
       }
     };
 
     pc.ontrack = (event) => {
+      console.log('📺 Track distant reçu:', event.track.kind, event.streams.length, 'streams');
       if (remoteVideoRef.current && event.streams[0]) {
+        console.log('📺 Attribution du stream distant à la vidéo');
         remoteVideoRef.current.srcObject = event.streams[0];
         if (callStatus !== 'active') {
           setCallStatus('active');
         }
+      } else {
+        console.warn('⚠️ Pas de stream dans l\'événement ontrack ou ref manquante');
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      console.log('🧊 ICE connection state:', pc.iceConnectionState);
+    };
+
+    pc.onicegatheringstatechange = () => {
+      console.log('🧊 ICE gathering state:', pc.iceGatheringState);
+    };
+
     pc.onconnectionstatechange = () => {
-      console.log('Connection state:', pc.connectionState);
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      console.log('🔗 Connection state:', pc.connectionState);
+      if (pc.connectionState === 'connected') {
+        console.log('✅ Connexion WebRTC établie!');
+      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        console.log('❌ Connexion WebRTC perdue ou échouée');
         handleEndCall();
       }
+    };
+
+    pc.onsignalingstatechange = () => {
+      console.log('📡 Signaling state:', pc.signalingState);
     };
 
     return pc;
@@ -324,6 +369,8 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     let attempts = 0;
     let lastCandidateCount = 0;
 
+    console.log('🔄 Début polling ICE candidates pour callId:', callId);
+
     const interval = setInterval(async () => {
       attempts++;
       if (attempts > maxAttempts) {
@@ -332,22 +379,36 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         return;
       }
 
+      // Arrêter si connexion établie
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        clearInterval(interval);
+        console.log('✅ ICE connecté, arrêt du polling');
+        return;
+      }
+
       try {
         const response = await videoCallApi.getIceCandidates(callId);
         const candidates = response || [];
         
         if (candidates.length > lastCandidateCount) {
-          console.log(`📡 Nouveaux ICE candidates: ${candidates.length - lastCandidateCount}`);
+          console.log(`📡 Nouveaux ICE candidates reçus: ${candidates.length - lastCandidateCount} (total: ${candidates.length})`);
           
           for (let i = lastCandidateCount; i < candidates.length; i++) {
-            const candidate = new RTCIceCandidate(JSON.parse(candidates[i]));
-            await pc.addIceCandidate(candidate);
+            try {
+              const candidateData = JSON.parse(candidates[i]);
+              console.log('🧊 Ajout ICE candidate:', candidateData.candidate?.substring(0, 50) + '...');
+              const candidate = new RTCIceCandidate(candidateData);
+              await pc.addIceCandidate(candidate);
+              console.log('✅ ICE candidate ajouté');
+            } catch (parseError) {
+              console.error('❌ Erreur parsing ICE candidate:', parseError);
+            }
           }
           
           lastCandidateCount = candidates.length;
         }
       } catch (error) {
-        console.error('Erreur lors du polling des ICE candidates:', error);
+        console.error('❌ Erreur lors du polling des ICE candidates:', error);
       }
     }, 1000);
   };

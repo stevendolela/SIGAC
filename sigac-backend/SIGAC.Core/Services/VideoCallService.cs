@@ -227,14 +227,16 @@ public class VideoCallService : IVideoCallService
         if (call.InitiatorId != userId && call.ReceiverId != userId)
             throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à modifier cet appel");
 
-        // Stocker les ICE candidates séparément dans un tableau
+        // Stocker les ICE candidates séparément dans un tableau avec préfixe sender
         if (dto.Type == "ice-candidate")
         {
             var candidates = string.IsNullOrEmpty(call.IceCandidates) 
                 ? new List<string>() 
                 : System.Text.Json.JsonSerializer.Deserialize<List<string>>(call.IceCandidates) ?? new List<string>();
             
-            candidates.Add(dto.Data);
+            // Ajouter le préfixe pour identifier qui a envoyé ce candidate
+            var senderPrefix = call.InitiatorId == userId ? "initiator:" : "receiver:";
+            candidates.Add(senderPrefix + dto.Data);
             call.IceCandidates = System.Text.Json.JsonSerializer.Serialize(candidates);
         }
         else
@@ -266,8 +268,18 @@ public class VideoCallService : IVideoCallService
         if (call.InitiatorId != userId && call.ReceiverId != userId)
             throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à voir cet appel");
 
-        // Récupérer tous les ICE candidates stockés
-        return await _videoCallRepository.GetIceCandidatesAsync(callId);
+        // Récupérer les ICE candidates de l'AUTRE peer seulement
+        // Si l'utilisateur est l'initiateur, il veut les candidates du receiver (préfixe "receiver:")
+        // Si l'utilisateur est le receiver, il veut les candidates de l'initiateur (préfixe "initiator:")
+        var prefixToFilter = call.InitiatorId == userId ? "receiver:" : "initiator:";
+        
+        var allCandidates = await _videoCallRepository.GetIceCandidatesAsync(callId);
+        
+        // Filtrer et retirer le préfixe
+        return allCandidates
+            .Where(c => c.StartsWith(prefixToFilter))
+            .Select(c => c.Substring(prefixToFilter.Length))
+            .ToList();
     }
 
     private VideoCallDto MapToDto(VideoCall call, User initiator, User receiver)
