@@ -146,31 +146,41 @@ public class DocumentsController : ControllerBase
             // Calculer le hash SHA256 du fichier
             string hashSHA256 = await CalculateSHA256HashAsync(file);
 
-            // Préparer répertoires de stockage (racine + sous-dossier date)
+            // Lire le contenu du fichier en mémoire pour stockage Base64
+            byte[] fileBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                fileBytes = memoryStream.ToArray();
+            }
+            string fileDataBase64 = Convert.ToBase64String(fileBytes);
+
+            // Préparer répertoires de stockage (racine + sous-dossier date) - fallback local
             var baseUploadDir = GetBaseUploadDirectory();
             var subDir = GetCurrentUploadSubdirectory(); // yyyy/MM
             var uploadDir = Path.Combine(baseUploadDir, subDir);
-            Directory.CreateDirectory(uploadDir);
-
-            // Générer un nom de fichier sécurisé (GUID + extension)
-            var storedFileName = $"{Guid.NewGuid():N}{ext}";
-            var filePath = Path.Combine(uploadDir, storedFileName);
-
-            // Sauvegarder le fichier
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            
+            string storedFileName = $"{Guid.NewGuid():N}{ext}";
+            string relativeStoredPath = Path.Combine(subDir, storedFileName);
+            
+            // Essayer de sauvegarder localement (optionnel, peut échouer sur Render)
+            try
             {
-                await file.CopyToAsync(stream);
+                Directory.CreateDirectory(uploadDir);
+                var filePath = Path.Combine(uploadDir, storedFileName);
+                await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
+                _logger.LogInformation(
+                    "Fichier uploadé localement: {OriginalName} -> {StoredName} ({Size} bytes) pour dossier {DossierId}",
+                    file.FileName, storedFileName, file.Length, dossierId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Impossible de sauvegarder localement, stockage DB uniquement");
             }
 
-            _logger.LogInformation(
-                "Fichier uploadé: {OriginalName} -> {StoredName} ({Size} bytes) pour dossier {DossierId}",
-                file.FileName, storedFileName, file.Length, dossierId);
-
-            // Enregistrer le document en base de données
+            // Enregistrer le document en base de données avec données Base64
             var userId = GetCurrentUserId();
-            // Stocker chemin relatif (yyyy/MM/filename) sans préfixe 'uploads' pour éviter dépendance au mois courant
-            var relativeStoredPath = Path.Combine(subDir, storedFileName);
-            var document = await _documentService.UploadAsync(
+            var document = await _documentService.UploadWithDataAsync(
                 dossierId,
                 file.FileName,
                 relativeStoredPath,
@@ -178,6 +188,7 @@ public class DocumentsController : ControllerBase
                 file.Length,
                 file.ContentType,
                 hashSHA256,
+                fileDataBase64,
                 userId);
 
             return CreatedAtAction(nameof(GetDocumentById), new { id = document.Id }, document);
@@ -199,20 +210,40 @@ public class DocumentsController : ControllerBase
     {
         try
         {
-            var document = await _documentService.GetByIdAsync(id);
+            // Récupérer l'entité Document complète (avec FileData)
+            var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound(new { message = "Document non trouvé" });
 
-            // Construire le chemin physique (indépendant du mois courant)
-            var filePath = GetAbsoluteFilePath(document.CheminFichier);
+            byte[] fileBytes;
 
-            if (!System.IO.File.Exists(filePath))
+            // Priorité 1: FileData (stockage Base64 en DB)
+            if (!string.IsNullOrEmpty(document.FileData))
             {
-                _logger.LogWarning("Fichier physique non trouvé: {FilePath}", filePath);
-                return NotFound(new { message = "Fichier non trouvé sur le serveur" });
+                _logger.LogInformation("DownloadDocument: Lecture depuis FileData (Base64) pour {DocumentId}", id);
+                try
+                {
+                    fileBytes = Convert.FromBase64String(document.FileData);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erreur décodage Base64 pour document {DocumentId}", id);
+                    return StatusCode(500, new { message = "Erreur lors du décodage du fichier" });
+                }
+            }
+            // Priorité 2: Fichier physique (fallback)
+            else
+            {
+                var filePath = GetAbsoluteFilePath(document.CheminFichier);
+                if (!System.IO.File.Exists(filePath))
+                {
+                    _logger.LogWarning("DownloadDocument 404: Ni FileData ni fichier physique pour document {DocumentId}", id);
+                    return NotFound(new { message = "Fichier non trouvé sur le serveur" });
+                }
+                _logger.LogInformation("DownloadDocument: Lecture depuis fichier physique pour {DocumentId}", id);
+                fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             }
 
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             var fileName = document.NomFichier;
 
             // Enregistrer la visualisation
@@ -241,25 +272,44 @@ public class DocumentsController : ControllerBase
     {
         try
         {
-            var document = await _documentService.GetByIdAsync(id);
+            // Récupérer l'entité Document complète (avec FileData)
+            var document = await _context.Documents.FindAsync(id);
             if (document == null)
             {
                 _logger.LogWarning("ViewDocument 404: Document {DocumentId} introuvable en base", id);
                 return NotFound(new { message = "Document non trouvé" });
             }
 
-            // Construire le chemin physique (indépendant du mois courant)
-            var filePath = GetAbsoluteFilePath(document.CheminFichier);
+            byte[] fileBytes;
 
-            if (!System.IO.File.Exists(filePath))
+            // Priorité 1: FileData (stockage Base64 en DB)
+            if (!string.IsNullOrEmpty(document.FileData))
             {
-                _logger.LogWarning(
-                    "ViewDocument 404: Fichier physique introuvable pour document {DocumentId}. Chemin enregistré='{CheminEnregistre}' Chemin résolu='{CheminResolu}'", 
-                    id, document.CheminFichier, filePath);
-                return NotFound(new { message = "Fichier non trouvé sur le serveur" });
+                _logger.LogInformation("ViewDocument: Lecture depuis FileData (Base64) pour {DocumentId}", id);
+                try
+                {
+                    fileBytes = Convert.FromBase64String(document.FileData);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erreur décodage Base64 pour document {DocumentId}", id);
+                    return StatusCode(500, new { message = "Erreur lors du décodage du fichier" });
+                }
             }
-
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            // Priorité 2: Fichier physique (fallback)
+            else
+            {
+                var filePath = GetAbsoluteFilePath(document.CheminFichier);
+                if (!System.IO.File.Exists(filePath))
+                {
+                    _logger.LogWarning(
+                        "ViewDocument 404: Ni FileData ni fichier physique pour document {DocumentId}. Chemin='{CheminResolu}'", 
+                        id, filePath);
+                    return NotFound(new { message = "Fichier non trouvé sur le serveur" });
+                }
+                _logger.LogInformation("ViewDocument: Lecture depuis fichier physique pour {DocumentId}", id);
+                fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            }
 
             // Enregistrer la visualisation
             await LogDocumentVisualisation(id, "view");

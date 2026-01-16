@@ -15,6 +15,16 @@ public interface IDocumentService
         string mimeType,
         string hashSHA256,
         Guid userId);
+    Task<DocumentDto> UploadWithDataAsync(
+        Guid dossierId,
+        string nomFichier,
+        string cheminFichier,
+        string typeDocument,
+        long tailleFichier,
+        string mimeType,
+        string hashSHA256,
+        string? fileDataBase64,
+        Guid userId);
     Task<DocumentDto?> AssignToDossierAsync(Guid documentId, Guid newDossierId, Guid userId);
     Task<bool> DeleteAsync(Guid documentId, Guid userId);
 }

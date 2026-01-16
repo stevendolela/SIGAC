@@ -43,6 +43,21 @@ public class DocumentService : IDocumentService
         string hashSHA256,
         Guid userId)
     {
+        return await UploadWithDataAsync(dossierId, nomFichier, cheminFichier, typeDocument, 
+            tailleFichier, mimeType, hashSHA256, null, userId);
+    }
+
+    public async Task<DocumentDto> UploadWithDataAsync(
+        Guid dossierId,
+        string nomFichier,
+        string cheminFichier,
+        string typeDocument,
+        long tailleFichier,
+        string mimeType,
+        string hashSHA256,
+        string? fileDataBase64,
+        Guid userId)
+    {
         var document = new Document
         {
             Id = Guid.NewGuid(),
@@ -55,6 +70,7 @@ public class DocumentService : IDocumentService
             NumeroVersion = 1,
             EstConfidentiel = false,
             HashSHA256 = hashSHA256,
+            FileData = fileDataBase64,
             UploadedBy = userId,
             UploadedAt = DateTime.UtcNow
         };

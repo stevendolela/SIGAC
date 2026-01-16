@@ -13,6 +13,11 @@ public class Document
     public string MimeType { get; set; } = string.Empty;
     public int NumeroVersion { get; set; } = 1;
     
+    /// <summary>
+    /// Contenu du fichier encodé en Base64 (stockage DB pour Render)
+    /// </summary>
+    public string? FileData { get; set; }
+    
     // Sécurité
     public bool EstConfidentiel { get; set; }
     public string HashSHA256 { get; set; } = string.Empty;

@@ -338,6 +338,9 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Property<bool>("EstConfidentiel")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("FileData")
+                        .HasColumnType("text");
+
                     b.Property<string>("HashSHA256")
                         .IsRequired()
                         .HasColumnType("text");
