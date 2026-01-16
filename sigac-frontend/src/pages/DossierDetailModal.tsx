@@ -26,7 +26,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   const [nouveauStatut, setNouveauStatut] = useState('')
   const [commentaire, setCommentaire] = useState('')
   const [showVisHistory, setShowVisHistory] = useState(false)
-  const [viewerDoc, setViewerDoc] = useState<{ blob: Blob; name: string } | null>(null)
+  const [viewerDoc, setViewerDoc] = useState<{ dataUrl: string; name: string; mimeType: string } | null>(null)
   const [showAudienceModal, setShowAudienceModal] = useState(false)
   const [selectedAudienceId, setSelectedAudienceId] = useState<string | undefined>()
   const [audienceRefreshKey, setAudienceRefreshKey] = useState(0)
@@ -134,8 +134,14 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   async function viewDocument(doc: DocumentDto) {
     try {
       const blob = await documentApi.view(doc.id)
-      setViewerDoc({ blob, name: doc.nomFichier })
-      notify({ type: 'success', message: '👁️ Document ouvert' })
+      // Convertir blob en data URL pour éviter le blocage CSP
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string
+        setViewerDoc({ dataUrl, name: doc.nomFichier, mimeType: doc.mimeType })
+        notify({ type: 'success', message: '👁️ Document ouvert' })
+      }
+      reader.readAsDataURL(blob)
       if (showVisHistory) {
         setTimeout(() => loadVisualisations(), 500)
       }
@@ -1048,15 +1054,29 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
               </button>
             </div>
             <div style={{ flex: 1, overflow: 'auto' }}>
-              <iframe
-                src={URL.createObjectURL(viewerDoc.blob)}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none'
-                }}
-                title={viewerDoc.name}
-              />
+              {viewerDoc.mimeType?.startsWith('image/') ? (
+                <img
+                  src={viewerDoc.dataUrl}
+                  alt={viewerDoc.name}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    margin: 'auto',
+                    display: 'block'
+                  }}
+                />
+              ) : (
+                <iframe
+                  src={viewerDoc.dataUrl}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none'
+                  }}
+                  title={viewerDoc.name}
+                />
+              )}
             </div>
           </div>
         </div>

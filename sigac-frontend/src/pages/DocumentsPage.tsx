@@ -124,19 +124,21 @@ export default function DocumentsPage() {
   async function handlePreviewDocument(doc: DocumentDto) {
     try {
       const blob = await documentApi.download(doc.id)
-      const url = URL.createObjectURL(blob)
-      setPreviewUrl(url)
-      setPreviewDocument(doc)
-      setShowPreviewModal(true)
+      // Convertir blob en data URL pour éviter le blocage CSP
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string
+        setPreviewUrl(dataUrl)
+        setPreviewDocument(doc)
+        setShowPreviewModal(true)
+      }
+      reader.readAsDataURL(blob)
     } catch (e: any) {
       notify({ type: 'error', message: 'Erreur lors du chargement du document' })
     }
   }
 
   function closePreview() {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-    }
     setPreviewUrl(null)
     setPreviewDocument(null)
     setShowPreviewModal(false)
