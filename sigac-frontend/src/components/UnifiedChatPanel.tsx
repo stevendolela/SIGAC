@@ -523,6 +523,7 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [videoCallReceiverName, setVideoCallReceiverName] = useState<string>('');
   const [incomingCall, setIncomingCall] = useState<any | null>(null);
   const [isIncomingCallModalOpen, setIsIncomingCallModalOpen] = useState(false);
+  const [shouldAcceptIncomingCall, setShouldAcceptIncomingCall] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1441,11 +1442,35 @@ const UnreadBadge: React.FC = React.memo(() => {
 
   return (
     <div className="unified-chat-panel">
+      {/* Notification compacte d'appel entrant en bas à droite */}
+      {incomingCall && isIncomingCallModalOpen && !shouldAcceptIncomingCall && (
+        <IncomingCallNotification
+          callerName={incomingCall.initiatorName || 'Appelant'}
+          onAccept={() => {
+            // Déclencher l'acceptation de l'appel dans VideoCallModal
+            console.log('✅ Accepter appel via notification');
+            setShouldAcceptIncomingCall(true);
+          }}
+          onReject={async () => {
+            try {
+              await videoCallApi.rejectCall(incomingCall.id);
+              setShouldAcceptIncomingCall(false);
+              setIsIncomingCallModalOpen(false);
+              setIncomingCall(null);
+            } catch (error) {
+              console.error('Erreur refus appel:', error);
+            }
+          }}
+          isVisible={true}
+        />
+      )}
+
       {/* Modal pour appel vidéo entrant - s'ouvre immédiatement pour WebRTC */}
       {incomingCall && (
         <VideoCallModal
           isOpen={isIncomingCallModalOpen}
           onClose={() => {
+            setShouldAcceptIncomingCall(false);
             setIsIncomingCallModalOpen(false);
             setIncomingCall(null);
           }}
@@ -1455,6 +1480,11 @@ const UnreadBadge: React.FC = React.memo(() => {
           conversationId={incomingCall.conversationId}
           isIncoming={true}
           incomingCallId={incomingCall.id}
+          shouldAcceptCall={shouldAcceptIncomingCall}
+          onCallAccepted={() => {
+            // L'appel a été accepté, cacher la notification
+            setShouldAcceptIncomingCall(false);
+          }}
         />
       )}
 

@@ -19,6 +19,8 @@ interface VideoCallModalProps {
   conversationId?: string;
   isIncoming?: boolean;
   incomingCallId?: string;
+  shouldAcceptCall?: boolean; // Trigger acceptation depuis l'extérieur
+  onCallAccepted?: () => void; // Callback quand l'appel est accepté
 }
 
 export const VideoCallModal: React.FC<VideoCallModalProps> = ({
@@ -29,7 +31,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   receiverName,
   conversationId,
   isIncoming = false,
-  incomingCallId
+  incomingCallId,
+  shouldAcceptCall = false,
+  onCallAccepted
 }) => {
   const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'active' | 'ended'>('connecting');
   const [currentCall, setCurrentCall] = useState<VideoCallDto | null>(null);
@@ -177,6 +181,14 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
       stopRingtone();
     };
   }, [isOpen]);
+
+  // Réagir à shouldAcceptCall depuis la notification
+  useEffect(() => {
+    if (shouldAcceptCall && isIncoming && callStatus === 'ringing' && incomingCallId) {
+      console.log('🔔 Acceptation déclenchée depuis la notification');
+      handleAnswerCallInternal();
+    }
+  }, [shouldAcceptCall]);
 
   // Gérer la tonalité/sonnerie selon le statut
   useEffect(() => {
@@ -353,10 +365,15 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     }
   };
 
-  const handleAnswerCall = async () => {
+  const handleAnswerCallInternal = async () => {
     if (!incomingCallId) return;
 
     console.log('📞 Acceptation de l\'appel:', incomingCallId);
+    
+    // Notifier le parent que l'appel est accepté
+    if (onCallAccepted) {
+      onCallAccepted();
+    }
 
     try {
       // Accepter l'appel côté serveur
@@ -680,8 +697,16 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Pour les appels entrants en mode 'ringing', masquer le modal (la notification est affichée)
+  // WebRTC tourne en arrière-plan mais l'UI n'est pas visible
+  const isHiddenForIncomingRinging = isIncoming && callStatus === 'ringing';
+
   return (
-    <div className="video-call-overlay">
+    <div className="video-call-overlay" style={{ 
+      opacity: isHiddenForIncomingRinging ? 0 : 1,
+      pointerEvents: isHiddenForIncomingRinging ? 'none' : 'auto',
+      transition: 'opacity 0.3s ease'
+    }}>
       <div className="video-call-modal">
         <div className="video-call-header">
           <h3>{receiverName}</h3>
@@ -751,7 +776,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         <div className="video-call-controls">
           {callStatus === 'ringing' && isIncoming ? (
             <>
-              <button className="control-btn accept-btn" onClick={handleAnswerCall}>
+              <button className="control-btn accept-btn" onClick={handleAnswerCallInternal}>
                 <span>📞</span>
                 <span>Accepter</span>
               </button>

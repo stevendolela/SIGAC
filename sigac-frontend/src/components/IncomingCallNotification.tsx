@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { VideoCallIcon, CloseIcon, CheckIcon } from './icons/ChatIcons';
 
 interface IncomingCallNotificationProps {
@@ -14,88 +14,8 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
   onReject,
   isVisible
 }) => {
-  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
-
-  // Jouer la sonnerie quand visible
-  useEffect(() => {
-    if (isVisible) {
-      // Créer et jouer la sonnerie
-      ringtoneRef.current = new Audio();
-      // Sonnerie base64 ou URL - utilisation d'un oscillateur Web Audio API
-      playRingtone();
-    } else {
-      stopRingtone();
-    }
-
-    return () => {
-      stopRingtone();
-    };
-  }, [isVisible]);
-
-  const playRingtone = () => {
-    try {
-      // Utiliser Web Audio API pour générer une sonnerie
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      const playTone = (startTime: number) => {
-        // Première note
-        const osc1 = audioContext.createOscillator();
-        const gain1 = audioContext.createGain();
-        osc1.connect(gain1);
-        gain1.connect(audioContext.destination);
-        osc1.frequency.value = 440; // La 440 Hz
-        osc1.type = 'sine';
-        gain1.gain.setValueAtTime(0.3, startTime);
-        gain1.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
-        osc1.start(startTime);
-        osc1.stop(startTime + 0.5);
-
-        // Deuxième note (plus haute)
-        const osc2 = audioContext.createOscillator();
-        const gain2 = audioContext.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioContext.destination);
-        osc2.frequency.value = 554.37; // Do# 
-        osc2.type = 'sine';
-        gain2.gain.setValueAtTime(0.3, startTime + 0.15);
-        gain2.gain.exponentialRampToValueAtTime(0.01, startTime + 0.65);
-        osc2.start(startTime + 0.15);
-        osc2.stop(startTime + 0.65);
-      };
-
-      // Jouer la sonnerie en boucle
-      let currentTime = audioContext.currentTime;
-      const ringInterval = setInterval(() => {
-        if (ringtoneRef.current) {
-          currentTime = audioContext.currentTime;
-          playTone(currentTime);
-          playTone(currentTime + 0.7);
-        }
-      }, 2000);
-
-      // Jouer immédiatement
-      playTone(currentTime);
-      playTone(currentTime + 0.7);
-
-      // Stocker pour cleanup
-      (ringtoneRef.current as any) = { audioContext, ringInterval };
-    } catch (error) {
-      console.error('Erreur lecture sonnerie:', error);
-    }
-  };
-
-  const stopRingtone = () => {
-    if (ringtoneRef.current) {
-      const ref = ringtoneRef.current as any;
-      if (ref.ringInterval) {
-        clearInterval(ref.ringInterval);
-      }
-      if (ref.audioContext) {
-        ref.audioContext.close();
-      }
-      ringtoneRef.current = null;
-    }
-  };
+  // Note: La sonnerie est gérée par VideoCallModal
+  // Ce composant est juste un overlay visuel
 
   if (!isVisible) return null;
 
