@@ -44,6 +44,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const localStreamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
   const dialToneRef = useRef<any>(null);
+  const ringtoneRef = useRef<any>(null);
 
   // Configuration ICE servers (STUN/TURN)
   const iceServers: RTCConfiguration = {
@@ -102,6 +103,69 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     }
   };
 
+  // Sonnerie pour appel entrant
+  const playRingtone = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      const playTone = (startTime: number) => {
+        // Première note
+        const osc1 = audioContext.createOscillator();
+        const gain1 = audioContext.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioContext.destination);
+        osc1.frequency.value = 440; // La 440 Hz
+        osc1.type = 'sine';
+        gain1.gain.setValueAtTime(0.3, startTime);
+        gain1.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+        osc1.start(startTime);
+        osc1.stop(startTime + 0.5);
+
+        // Deuxième note (plus haute)
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        osc2.frequency.value = 554.37; // Do# 
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(0.3, startTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.01, startTime + 0.65);
+        osc2.start(startTime + 0.15);
+        osc2.stop(startTime + 0.65);
+      };
+
+      // Jouer immédiatement
+      let currentTime = audioContext.currentTime;
+      playTone(currentTime);
+      playTone(currentTime + 0.7);
+
+      // Jouer la sonnerie en boucle
+      const ringInterval = setInterval(() => {
+        if (ringtoneRef.current) {
+          currentTime = audioContext.currentTime;
+          playTone(currentTime);
+          playTone(currentTime + 0.7);
+        }
+      }, 2000);
+
+      ringtoneRef.current = { audioContext, ringInterval };
+    } catch (error) {
+      console.error('Erreur lecture sonnerie:', error);
+    }
+  };
+
+  const stopRingtone = () => {
+    if (ringtoneRef.current) {
+      if (ringtoneRef.current.ringInterval) {
+        clearInterval(ringtoneRef.current.ringInterval);
+      }
+      if (ringtoneRef.current.audioContext) {
+        ringtoneRef.current.audioContext.close();
+      }
+      ringtoneRef.current = null;
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       initializeCall();
@@ -110,17 +174,24 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     return () => {
       cleanup();
       stopDialTone();
+      stopRingtone();
     };
   }, [isOpen]);
 
-  // Gérer la tonalité selon le statut
+  // Gérer la tonalité/sonnerie selon le statut
   useEffect(() => {
-    if (callStatus === 'ringing' && !isIncoming) {
-      // Appel sortant en sonnerie -> jouer tonalité
-      playDialTone();
+    if (callStatus === 'ringing') {
+      if (isIncoming) {
+        // Appel entrant -> jouer sonnerie
+        playRingtone();
+      } else {
+        // Appel sortant -> jouer tonalité
+        playDialTone();
+      }
     } else {
-      // Appel actif ou terminé -> stopper tonalité
+      // Appel actif ou terminé -> stopper tous les sons
       stopDialTone();
+      stopRingtone();
     }
   }, [callStatus, isIncoming]);
 
@@ -591,6 +662,10 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+
+    // Arrêter les sons
+    stopDialTone();
+    stopRingtone();
 
     setCallStatus('ended');
     setElapsedTime(0);

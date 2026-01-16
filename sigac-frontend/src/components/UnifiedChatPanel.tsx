@@ -863,7 +863,8 @@ const UnreadBadge: React.FC = React.memo(() => {
           const call = pendingCalls[0]; // Prendre le premier appel en attente
           console.log('📞 Appel entrant détecté:', call);
           setIncomingCall(call);
-          // NE PAS ouvrir la modal immédiatement - laisser la notification compacte s'afficher
+          // Ouvrir immédiatement le VideoCallModal (comme avant) pour que WebRTC s'initialise
+          setIsIncomingCallModalOpen(true);
         }
       } catch (error) {
         console.error('Erreur vérification appels entrants:', error);
@@ -1440,32 +1441,8 @@ const UnreadBadge: React.FC = React.memo(() => {
 
   return (
     <div className="unified-chat-panel">
-      {/* Notification d'appel entrant - TOUJOURS visible (même chat fermé) */}
-      {incomingCall && !isIncomingCallModalOpen && (
-        <IncomingCallNotification
-          callerName={incomingCall.initiatorName || 'Appelant'}
-          isVisible={true}
-          onAccept={() => setIsIncomingCallModalOpen(true)}
-          onReject={async () => {
-            try {
-              await videoCallApi.rejectCall(incomingCall.id);
-              // Envoyer trace de l'appel refusé
-              if (incomingCall.conversationId) {
-                await chatApi.sendMessage(
-                  incomingCall.conversationId, 
-                  `📹 Appel refusé de ${incomingCall.initiatorName || 'Appelant'}`
-                );
-              }
-            } catch (error) {
-              console.error('Erreur rejet appel:', error);
-            }
-            setIncomingCall(null);
-          }}
-        />
-      )}
-
-      {/* Modal pour appel vidéo entrant (après avoir accepté) */}
-      {incomingCall && isIncomingCallModalOpen && (
+      {/* Modal pour appel vidéo entrant - s'ouvre immédiatement pour WebRTC */}
+      {incomingCall && (
         <VideoCallModal
           isOpen={isIncomingCallModalOpen}
           onClose={() => {
