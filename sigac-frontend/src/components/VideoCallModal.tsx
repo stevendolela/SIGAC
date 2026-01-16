@@ -150,39 +150,63 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     try {
       setCallStatus('ringing');
 
+      console.log('📞 Création de l\'appel côté serveur...', { receiverId, conversationId });
+      
       // Créer l'appel côté serveur
       const call = await videoCallApi.initiateCall({
         receiverId,
         conversationId
       });
 
+      console.log('✅ Appel créé:', call);
       setCurrentCall(call);
 
       // Créer la connexion WebRTC
+      console.log('🔗 Création de la connexion WebRTC...');
       const pc = createPeerConnection();
       peerConnectionRef.current = pc;
 
       // Ajouter les tracks locaux
       localStreamRef.current?.getTracks().forEach(track => {
+        console.log('➕ Ajout track:', track.kind);
         pc.addTrack(track, localStreamRef.current!);
       });
 
       // Créer l'offre
+      console.log('📝 Création de l\'offre SDP...');
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      console.log('✅ Offre créée:', offer.type);
 
       // Envoyer l'offre au serveur
+      console.log('📤 Envoi de l\'offre au serveur...');
       await videoCallApi.saveSignalingData({
         callId: call.id,
         type: 'offer',
         data: JSON.stringify(offer)
       });
+      console.log('✅ Offre envoyée');
 
       // Polling pour récupérer la réponse (à améliorer avec WebSocket)
       pollForAnswer(call.id);
-    } catch (error) {
-      console.error('Erreur lors de l\'initiation de l\'appel:', error);
-      alert('Erreur lors de l\'initiation de l\'appel');
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'initiation de l\'appel:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        response: error.response,
+        status: error.status
+      });
+      
+      let errorMessage = 'Erreur lors de l\'initiation de l\'appel';
+      if (error.message) {
+        errorMessage += `\n\nDétails: ${error.message}`;
+      }
+      if (error.response?.data?.message) {
+        errorMessage += `\n\nServeur: ${error.response.data.message}`;
+      }
+      
+      alert(errorMessage);
       handleEndCall();
     }
   };
