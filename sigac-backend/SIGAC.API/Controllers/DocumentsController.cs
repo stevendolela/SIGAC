@@ -944,6 +944,67 @@ public class DocumentsController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Ajoute la colonne FileData à la table Documents si elle n'existe pas
+    /// </summary>
+    [HttpPost("add-filedata-column")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddFileDataColumn()
+    {
+        try
+        {
+            await using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            // Vérifier si la colonne existe déjà
+            await using var checkCmd = conn.CreateCommand();
+            checkCmd.CommandText = @"
+                SELECT COUNT(*) FROM information_schema.columns 
+                WHERE table_name = 'Documents' AND column_name = 'FileData'";
+            var exists = Convert.ToInt32(await checkCmd.ExecuteScalarAsync()) > 0;
+            
+            if (exists)
+            {
+                return Ok(new { 
+                    message = "La colonne FileData existe déjà",
+                    alreadyExists = true
+                });
+            }
+            
+            // Ajouter la colonne
+            await using var addCmd = conn.CreateCommand();
+            addCmd.CommandText = @"ALTER TABLE ""Documents"" ADD COLUMN ""FileData"" TEXT NULL";
+            await addCmd.ExecuteNonQueryAsync();
+            
+            // Enregistrer la migration
+            await using var migrationCmd = conn.CreateCommand();
+            migrationCmd.CommandText = @"
+                INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                SELECT '20260116215039_AddFileDataToDocument', '8.0.2'
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM ""__EFMigrationsHistory"" 
+                    WHERE ""MigrationId"" = '20260116215039_AddFileDataToDocument'
+                )";
+            await migrationCmd.ExecuteNonQueryAsync();
+            
+            _logger.LogInformation("Colonne FileData ajoutée avec succès à la table Documents");
+            
+            return Ok(new { 
+                message = "Colonne FileData ajoutée avec succès",
+                success = true
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'ajout de la colonne FileData");
+            return StatusCode(500, new { 
+                message = "Erreur lors de l'ajout de la colonne FileData",
+                error = ex.Message 
+            });
+        }
+    }
 }
 
 public class TestScannerRequest
