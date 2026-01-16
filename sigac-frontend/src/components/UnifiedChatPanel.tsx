@@ -814,10 +814,20 @@ const UnreadBadge: React.FC = React.memo(() => {
 
     // Déterminer l'ID et le nom de l'autre utilisateur
     const currentUserId = localStorage.getItem('userId') || '';
-    const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
-    const otherUserName = conversation.user1Id === currentUserId 
-      ? (conversation.user2NomComplet || conversation.user2Username || 'Utilisateur')
-      : (conversation.user1NomComplet || conversation.user1Username || 'Utilisateur');
+    
+    // Logique explicite pour éviter les bugs
+    let otherUserId: string;
+    let otherUserName: string;
+    
+    if (conversation.user1Id === currentUserId) {
+      // Je suis user1, donc l'autre est user2
+      otherUserId = conversation.user2Id;
+      otherUserName = conversation.user2NomComplet || conversation.user2Username || 'Utilisateur';
+    } else {
+      // Je suis user2 (ou ni l'un ni l'autre), donc l'autre est user1
+      otherUserId = conversation.user1Id;
+      otherUserName = conversation.user1NomComplet || conversation.user1Username || 'Utilisateur';
+    }
 
     // Debug: Afficher les IDs pour diagnostiquer
     console.log('🔍 Video Call Debug:', {
@@ -825,16 +835,18 @@ const UnreadBadge: React.FC = React.memo(() => {
       conversationUser1Id: conversation.user1Id,
       conversationUser2Id: conversation.user2Id,
       calculatedOtherUserId: otherUserId,
-      otherUserName
+      otherUserName,
+      condition: conversation.user1Id === currentUserId ? 'user1==current' : 'user1!=current'
     });
 
     // Empêcher de s'appeler soi-même
-    if (otherUserId === currentUserId) {
+    if (!otherUserId || otherUserId === currentUserId) {
       alert('❌ Vous ne pouvez pas vous appeler vous-même!');
+      console.error('❌ Impossible d\'appeler:', { otherUserId, currentUserId });
       return;
     }
 
-    console.log('Starting video call with:', { otherUserId, otherUserName });
+    console.log('✅ Starting video call with:', { otherUserId, otherUserName });
     setVideoCallReceiverId(otherUserId);
     setVideoCallReceiverName(otherUserName);
     setIsVideoCallModalOpen(true);
