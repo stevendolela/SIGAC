@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useChatConversations, useChatConversation, useChatGroups, useChatGroup, useUnreadCount } from '../hooks/useChat';
 import { chatApi } from '../api/chatApi';
 import { chatAttachmentApi } from '../api/chatAttachmentApi';
+import { videoCallApi } from '../api/videoCallApi';
 import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
@@ -475,6 +476,8 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [isVideoCallModalOpen, setIsVideoCallModalOpen] = useState(false);
   const [videoCallReceiverId, setVideoCallReceiverId] = useState<string>('');
   const [videoCallReceiverName, setVideoCallReceiverName] = useState<string>('');
+  const [incomingCall, setIncomingCall] = useState<any | null>(null);
+  const [isIncomingCallModalOpen, setIsIncomingCallModalOpen] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [currentUserStatus, setCurrentUserStatus] = useState<UserStatus>(UserStatus.EnLigne);
   const [searchQuery, setSearchQuery] = useState('');
@@ -781,6 +784,30 @@ const UnreadBadge: React.FC = React.memo(() => {
       console.error('Erreur:', error);
     }
   };
+
+  // Polling pour les appels entrants
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkPendingCalls = async () => {
+      try {
+        const pendingCalls = await videoCallApi.getPendingCalls();
+        if (pendingCalls.length > 0 && !incomingCall) {
+          const call = pendingCalls[0]; // Prendre le premier appel en attente
+          console.log('📞 Appel entrant détecté:', call);
+          setIncomingCall(call);
+          setIsIncomingCallModalOpen(true);
+        }
+      } catch (error) {
+        console.error('Erreur vérification appels entrants:', error);
+      }
+    };
+
+    checkPendingCalls();
+    const interval = setInterval(checkPendingCalls, 3000); // Check toutes les 3 secondes
+
+    return () => clearInterval(interval);
+  }, [isOpen, incomingCall]);
 
   const handleStartVideoCall = () => {
     if (!conversation || selectedChat?.type !== 'conversation') return;
@@ -1930,6 +1957,22 @@ const UnreadBadge: React.FC = React.memo(() => {
         receiverName={videoCallReceiverName}
         conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
       />
+
+      {/* Modal pour appel vidéo entrant */}
+      {incomingCall && (
+        <VideoCallModal
+          isOpen={isIncomingCallModalOpen}
+          onClose={() => {
+            setIsIncomingCallModalOpen(false);
+            setIncomingCall(null);
+          }}
+          receiverId={incomingCall.initiatorId}
+          receiverName="Appelant" // À améliorer avec le vrai nom
+          conversationId={incomingCall.conversationId}
+          isIncoming={true}
+          incomingCallId={incomingCall.id}
+        />
+      )}
 
       {/* Modal de prévisualisation des fichiers */}
       {filePreviewModal.isOpen && filePreviewModal.attachment && (

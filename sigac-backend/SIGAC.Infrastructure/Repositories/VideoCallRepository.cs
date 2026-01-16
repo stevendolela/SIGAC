@@ -33,6 +33,16 @@ public class VideoCallRepository : IVideoCallRepository
             .Take(pageSize)
             .ToListAsync();
     }
+    
+    public async Task<List<VideoCall>> GetPendingCallsForReceiverAsync(Guid receiverId)
+    {
+        return await _context.VideoCalls
+            .Include(vc => vc.Initiator)
+            .Include(vc => vc.Receiver)
+            .Where(vc => vc.ReceiverId == receiverId && vc.Status == VideoCallStatus.Initiating)
+            .OrderByDescending(vc => vc.StartedAt)
+            .ToListAsync();
+    }
 
     public async Task AddAsync(VideoCall videoCall)
     {

@@ -74,6 +74,14 @@ class VideoCallApi {
     const response = await api.get(`${this.baseUrl}/${callId}/signaling`);
     return response.data.data;
   }
+
+  /**
+   * Récupérer les appels entrants en attente
+   */
+  async getPendingCalls(): Promise<VideoCallDto[]> {
+    const response = await api.get(`${this.baseUrl}/pending`);
+    return response.data;
+  }
 }
 
 export const videoCallApi = new VideoCallApi();

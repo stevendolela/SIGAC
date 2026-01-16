@@ -48,4 +48,9 @@ public interface IVideoCallService
     /// Récupérer les données de signalisation pour un appel
     /// </summary>
     Task<string?> GetSignalingDataAsync(Guid callId, Guid userId);
+    
+    /// <summary>
+    /// Récupérer les appels entrants en attente pour un utilisateur
+    /// </summary>
+    Task<List<VideoCallDto>> GetPendingCallsForUserAsync(Guid userId);
 }

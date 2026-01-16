@@ -233,4 +233,22 @@ public class VideoCallController : ControllerBase
             return Forbid(ex.Message);
         }
     }
+
+    /// <summary>
+    /// Récupérer les appels entrants en attente pour l'utilisateur connecté
+    /// </summary>
+    [HttpGet("pending")]
+    public async Task<ActionResult<List<VideoCallDto>>> GetPendingCalls()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _videoCallService.GetPendingCallsForUserAsync(userId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erreur lors de la récupération des appels entrants", error = ex.Message });
+        }
+    }
 }

@@ -261,4 +261,23 @@ public class VideoCallService : IVideoCallService
             DurationSeconds = call.DurationSeconds
         };
     }
+    
+    public async Task<List<VideoCallDto>> GetPendingCallsForUserAsync(Guid userId)
+    {
+        // Récupérer tous les appels où l'utilisateur est le destinataire et le statut est Initiating
+        var pendingCalls = await _videoCallRepository.GetPendingCallsForReceiverAsync(userId);
+        
+        return pendingCalls.Select(call => new VideoCallDto
+        {
+            Id = call.Id,
+            InitiatorId = call.InitiatorId,
+            ReceiverId = call.ReceiverId,
+            ConversationId = call.ConversationId,
+            GroupId = call.GroupId,
+            Status = call.Status.ToString(),
+            StartedAt = call.StartedAt,
+            EndedAt = call.EndedAt,
+            DurationSeconds = call.DurationSeconds
+        }).ToList();
+    }
 }
