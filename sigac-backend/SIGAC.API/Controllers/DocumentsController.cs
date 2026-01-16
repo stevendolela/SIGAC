@@ -853,6 +853,97 @@ public class DocumentsController : ControllerBase
     #endregion
 
     #endregion
+
+    /// <summary>
+    /// Vérifie et applique les migrations de la base de données si nécessaire
+    /// </summary>
+    [HttpPost("apply-migrations")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ApplyMigrations()
+    {
+        try
+        {
+            var pendingMigrations = await _context.Database.GetPendingMigrationsAsync();
+            var pendingList = pendingMigrations.ToList();
+            
+            if (pendingList.Any())
+            {
+                _logger.LogInformation("Applying {Count} pending migrations: {Migrations}", 
+                    pendingList.Count, string.Join(", ", pendingList));
+                
+                await _context.Database.MigrateAsync();
+                
+                return Ok(new { 
+                    message = "Migrations applied successfully",
+                    applied = pendingList
+                });
+            }
+            
+            var appliedMigrations = await _context.Database.GetAppliedMigrationsAsync();
+            return Ok(new { 
+                message = "No pending migrations",
+                applied = appliedMigrations.ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying migrations");
+            return StatusCode(500, new { 
+                message = "Error applying migrations",
+                error = ex.Message 
+            });
+        }
+    }
+
+    /// <summary>
+    /// Vérifie si la colonne FileData existe dans la table Documents
+    /// </summary>
+    [HttpGet("check-schema")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CheckSchema()
+    {
+        try
+        {
+            var sql = @"
+                SELECT column_name, data_type, is_nullable 
+                FROM information_schema.columns 
+                WHERE table_name = 'Documents'
+                ORDER BY ordinal_position";
+            
+            var columns = new List<object>();
+            await using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                columns.Add(new {
+                    columnName = reader.GetString(0),
+                    dataType = reader.GetString(1),
+                    isNullable = reader.GetString(2)
+                });
+            }
+            
+            var hasFileData = columns.Any(c => ((dynamic)c).columnName == "FileData");
+            
+            return Ok(new {
+                hasFileDataColumn = hasFileData,
+                columns = columns
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking schema");
+            return StatusCode(500, new { 
+                message = "Error checking schema",
+                error = ex.Message 
+            });
+        }
+    }
 }
 
 public class TestScannerRequest
