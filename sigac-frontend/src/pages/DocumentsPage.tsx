@@ -360,57 +360,37 @@ export default function DocumentsPage() {
 
   return (
     <div className="documents-page">
-      {/* Header */}
-      <div className="documents-header">
-        <div className="documents-title">
-          <div className="documents-title-icon">📄</div>
-          <h1>Gestion des Documents</h1>
-        </div>
-        <p className="documents-subtitle">Gérez, organisez et consultez tous vos documents en un seul endroit</p>
+      {/* Header Minimaliste */}
+      <div className="docs-header">
+        <h1>Documents</h1>
+        <p className="docs-subtitle">Gérez et organisez vos fichiers</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="documents-stats">
-        <div className="stat-card">
-          <div className="stat-icon blue">📁</div>
-          <div className="stat-info">
-            <h4>{filteredDocuments.length}</h4>
-            <p>Documents</p>
-          </div>
+      {/* Stats Mini Bar */}
+      <div className="stats-bar">
+        <div className="stat-item">
+          <strong>{filteredDocuments.length}</strong> documents
         </div>
-        <div className="stat-card">
-          <div className="stat-icon green">📷</div>
-          <div className="stat-info">
-            <h4>{imageCount}</h4>
-            <p>Images</p>
-          </div>
+        <div className="stat-item">
+          <strong>{pdfCount}</strong> PDF
         </div>
-        <div className="stat-card">
-          <div className="stat-icon purple">📕</div>
-          <div className="stat-info">
-            <h4>{pdfCount}</h4>
-            <p>PDF</p>
-          </div>
+        <div className="stat-item">
+          <strong>{imageCount}</strong> images
         </div>
-        <div className="stat-card">
-          <div className="stat-icon orange">💾</div>
-          <div className="stat-info">
-            <h4>{formatSize(totalSize)}</h4>
-            <p>Stockage total</p>
-          </div>
+        <div className="stat-item">
+          <strong>{formatSize(totalSize)}</strong> total
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="documents-toolbar">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Rechercher un document..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      {/* Toolbar Compact */}
+      <div className="docs-toolbar">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Rechercher..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         
         <select
           className="filter-select"
@@ -425,163 +405,165 @@ export default function DocumentsPage() {
           ))}
         </select>
 
-        <button
-          className="action-btn success"
-          onClick={() => setShowUploadModal(true)}
-          disabled={!selectedDossierId}
-        >
-          {Icons.upload}
-          <span>Importer</span>
-        </button>
+        <div className="toolbar-spacer" />
 
         <button
-          className="action-btn purple"
+          className="btn-action"
           onClick={() => { setShowScannerModal(true); setShowUploadModal(false) }}
           disabled={!selectedDossierId}
         >
-          {Icons.camera}
-          <span>Scanner</span>
+          📷 Scanner
+        </button>
+
+        <button
+          className="btn-action primary"
+          onClick={() => setShowUploadModal(true)}
+          disabled={!selectedDossierId}
+        >
+          ↑ Importer
         </button>
       </div>
 
       {/* Loading */}
       {loading && (
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <p style={{ marginTop: 16, color: '#64748b' }}>Chargement des documents...</p>
+        <div className="loading-state">
+          <div className="spinner" />
+          <p>Chargement...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && filteredDocuments.length === 0 && (
         <div className="empty-state">
-          <div className="empty-state-icon">📭</div>
-          <h3>Aucun document trouvé</h3>
+          <div className="empty-icon">📄</div>
+          <h3>Aucun document</h3>
           <p>
             {selectedDossierId 
-              ? "Ce dossier ne contient pas encore de documents. Importez-en un pour commencer."
-              : "Sélectionnez un dossier et importez vos premiers documents."}
+              ? "Ce dossier est vide. Importez un document pour commencer."
+              : "Sélectionnez un dossier pour voir ses documents."}
           </p>
         </div>
       )}
 
-      {/* Documents Grid */}
+      {/* Table de Documents */}
       {!loading && filteredDocuments.length > 0 && (
-        <div className="documents-grid">
-          {filteredDocuments.map(doc => {
-            const fileType = getFileType(doc.mimeType)
-            return (
-              <div key={doc.id} className="document-card">
-                <div className={`document-preview ${fileType}`}>
-                  <div className="document-icon">
-                    {fileType === 'pdf' && '📕'}
-                    {fileType === 'image' && '🖼️'}
-                    {fileType === 'word' && '📘'}
-                    {fileType === 'excel' && '📗'}
-                    {fileType === 'other' && '📄'}
-                  </div>
-                  <span className={`document-type-badge ${fileType}`}>
-                    {fileType.toUpperCase()}
-                  </span>
-                </div>
-                <div className="document-info">
-                  <div className="document-name" title={doc.nomFichier}>
-                    {doc.nomFichier}
-                  </div>
-                  <div className="document-meta">
-                    <span>{formatSize(doc.tailleFichier)}</span>
-                    <span>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                  <div className="document-actions">
-                    <button 
-                      className="doc-action-btn view"
-                      onClick={() => handlePreviewDocument(doc)}
-                      title="Ouvrir"
-                    >
-                      {Icons.eye}
-                      <span>Ouvrir</span>
-                    </button>
-                    <button 
-                      className="doc-action-btn download"
-                      onClick={async () => {
-                        try {
-                          const blob = await documentApi.download(doc.id)
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement('a')
-                          a.href = url
-                          a.download = doc.nomFichier
-                          a.click()
-                          URL.revokeObjectURL(url)
-                          notify({ type: 'success', message: 'Téléchargé' })
-                        } catch { notify({ type: 'error', message: 'Erreur' }) }
-                      }}
-                      title="Télécharger"
-                    >
-                      {Icons.download}
-                    </button>
-                    <button 
-                      className="doc-action-btn delete"
-                      onClick={async () => {
-                        if (!confirm(`Supprimer "${doc.nomFichier}" ?`)) return
-                        try {
-                          await documentApi.remove(doc.id)
-                          setDocuments(prev => prev.filter(d => d.id !== doc.id))
-                          notify({ type: 'success', message: 'Supprimé' })
-                        } catch { notify({ type: 'error', message: 'Erreur' }) }
-                      }}
-                      title="Supprimer"
-                    >
-                      {Icons.trash}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+        <div className="docs-table-wrapper">
+          <table className="docs-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Taille</th>
+                <th>Date</th>
+                <th style={{ width: 100 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDocuments.map(doc => {
+                const fileType = getFileType(doc.mimeType)
+                const iconMap = { pdf: '📕', image: '🖼', word: '📘', excel: '📗', other: '📄' }
+                return (
+                  <tr key={doc.id}>
+                    <td>
+                      <div className="file-cell">
+                        <div className={`file-icon ${fileType}`}>
+                          {iconMap[fileType]}
+                        </div>
+                        <span className="file-name" title={doc.nomFichier}>
+                          {doc.nomFichier}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`type-tag ${fileType}`}>
+                        {fileType}
+                      </span>
+                    </td>
+                    <td className="text-muted">{formatSize(doc.tailleFichier)}</td>
+                    <td className="text-muted">{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                      <div className="actions-cell">
+                        <button 
+                          className="icon-btn view"
+                          onClick={() => handlePreviewDocument(doc)}
+                          title="Ouvrir"
+                        >
+                          👁
+                        </button>
+                        <button 
+                          className="icon-btn download"
+                          onClick={async () => {
+                            try {
+                              const blob = await documentApi.download(doc.id)
+                              const url = URL.createObjectURL(blob)
+                              const a = document.createElement('a')
+                              a.href = url
+                              a.download = doc.nomFichier
+                              a.click()
+                              URL.revokeObjectURL(url)
+                              notify({ type: 'success', message: 'Téléchargé' })
+                            } catch { notify({ type: 'error', message: 'Erreur' }) }
+                          }}
+                          title="Télécharger"
+                        >
+                          ↓
+                        </button>
+                        <button 
+                          className="icon-btn delete"
+                          onClick={async () => {
+                            if (!confirm(`Supprimer "${doc.nomFichier}" ?`)) return
+                            try {
+                              await documentApi.remove(doc.id)
+                              setDocuments(prev => prev.filter(d => d.id !== doc.id))
+                              notify({ type: 'success', message: 'Supprimé' })
+                            } catch { notify({ type: 'error', message: 'Erreur' }) }
+                          }}
+                          title="Supprimer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Modal Upload */}
       {showUploadModal && (
-        <div className="modal-overlay-modern" onClick={() => setShowUploadModal(false)}>
-          <div className="modal-modern" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>
-                <span style={{ fontSize: 24 }}>📤</span>
-                Importer des documents
-              </h2>
-              <button className="modal-close" onClick={() => setShowUploadModal(false)}>
-                {Icons.close}
-              </button>
+              <h3>Importer des documents</h3>
+              <button className="modal-close" onClick={() => setShowUploadModal(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div
-                className={`upload-zone ${dragActive ? 'active' : ''}`}
+                className={`upload-area ${dragActive ? 'active' : ''}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById('file-input')?.click()}
               >
-                <div className="upload-zone-icon">📁</div>
+                <div className="icon">📁</div>
                 <h4>Glissez vos fichiers ici</h4>
                 <p>ou cliquez pour sélectionner</p>
-                <p style={{ marginTop: 12, fontSize: 12, color: '#94a3b8' }}>
-                  PDF, Images, Word, Excel
-                </p>
                 <input
                   type="file"
                   multiple
                   onChange={(e) => handleFileUpload(e.target.files)}
-                  style={{ display: 'none' }}
                   id="file-input"
                   disabled={uploading}
                 />
               </div>
               {uploading && (
                 <div style={{ textAlign: 'center', marginTop: 20 }}>
-                  <div className="loading-spinner" style={{ margin: '0 auto' }} />
-                  <p style={{ marginTop: 12, color: '#64748b' }}>Import en cours...</p>
+                  <div className="spinner" style={{ margin: '0 auto' }} />
+                  <p style={{ marginTop: 12, color: '#9b9a97' }}>Import en cours...</p>
                 </div>
               )}
             </div>
