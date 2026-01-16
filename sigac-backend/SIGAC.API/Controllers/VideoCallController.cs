@@ -235,6 +235,28 @@ public class VideoCallController : ControllerBase
     }
 
     /// <summary>
+    /// Récupérer tous les ICE candidates pour un appel
+    /// </summary>
+    [HttpGet("{callId}/ice-candidates")]
+    public async Task<ActionResult<List<string>>> GetIceCandidates(Guid callId)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var candidates = await _videoCallService.GetIceCandidatesAsync(callId, userId);
+            return Ok(candidates);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Récupérer les appels entrants en attente pour l'utilisateur connecté
     /// </summary>
     [HttpGet("pending")]

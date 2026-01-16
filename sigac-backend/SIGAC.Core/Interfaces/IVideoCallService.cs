@@ -50,6 +50,11 @@ public interface IVideoCallService
     Task<string?> GetSignalingDataAsync(Guid callId, Guid userId);
     
     /// <summary>
+    /// Récupérer tous les ICE candidates pour un appel
+    /// </summary>
+    Task<List<string>> GetIceCandidatesAsync(Guid callId, Guid userId);
+    
+    /// <summary>
     /// Récupérer les appels entrants en attente pour un utilisateur
     /// </summary>
     Task<List<VideoCallDto>> GetPendingCallsForUserAsync(Guid userId);

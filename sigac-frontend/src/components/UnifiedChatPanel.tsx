@@ -819,6 +819,12 @@ const UnreadBadge: React.FC = React.memo(() => {
       ? (conversation.user2NomComplet || conversation.user2Username || 'Utilisateur')
       : (conversation.user1NomComplet || conversation.user1Username || 'Utilisateur');
 
+    // Empêcher de s'appeler soi-même
+    if (otherUserId === currentUserId) {
+      alert('❌ Vous ne pouvez pas vous appeler vous-même!');
+      return;
+    }
+
     console.log('Starting video call with:', { otherUserId, otherUserName });
     setVideoCallReceiverId(otherUserId);
     setVideoCallReceiverName(otherUserName);

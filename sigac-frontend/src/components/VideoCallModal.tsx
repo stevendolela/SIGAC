@@ -245,6 +245,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
           type: 'answer',
           data: JSON.stringify(answer)
         });
+
+        // Démarrer le polling des ICE candidates de l'initiateur
+        pollForIceCandidates(incomingCallId, pc);
       }
     } catch (error) {
       console.error('Erreur lors de la réponse à l\'appel:', error);
@@ -315,6 +318,40 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     return pc;
   };
 
+  const pollForIceCandidates = async (callId: string, pc: RTCPeerConnection) => {
+    // Polling pour récupérer les ICE candidates de l'autre peer
+    const maxAttempts = 60; // 60 secondes
+    let attempts = 0;
+    let lastCandidateCount = 0;
+
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(interval);
+        console.log('🛑 Polling ICE candidates arrêté après 60s');
+        return;
+      }
+
+      try {
+        const response = await videoCallApi.getIceCandidates(callId);
+        const candidates = response || [];
+        
+        if (candidates.length > lastCandidateCount) {
+          console.log(`📡 Nouveaux ICE candidates: ${candidates.length - lastCandidateCount}`);
+          
+          for (let i = lastCandidateCount; i < candidates.length; i++) {
+            const candidate = new RTCIceCandidate(JSON.parse(candidates[i]));
+            await pc.addIceCandidate(candidate);
+          }
+          
+          lastCandidateCount = candidates.length;
+        }
+      } catch (error) {
+        console.error('Erreur lors du polling des ICE candidates:', error);
+      }
+    }, 1000);
+  };
+
   const pollForAnswer = async (callId: string) => {
     // Polling simple - à remplacer par WebSocket en production
     const maxAttempts = 30; // 30 secondes
@@ -340,6 +377,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
           if (signalingData && peerConnectionRef.current) {
             const answer = JSON.parse(signalingData);
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+            
+            // Démarrer le polling des ICE candidates du répondeur
+            pollForIceCandidates(callId, peerConnectionRef.current);
           }
         } else if (call.status === 'Rejected' || call.status === 'Cancelled') {
           clearInterval(interval);

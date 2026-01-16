@@ -55,6 +55,11 @@ public class VideoCall
     /// Données de signalisation WebRTC (SDP offer/answer)
     /// </summary>
     public string? SignalingData { get; set; }
+    
+    /// <summary>
+    /// ICE candidates WebRTC (stockés en JSON array)
+    /// </summary>
+    public string? IceCandidates { get; set; }
 }
 
 /// <summary>

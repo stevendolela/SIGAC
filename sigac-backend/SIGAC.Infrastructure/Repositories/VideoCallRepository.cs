@@ -43,6 +43,17 @@ public class VideoCallRepository : IVideoCallRepository
             .OrderByDescending(vc => vc.StartedAt)
             .ToListAsync();
     }
+    
+    public async Task<List<string>> GetIceCandidatesAsync(Guid callId)
+    {
+        var call = await GetByIdAsync(callId);
+        if (call == null || string.IsNullOrEmpty(call.IceCandidates))
+            return new List<string>();
+
+        // Les ICE candidates sont stockés comme JSON array string
+        return System.Text.Json.JsonSerializer.Deserialize<List<string>>(call.IceCandidates) 
+               ?? new List<string>();
+    }
 
     public async Task AddAsync(VideoCall videoCall)
     {

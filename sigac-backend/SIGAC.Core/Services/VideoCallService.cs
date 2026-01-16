@@ -227,7 +227,21 @@ public class VideoCallService : IVideoCallService
         if (call.InitiatorId != userId && call.ReceiverId != userId)
             throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à modifier cet appel");
 
-        call.SignalingData = dto.Data;
+        // Stocker les ICE candidates séparément dans un tableau
+        if (dto.Type == "ice-candidate")
+        {
+            var candidates = string.IsNullOrEmpty(call.IceCandidates) 
+                ? new List<string>() 
+                : System.Text.Json.JsonSerializer.Deserialize<List<string>>(call.IceCandidates) ?? new List<string>();
+            
+            candidates.Add(dto.Data);
+            call.IceCandidates = System.Text.Json.JsonSerializer.Serialize(candidates);
+        }
+        else
+        {
+            // Stocker l'offre ou la réponse SDP
+            call.SignalingData = dto.Data;
+        }
         
         await _videoCallRepository.UpdateAsync(call);
         await _videoCallRepository.SaveChangesAsync();
@@ -242,6 +256,18 @@ public class VideoCallService : IVideoCallService
             throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à voir cet appel");
 
         return call.SignalingData;
+    }
+
+    public async Task<List<string>> GetIceCandidatesAsync(Guid callId, Guid userId)
+    {
+        var call = await _videoCallRepository.GetByIdAsync(callId)
+            ?? throw new KeyNotFoundException("Appel non trouvé");
+
+        if (call.InitiatorId != userId && call.ReceiverId != userId)
+            throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à voir cet appel");
+
+        // Récupérer tous les ICE candidates stockés
+        return await _videoCallRepository.GetIceCandidatesAsync(callId);
     }
 
     private VideoCallDto MapToDto(VideoCall call, User initiator, User receiver)

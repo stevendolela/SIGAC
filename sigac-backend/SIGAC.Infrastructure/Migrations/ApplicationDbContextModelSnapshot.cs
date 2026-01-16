@@ -1031,6 +1031,9 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Property<Guid?>("GroupId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("IceCandidates")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("InitiatorId")
                         .HasColumnType("uuid");
 

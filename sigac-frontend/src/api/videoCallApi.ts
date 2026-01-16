@@ -76,6 +76,14 @@ class VideoCallApi {
   }
 
   /**
+   * Récupérer tous les ICE candidates pour un appel
+   */
+  async getIceCandidates(callId: string): Promise<string[]> {
+    const response = await api.get(`${this.baseUrl}/${callId}/ice-candidates`);
+    return response.data;
+  }
+
+  /**
    * Récupérer les appels entrants en attente
    */
   async getPendingCalls(): Promise<VideoCallDto[]> {
