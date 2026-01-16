@@ -9,7 +9,6 @@ import { useToast } from '../components/common/ToastProvider'
 import AudienceList from '../components/audiences/AudienceList'
 import AudienceForm from '../components/audiences/AudienceForm'
 import Modal from '../components/common/Modal'
-import DocumentViewer from '../components/DocumentViewer'
 
 interface Props {
   dossierId: string
@@ -27,7 +26,6 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   const [nouveauStatut, setNouveauStatut] = useState('')
   const [commentaire, setCommentaire] = useState('')
   const [showVisHistory, setShowVisHistory] = useState(false)
-  const [viewerDoc, setViewerDoc] = useState<DocumentDto | null>(null)
   const [showAudienceModal, setShowAudienceModal] = useState(false)
   const [selectedAudienceId, setSelectedAudienceId] = useState<string | undefined>()
   const [audienceRefreshKey, setAudienceRefreshKey] = useState(0)
@@ -132,10 +130,17 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     }
   }
 
-  function viewDocument(doc: DocumentDto) {
-    setViewerDoc(doc)
-    if (showVisHistory) {
-      setTimeout(() => loadVisualisations(), 500)
+  async function viewDocument(doc: DocumentDto) {
+    try {
+      const blob = await documentApi.view(doc.id)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      notify({ type: 'success', message: '👁️ Document ouvert' })
+      if (showVisHistory) {
+        setTimeout(() => loadVisualisations(), 500)
+      }
+    } catch (e) {
+      notify({ type: 'error', message: 'Impossible d\'ouvrir le document' })
     }
   }
 
@@ -982,17 +987,6 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
           </div>
         )}
       </div>
-
-      {/* Document Viewer */}
-      {viewerDoc && (
-        <DocumentViewer
-          documentId={viewerDoc.id}
-          fileName={viewerDoc.nomFichier}
-          mimeType={viewerDoc.mimeType}
-          onClose={() => setViewerDoc(null)}
-          fetchDocument={documentApi.view}
-        />
-      )}
 
       {/* Modal Formulaire Audience */}
       <Modal

@@ -4,7 +4,6 @@ import type { DocumentDto } from '../types/document'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
 import DossierDetailModal from './DossierDetailModal'
-import DocumentViewer from '../components/DocumentViewer'
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentDto[]>([])
@@ -28,7 +27,6 @@ export default function DocumentsPage() {
   const [scanningNetwork, setScanningNetwork] = useState(false)
   const [selectedNetworkScanner, setSelectedNetworkScanner] = useState<any>(null)
   const [scannerModalTab, setScannerModalTab] = useState<'local' | 'network'>('local')
-  const [previewDocument, setPreviewDocument] = useState<DocumentDto | null>(null)
   const [selectedDossierDetailId, setSelectedDossierDetailId] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -120,12 +118,15 @@ export default function DocumentsPage() {
     doc.typeDocument?.toLowerCase().includes(search.toLowerCase())
   )
 
-  function handlePreviewDocument(doc: DocumentDto) {
-    setPreviewDocument(doc)
-  }
-
-  function closePreview() {
-    setPreviewDocument(null)
+  async function handlePreviewDocument(doc: DocumentDto) {
+    try {
+      const blob = await documentApi.download(doc.id)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      notify({ type: 'success', message: '👁️ Document ouvert' })
+    } catch (e) {
+      notify({ type: 'error', message: 'Impossible d\'ouvrir le document' })
+    }
   }
 
   async function handleFileUpload(files: FileList | null) {
@@ -1111,17 +1112,6 @@ export default function DocumentsPage() {
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* Document Viewer */}
-      {previewDocument && (
-        <DocumentViewer
-          documentId={previewDocument.id}
-          fileName={previewDocument.nomFichier}
-          mimeType={previewDocument.mimeType}
-          onClose={closePreview}
-          fetchDocument={documentApi.download}
-        />
       )}
 
       {/* Modal Détail Dossier */}
