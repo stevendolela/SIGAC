@@ -42,6 +42,30 @@
   margin-right: 12px;
 }
 
+.doc-viewer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.doc-viewer-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.doc-viewer-btn:hover {
+  background: #d1d5db;
+}
+
 .doc-viewer-close {
   width: 32px;
   height: 32px;
@@ -130,15 +154,20 @@
 }
 
 .doc-viewer-download {
-  display: inline-block;
-  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
   background: #3b82f6;
   color: #fff;
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .doc-viewer-download:hover {
-  background: #2563eb;
+  opacity: 0.9;
 }

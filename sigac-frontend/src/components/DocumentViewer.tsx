@@ -24,20 +24,12 @@ export default function DocumentViewer({ documentId, fileName, mimeType, onClose
         const blob = await fetchDocument(documentId)
         if (cancelled) return
         
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          if (!cancelled) {
-            setDataUrl(reader.result as string)
-            setLoading(false)
-          }
+        // Créer un Object URL pour le blob (meilleure performance que data URL)
+        const url = URL.createObjectURL(blob)
+        if (!cancelled) {
+          setDataUrl(url)
+          setLoading(false)
         }
-        reader.onerror = () => {
-          if (!cancelled) {
-            setError('Erreur de lecture du fichier')
-            setLoading(false)
-          }
-        }
-        reader.readAsDataURL(blob)
       } catch (e: any) {
         if (!cancelled) {
           setError(e?.message || 'Impossible de charger le document')
@@ -47,20 +39,52 @@ export default function DocumentViewer({ documentId, fileName, mimeType, onClose
     }
     
     load()
-    return () => { cancelled = true }
+    return () => { 
+      cancelled = true
+      // Nettoyer l'URL quand le composant se démonte
+      if (dataUrl) URL.revokeObjectURL(dataUrl)
+    }
   }, [documentId, fetchDocument])
 
   const isImage = mimeType?.startsWith('image/')
-  const isPdf = mimeType === 'application/pdf'
+
+  // Ouvrir dans un nouvel onglet (contourne les restrictions CSP)
+  function openInNewTab() {
+    if (dataUrl) {
+      window.open(dataUrl, '_blank')
+    }
+  }
+
+  // Télécharger le fichier
+  function downloadFile() {
+    if (dataUrl) {
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = fileName
+      a.click()
+    }
+  }
 
   return (
     <div className="doc-viewer-overlay" onClick={onClose}>
       <div className="doc-viewer-modal" onClick={e => e.stopPropagation()}>
         <div className="doc-viewer-header">
           <span className="doc-viewer-title" title={fileName}>
-            {fileName}
+            📄 {fileName}
           </span>
-          <button className="doc-viewer-close" onClick={onClose}>×</button>
+          <div className="doc-viewer-actions">
+            {dataUrl && (
+              <>
+                <button className="doc-viewer-btn" onClick={openInNewTab} title="Ouvrir">
+                  🔗
+                </button>
+                <button className="doc-viewer-btn" onClick={downloadFile} title="Télécharger">
+                  ⬇️
+                </button>
+              </>
+            )}
+            <button className="doc-viewer-close" onClick={onClose}>×</button>
+          </div>
         </div>
         
         <div className="doc-viewer-content">
@@ -80,19 +104,23 @@ export default function DocumentViewer({ documentId, fileName, mimeType, onClose
           
           {!loading && !error && dataUrl && (
             <>
-              {isImage && (
+              {isImage ? (
                 <img src={dataUrl} alt={fileName} className="doc-viewer-image" />
-              )}
-              {isPdf && (
-                <iframe src={dataUrl} title={fileName} className="doc-viewer-iframe" />
-              )}
-              {!isImage && !isPdf && (
+              ) : (
                 <div className="doc-viewer-unsupported">
                   <span>📄</span>
-                  <p>Aperçu non disponible</p>
-                  <a href={dataUrl} download={fileName} className="doc-viewer-download">
-                    Télécharger
-                  </a>
+                  <p style={{ fontWeight: 600, fontSize: 18, margin: '12px 0' }}>{fileName}</p>
+                  <p style={{ color: '#6b7280', marginBottom: 20 }}>
+                    Cliquez pour ouvrir ou télécharger
+                  </p>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={openInNewTab} className="doc-viewer-download">
+                      🔗 Ouvrir
+                    </button>
+                    <button onClick={downloadFile} className="doc-viewer-download" style={{ background: '#10b981' }}>
+                      ⬇️ Télécharger
+                    </button>
+                  </div>
                 </div>
               )}
             </>
