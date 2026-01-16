@@ -74,12 +74,15 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
   const initializeCall = async () => {
     try {
-      // Demander accès à la caméra et au micro
+      console.log('Requesting camera and microphone access...');
+      
+      // Demander accès à la caméra et au micro avec des contraintes optimales
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: { echoCancellation: true, noiseSuppression: true }
       });
 
+      console.log('Media stream obtained successfully:', stream);
       localStreamRef.current = stream;
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
@@ -92,9 +95,21 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         // Appel sortant
         await initiateOutgoingCall();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur d\'accès aux médias:', error);
-      alert('Impossible d\'accéder à la caméra ou au microphone');
+      let errorMessage = 'Impossible d\'accéder à la caméra ou au microphone.';
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage += '\n\nVeuillez autoriser l\'accès dans les paramètres de votre navigateur.\n\nPour Chrome:\n1. Cliquez sur l\'icône 🔒 ou ⓘ à gauche de l\'URL\n2. Autorisez la caméra et le microphone\n3. Rechargez la page';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage += '\n\nAucune caméra ou microphone détecté sur cet appareil.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage += '\n\nLa caméra est peut-être utilisée par une autre application.\nFermez les autres applications utilisant la caméra et réessayez.';
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage += '\n\nVotre navigateur ne supporte pas l\'accès aux médias.\nUtilisez Chrome, Firefox ou Edge en version récente.';
+      }
+      
+      alert(errorMessage);
       onClose();
     }
   };

@@ -789,9 +789,10 @@ const UnreadBadge: React.FC = React.memo(() => {
     const currentUserId = localStorage.getItem('userId') || '';
     const otherUserId = conversation.user1Id === currentUserId ? conversation.user2Id : conversation.user1Id;
     const otherUserName = conversation.user1Id === currentUserId 
-      ? `${conversation.user2Nom} ${conversation.user2Prenom}`
-      : `${conversation.user1Nom} ${conversation.user1Prenom}`;
+      ? (conversation.user2NomComplet || conversation.user2Username || 'Utilisateur')
+      : (conversation.user1NomComplet || conversation.user1Username || 'Utilisateur');
 
+    console.log('Starting video call with:', { otherUserId, otherUserName });
     setVideoCallReceiverId(otherUserId);
     setVideoCallReceiverName(otherUserName);
     setIsVideoCallModalOpen(true);
