@@ -1356,12 +1356,21 @@ const UnreadBadge: React.FC = React.memo(() => {
   // Ouvrir la modal de prévisualisation
   const openFilePreview = useCallback(async (attachment: any) => {
     try {
+      console.log('📂 [Preview] Ouverture prévisualisation:', attachment);
+      console.log('📂 [Preview] FileType:', attachment.fileType, 'MimeType:', attachment.mimeType);
+      
       // Télécharger le fichier en blob pour l'afficher
       const blob = await chatAttachmentApi.downloadAttachment(attachment.id);
-      const blobUrl = URL.createObjectURL(blob);
+      console.log('📂 [Preview] Blob reçu:', blob.type, blob.size, 'bytes');
+      
+      // S'assurer que le blob a le bon type MIME
+      const typedBlob = blob.type ? blob : new Blob([blob], { type: attachment.mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      console.log('📂 [Preview] BlobURL créé:', blobUrl);
+      
       setFilePreviewModal({ isOpen: true, attachment, blobUrl });
     } catch (error) {
-      console.error('Erreur chargement fichier:', error);
+      console.error('❌ [Preview] Erreur chargement fichier:', error);
       alert('Impossible de charger le fichier');
     }
   }, []);
@@ -2313,17 +2322,44 @@ fontWeight: '600',
                     height: 'auto',
                     display: 'block'
                   }}
+                  onError={(e) => {
+                    console.error('❌ Erreur chargement image dans modal');
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               ) : filePreviewModal.attachment.mimeType === 'application/pdf' ? (
-                <iframe
-                  src={filePreviewModal.blobUrl || ''}
+                <object
+                  data={filePreviewModal.blobUrl || ''}
+                  type="application/pdf"
                   style={{
                     width: '90vw',
                     height: 'calc(90vh - 80px)',
                     border: 'none'
                   }}
-                  title={filePreviewModal.attachment.fileName}
-                />
+                >
+                  {/* Fallback si object ne fonctionne pas */}
+                  <div style={{ padding: '40px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>📄</div>
+                    <p style={{ marginBottom: '20px', color: '#6b7280' }}>
+                      Impossible d'afficher le PDF dans le navigateur
+                    </p>
+                    <button
+                      onClick={() => handleDownloadAttachment(filePreviewModal.attachment.id, filePreviewModal.attachment.fileName)}
+                      style={{
+                        padding: '12px 24px',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      📥 Télécharger le PDF
+                    </button>
+                  </div>
+                </object>
               ) : filePreviewModal.attachment.fileType === 'Video' ? (
                 <video
                   controls
