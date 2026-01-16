@@ -9,6 +9,11 @@ import { CreateGroupChatModal } from './CreateGroupChatModal';
 import { VideoCallModal } from './VideoCallModal';
 import StatusSelector from './StatusSelector';
 import { AudioPlayer } from './AudioPlayer';
+import { 
+  ChatIcon, GroupIcon, VideoCallIcon, PlusIcon, CloseIcon, 
+  TrashIcon, SendIcon, MicrophoneIcon, AttachmentIcon, EmojiIcon,
+  SearchIcon, CheckIcon, DocumentIcon
+} from './icons/ChatIcons';
 import '../styles/unified-chat.css';
 import '../styles/video-call.css';
 
@@ -1332,7 +1337,7 @@ const UnreadBadge: React.FC = React.memo(() => {
         onClick={() => setIsOpen(!isOpen)}
         title="Ouvrir/Fermer le chat"
       >
-        💬
+        <ChatIcon size={28} color="white" />
         <UnreadBadge />
       </button>
 
@@ -1348,7 +1353,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                 onStatusChange={(newStatus) => setCurrentUserStatus(newStatus)}
               />
             </div>
-            <button className="close-btn" onClick={() => setIsOpen(false)}>✕</button>
+            <button className="close-btn" onClick={() => setIsOpen(false)}><CloseIcon size={18} color="white" /></button>
           </div>
 
           {/* Onglets */}
@@ -1360,7 +1365,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                 setSelectedChat(null);
               }}
             >
-              💬 Conversations
+              <ChatIcon size={18} /> Conversations
             </button>
             <button
               className={`tab ${activeTab === 'groups' ? 'active' : ''}`}
@@ -1369,7 +1374,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                 setSelectedChat(null);
               }}
             >
-              👥 Groupes
+              <GroupIcon size={18} /> Groupes
             </button>
           </div>
 
@@ -1386,7 +1391,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                       onClick={() => setIsCreateConvModalOpen(true)}
                       title="Nouvelle conversation"
                     >
-                      ➕
+                      <PlusIcon size={18} color="white" />
                     </button>
                   </div>
                   
@@ -1446,7 +1451,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                       onClick={() => setIsCreateGroupModalOpen(true)}
                       title="Nouveau groupe"
                     >
-                      ➕
+                      <PlusIcon size={18} color="white" />
                     </button>
                   </div>
                   
@@ -1518,7 +1523,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                         onClick={handleStartVideoCall}
                         title="Démarrer un appel vidéo"
                       >
-                        📹
+                        <VideoCallIcon size={18} color="white" /> Appeler
                       </button>
                     )}
                     <button
@@ -1532,7 +1537,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                       }}
                       title="Supprimer"
                     >
-                      🗑️
+                      <TrashIcon size={18} />
                     </button>
                   </div>
                 </div>
@@ -1577,7 +1582,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                       alignItems: 'center',
                       gap: '8px'
                     }}>
-                      🎤 Prévisualisation de votre note vocale
+                      <MicrophoneIcon size={18} color="white" /> Prévisualisation de votre note vocale
                     </div>
                     
                     {/* Player audio pour le preview */}
@@ -1632,7 +1637,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                           e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                         }}
                       >
-                        🗑️ Supprimer
+                        <TrashIcon size={16} /> Supprimer
                       </button>
                       
                       <button
@@ -1663,7 +1668,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                           e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                         }}
                       >
-                        ✅ Envoyer
+                        <CheckIcon size={16} /> Envoyer
                       </button>
                     </div>
                   </div>
@@ -1702,7 +1707,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
                         title="Annuler"
                       >
-                        ✕
+                        <CloseIcon size={18} color="white" />
                       </button>
 
                       {/* Icône Micro/Play compact */}
@@ -1717,7 +1722,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                           justifyContent: 'center',
                           animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                         }}>
-                          <span style={{ fontSize: '14px' }}>🎤</span>
+                          <MicrophoneIcon size={14} color="white" />
                         </div>
                       ) : (
                         <button
@@ -1852,7 +1857,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         title="Ajouter un emoji"
                       >
-                        😊
+                        <EmojiIcon size={22} color="#6366f1" />
                       </button>
                       
                       {/* Bouton pièce jointe */}
@@ -1870,7 +1875,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         title="Joindre un fichier"
                       >
-                        📎
+                        <AttachmentIcon size={22} color="#6366f1" />
                       </button>
                       <input
                         ref={fileInputRef}
@@ -1896,7 +1901,7 @@ const UnreadBadge: React.FC = React.memo(() => {
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         title="Enregistrer une note vocale"
                       >
-                        🎤
+                        <MicrophoneIcon size={22} color="#6366f1" />
                       </button>
                       
                       <input
