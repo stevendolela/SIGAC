@@ -36,6 +36,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [hasRemoteStream, setHasRemoteStream] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -422,9 +423,20 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
     pc.ontrack = (event) => {
       console.log('📺 Track distant reçu:', event.track.kind, event.streams.length, 'streams');
+      console.log('📺 Event streams:', event.streams);
+      console.log('📺 Track:', event.track);
+      console.log('📺 remoteVideoRef.current:', remoteVideoRef.current);
+      
       if (remoteVideoRef.current && event.streams[0]) {
         console.log('📺 Attribution du stream distant à la vidéo');
         remoteVideoRef.current.srcObject = event.streams[0];
+        setHasRemoteStream(true);
+        
+        // Force play pour certains navigateurs
+        remoteVideoRef.current.play().catch(err => {
+          console.warn('⚠️ Auto-play bloqué:', err);
+        });
+        
         if (callStatus !== 'active') {
           setCallStatus('active');
         }
@@ -582,6 +594,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
     setCallStatus('ended');
     setElapsedTime(0);
+    setHasRemoteStream(false);
   };
 
   const formatTime = (seconds: number): string => {
@@ -605,11 +618,51 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         </div>
 
         <div className="video-container">
+          {/* Placeholder quand pas de vidéo distante */}
+          {!hasRemoteStream && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+              zIndex: 1
+            }}>
+              <div style={{
+                width: '120px',
+                height: '120px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '48px',
+                marginBottom: '20px',
+                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)'
+              }}>
+                {receiverName.charAt(0).toUpperCase()}
+              </div>
+              <div style={{ color: 'white', fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+                {receiverName}
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+                {callStatus === 'connecting' && '⏳ Connexion en cours...'}
+                {callStatus === 'ringing' && (isIncoming ? '📞 Appel entrant...' : '🔔 Ça sonne...')}
+                {callStatus === 'active' && '📹 En attente de la vidéo...'}
+              </div>
+            </div>
+          )}
           <video
             ref={remoteVideoRef}
             className="remote-video"
             autoPlay
             playsInline
+            style={{ opacity: hasRemoteStream ? 1 : 0 }}
           />
           <video
             ref={localVideoRef}
