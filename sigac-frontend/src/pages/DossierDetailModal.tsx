@@ -9,6 +9,7 @@ import { useToast } from '../components/common/ToastProvider'
 import AudienceList from '../components/audiences/AudienceList'
 import AudienceForm from '../components/audiences/AudienceForm'
 import Modal from '../components/common/Modal'
+import DocumentViewer from '../components/DocumentViewer'
 
 interface Props {
   dossierId: string
@@ -26,7 +27,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   const [nouveauStatut, setNouveauStatut] = useState('')
   const [commentaire, setCommentaire] = useState('')
   const [showVisHistory, setShowVisHistory] = useState(false)
-  const [viewerDoc, setViewerDoc] = useState<{ dataUrl: string; name: string; mimeType: string } | null>(null)
+  const [viewerDoc, setViewerDoc] = useState<DocumentDto | null>(null)
   const [showAudienceModal, setShowAudienceModal] = useState(false)
   const [selectedAudienceId, setSelectedAudienceId] = useState<string | undefined>()
   const [audienceRefreshKey, setAudienceRefreshKey] = useState(0)
@@ -131,23 +132,10 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     }
   }
 
-  async function viewDocument(doc: DocumentDto) {
-    try {
-      const blob = await documentApi.view(doc.id)
-      // Convertir blob en data URL pour éviter le blocage CSP
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string
-        setViewerDoc({ dataUrl, name: doc.nomFichier, mimeType: doc.mimeType })
-        notify({ type: 'success', message: '👁️ Document ouvert' })
-      }
-      reader.readAsDataURL(blob)
-      if (showVisHistory) {
-        setTimeout(() => loadVisualisations(), 500)
-      }
-    } catch (e) {
-      setError('Visualisation impossible')
-      notify({ type: 'error', message: 'Visualisation impossible' })
+  function viewDocument(doc: DocumentDto) {
+    setViewerDoc(doc)
+    if (showVisHistory) {
+      setTimeout(() => loadVisualisations(), 500)
     }
   }
 
@@ -995,91 +983,15 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
         )}
       </div>
 
-      {/* Modal Viewer pour documents */}
+      {/* Document Viewer */}
       {viewerDoc && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            zIndex: 9999,
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '20px'
-          }}
-          onClick={() => setViewerDoc(null)}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                padding: '16px 24px',
-                borderBottom: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: '#f8fafc'
-              }}
-            >
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#1e293b' }}>
-                📄 {viewerDoc.name}
-              </h3>
-              <button
-                onClick={() => setViewerDoc(null)}
-                style={{
-                  background: '#fee2e2',
-                  border: 'none',
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  color: '#991b1b',
-                  padding: '8px 16px',
-                  borderRadius: 6,
-                  fontWeight: 600
-                }}
-              >
-                ✕
-              </button>
-            </div>
-            <div style={{ flex: 1, overflow: 'auto' }}>
-              {viewerDoc.mimeType?.startsWith('image/') ? (
-                <img
-                  src={viewerDoc.dataUrl}
-                  alt={viewerDoc.name}
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    objectFit: 'contain',
-                    margin: 'auto',
-                    display: 'block'
-                  }}
-                />
-              ) : (
-                <iframe
-                  src={viewerDoc.dataUrl}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none'
-                  }}
-                  title={viewerDoc.name}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        <DocumentViewer
+          documentId={viewerDoc.id}
+          fileName={viewerDoc.nomFichier}
+          mimeType={viewerDoc.mimeType}
+          onClose={() => setViewerDoc(null)}
+          fetchDocument={documentApi.view}
+        />
       )}
 
       {/* Modal Formulaire Audience */}
