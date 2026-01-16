@@ -853,18 +853,17 @@ const UnreadBadge: React.FC = React.memo(() => {
     }
   };
 
-  // Polling pour les appels entrants
+  // Polling pour les appels entrants - TOUJOURS actif (même si chat fermé)
   useEffect(() => {
-    if (!isOpen) return;
-
     const checkPendingCalls = async () => {
       try {
         const pendingCalls = await videoCallApi.getPendingCalls();
+        console.log('🔍 Vérification appels entrants:', pendingCalls.length, 'appels en attente');
         if (pendingCalls.length > 0 && !incomingCall) {
           const call = pendingCalls[0]; // Prendre le premier appel en attente
           console.log('📞 Appel entrant détecté:', call);
           setIncomingCall(call);
-          setIsIncomingCallModalOpen(true);
+          // NE PAS ouvrir la modal immédiatement - laisser la notification compacte s'afficher
         }
       } catch (error) {
         console.error('Erreur vérification appels entrants:', error);
@@ -875,7 +874,7 @@ const UnreadBadge: React.FC = React.memo(() => {
     const interval = setInterval(checkPendingCalls, 3000); // Check toutes les 3 secondes
 
     return () => clearInterval(interval);
-  }, [isOpen, incomingCall]);
+  }, [incomingCall]);
 
   const handleStartVideoCall = () => {
     if (!conversation || selectedChat?.type !== 'conversation') return;
@@ -1441,6 +1440,47 @@ const UnreadBadge: React.FC = React.memo(() => {
 
   return (
     <div className="unified-chat-panel">
+      {/* Notification d'appel entrant - TOUJOURS visible (même chat fermé) */}
+      {incomingCall && !isIncomingCallModalOpen && (
+        <IncomingCallNotification
+          callerName={incomingCall.initiatorName || 'Appelant'}
+          isVisible={true}
+          onAccept={() => setIsIncomingCallModalOpen(true)}
+          onReject={async () => {
+            try {
+              await videoCallApi.rejectCall(incomingCall.id);
+              // Envoyer trace de l'appel refusé
+              if (incomingCall.conversationId) {
+                await chatApi.sendMessage(
+                  incomingCall.conversationId, 
+                  `📹 Appel refusé de ${incomingCall.initiatorName || 'Appelant'}`
+                );
+              }
+            } catch (error) {
+              console.error('Erreur rejet appel:', error);
+            }
+            setIncomingCall(null);
+          }}
+        />
+      )}
+
+      {/* Modal pour appel vidéo entrant (après avoir accepté) */}
+      {incomingCall && isIncomingCallModalOpen && (
+        <VideoCallModal
+          isOpen={isIncomingCallModalOpen}
+          onClose={() => {
+            setIsIncomingCallModalOpen(false);
+            setIncomingCall(null);
+          }}
+          onCallEnded={handleIncomingCallEnded}
+          receiverId={incomingCall.initiatorId}
+          receiverName={incomingCall.initiatorName || 'Appelant'}
+          conversationId={incomingCall.conversationId}
+          isIncoming={true}
+          incomingCallId={incomingCall.id}
+        />
+      )}
+
       {/* Bouton toggle */}
       <button
         className="unified-chat-toggle-btn"
@@ -2107,47 +2147,6 @@ const UnreadBadge: React.FC = React.memo(() => {
         receiverName={videoCallReceiverName}
         conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
       />
-
-      {/* Notification d'appel entrant - petite en bas à droite */}
-      {incomingCall && !isIncomingCallModalOpen && (
-        <IncomingCallNotification
-          callerName={incomingCall.initiatorName || 'Appelant'}
-          isVisible={true}
-          onAccept={() => setIsIncomingCallModalOpen(true)}
-          onReject={async () => {
-            try {
-              await videoCallApi.rejectCall(incomingCall.id);
-              // Envoyer trace de l'appel refusé
-              if (incomingCall.conversationId) {
-                await chatApi.sendMessage(
-                  incomingCall.conversationId, 
-                  `📹 Appel refusé de ${incomingCall.initiatorName || 'Appelant'}`
-                );
-              }
-            } catch (error) {
-              console.error('Erreur rejet appel:', error);
-            }
-            setIncomingCall(null);
-          }}
-        />
-      )}
-
-      {/* Modal pour appel vidéo entrant (après avoir accepté) */}
-      {incomingCall && isIncomingCallModalOpen && (
-        <VideoCallModal
-          isOpen={isIncomingCallModalOpen}
-          onClose={() => {
-            setIsIncomingCallModalOpen(false);
-            setIncomingCall(null);
-          }}
-          onCallEnded={handleIncomingCallEnded}
-          receiverId={incomingCall.initiatorId}
-          receiverName={incomingCall.initiatorName || 'Appelant'}
-          conversationId={incomingCall.conversationId}
-          isIncoming={true}
-          incomingCallId={incomingCall.id}
-        />
-      )}
 
       {/* Modal de prévisualisation des fichiers */}
       {filePreviewModal.isOpen && filePreviewModal.attachment && (
