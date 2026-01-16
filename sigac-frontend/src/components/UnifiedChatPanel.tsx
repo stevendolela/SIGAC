@@ -1522,8 +1522,9 @@ const UnreadBadge: React.FC = React.memo(() => {
                         className="video-call-btn"
                         onClick={handleStartVideoCall}
                         title="Démarrer un appel vidéo"
+                        style={{ padding: '8px 10px' }}
                       >
-                        <VideoCallIcon size={18} color="white" /> Appeler
+                        <VideoCallIcon size={16} color="white" />
                       </button>
                     )}
                     <button
