@@ -7,6 +7,7 @@ import { ChatConversationDto, ChatGroupDto, UserStatus } from '../types/chat';
 import { CreateChatModal } from './CreateChatModal';
 import { CreateGroupChatModal } from './CreateGroupChatModal';
 import { VideoCallModal, CallEndedInfo } from './VideoCallModal';
+import { IncomingCallNotification } from './IncomingCallNotification';
 import StatusSelector from './StatusSelector';
 import { AudioPlayer } from './AudioPlayer';
 import { 
@@ -2107,8 +2108,32 @@ const UnreadBadge: React.FC = React.memo(() => {
         conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
       />
 
-      {/* Modal pour appel vidéo entrant */}
-      {incomingCall && (
+      {/* Notification d'appel entrant - petite en bas à droite */}
+      {incomingCall && !isIncomingCallModalOpen && (
+        <IncomingCallNotification
+          callerName={incomingCall.initiatorName || 'Appelant'}
+          isVisible={true}
+          onAccept={() => setIsIncomingCallModalOpen(true)}
+          onReject={async () => {
+            try {
+              await videoCallApi.rejectCall(incomingCall.id);
+              // Envoyer trace de l'appel refusé
+              if (incomingCall.conversationId) {
+                await chatApi.sendMessage(
+                  incomingCall.conversationId, 
+                  `📹 Appel refusé de ${incomingCall.initiatorName || 'Appelant'}`
+                );
+              }
+            } catch (error) {
+              console.error('Erreur rejet appel:', error);
+            }
+            setIncomingCall(null);
+          }}
+        />
+      )}
+
+      {/* Modal pour appel vidéo entrant (après avoir accepté) */}
+      {incomingCall && isIncomingCallModalOpen && (
         <VideoCallModal
           isOpen={isIncomingCallModalOpen}
           onClose={() => {
@@ -2117,7 +2142,7 @@ const UnreadBadge: React.FC = React.memo(() => {
           }}
           onCallEnded={handleIncomingCallEnded}
           receiverId={incomingCall.initiatorId}
-          receiverName="Appelant" // À améliorer avec le vrai nom
+          receiverName={incomingCall.initiatorName || 'Appelant'}
           conversationId={incomingCall.conversationId}
           isIncoming={true}
           incomingCallId={incomingCall.id}

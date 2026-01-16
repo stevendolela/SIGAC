@@ -42,6 +42,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
+  const dialToneRef = useRef<any>(null);
 
   // Configuration ICE servers (STUN/TURN)
   const iceServers: RTCConfiguration = {
@@ -52,6 +53,54 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
     ]
   };
 
+  // Jouer la tonalité d'appel sortant (bip-bip classique)
+  const playDialTone = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      const playBeep = (startTime: number) => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.value = 425; // Fréquence standard tonalité européenne
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.2, startTime);
+        gain.gain.setValueAtTime(0.2, startTime + 0.4);
+        gain.gain.setValueAtTime(0, startTime + 0.4);
+        osc.start(startTime);
+        osc.stop(startTime + 0.4);
+      };
+
+      // Jouer le bip toutes les 4 secondes (pattern standard)
+      let currentTime = audioContext.currentTime;
+      playBeep(currentTime);
+      
+      const dialInterval = setInterval(() => {
+        if (dialToneRef.current) {
+          currentTime = audioContext.currentTime;
+          playBeep(currentTime);
+        }
+      }, 4000);
+
+      dialToneRef.current = { audioContext, dialInterval };
+    } catch (error) {
+      console.error('Erreur tonalité:', error);
+    }
+  };
+
+  const stopDialTone = () => {
+    if (dialToneRef.current) {
+      if (dialToneRef.current.dialInterval) {
+        clearInterval(dialToneRef.current.dialInterval);
+      }
+      if (dialToneRef.current.audioContext) {
+        dialToneRef.current.audioContext.close();
+      }
+      dialToneRef.current = null;
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       initializeCall();
@@ -59,8 +108,20 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
 
     return () => {
       cleanup();
+      stopDialTone();
     };
   }, [isOpen]);
+
+  // Gérer la tonalité selon le statut
+  useEffect(() => {
+    if (callStatus === 'ringing' && !isIncoming) {
+      // Appel sortant en sonnerie -> jouer tonalité
+      playDialTone();
+    } else {
+      // Appel actif ou terminé -> stopper tonalité
+      stopDialTone();
+    }
+  }, [callStatus, isIncoming]);
 
   // Timer pour durée d'appel
   useEffect(() => {
