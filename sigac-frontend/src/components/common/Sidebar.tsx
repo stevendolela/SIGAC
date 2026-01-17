@@ -15,7 +15,8 @@ import {
   FileType,
   DoorOpen,
   History,
-  Download
+  Download,
+  Mail
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -30,6 +31,7 @@ type ViewType =
   | 'audiences' 
   | 'calendrier' 
   | 'documents' 
+  | 'courrier'
   | 'profils' 
   | 'types-affaires' 
   | 'users' 
@@ -136,6 +138,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           label: 'Documents',
           icon: FileText,
           color: '#f97316'
+        },
+        {
+          view: 'courrier' as ViewType,
+          label: 'Courrier',
+          icon: Mail,
+          color: '#0891b2'
         }
       ]
     },

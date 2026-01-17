@@ -38,6 +38,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Workspace> Workspaces { get; set; }
     public DbSet<WorkspaceUser> WorkspaceUsers { get; set; }
     
+    // Gestion du courrier
+    public DbSet<Courrier> Courriers { get; set; }
+    public DbSet<CourrierHistorique> CourrierHistoriques { get; set; }
+    
     // System settings
     public DbSet<SystemSetting> SystemSettings { get; set; }
 
@@ -333,6 +337,60 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(a => a.Uploader)
                 .WithMany()
                 .HasForeignKey(a => a.UploadedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuration Courrier
+        modelBuilder.Entity<Courrier>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Reference).IsUnique();
+            entity.Property(e => e.Reference).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Objet).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Expediteur).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.Destinataire).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.ReferenceExterne).HasMaxLength(100);
+            entity.Property(e => e.NomFichier).HasMaxLength(255);
+            entity.Property(e => e.MimeType).HasMaxLength(100);
+
+            entity.HasOne(c => c.Dossier)
+                .WithMany()
+                .HasForeignKey(c => c.DossierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(c => c.Workspace)
+                .WithMany()
+                .HasForeignKey(c => c.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.AssigneA)
+                .WithMany()
+                .HasForeignKey(c => c.AssigneAId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(c => c.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(c => c.Historiques)
+                .WithOne(h => h.Courrier)
+                .HasForeignKey(h => h.CourrierId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration CourrierHistorique
+        modelBuilder.Entity<CourrierHistorique>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Details).HasMaxLength(1000);
+            entity.Property(e => e.AncienStatut).HasMaxLength(50);
+            entity.Property(e => e.NouveauStatut).HasMaxLength(50);
+
+            entity.HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

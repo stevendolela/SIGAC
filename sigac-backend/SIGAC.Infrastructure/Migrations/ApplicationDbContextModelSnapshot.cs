@@ -321,6 +321,152 @@ namespace SIGAC.Infrastructure.Migrations
                     b.ToTable("ChatGroupMembers");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.Courrier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssigneAId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ConfianceOCR")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateCourrier")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateReception")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Destinataire")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("DocumentData")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("DossierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Expediteur")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("MimeType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NomFichier")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Objet")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ReferenceExterne")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("TailleFichier")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TexteOCR")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Urgence")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssigneAId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DossierId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("Courriers");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.CourrierHistorique", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("AncienStatut")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("CourrierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateAction")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("NouveauStatut")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourrierId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CourrierHistoriques");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1276,6 +1422,57 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SIGAC.Core.Entities.Courrier", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.User", "AssigneA")
+                        .WithMany()
+                        .HasForeignKey("AssigneAId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SIGAC.Core.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.Dossier", "Dossier")
+                        .WithMany()
+                        .HasForeignKey("DossierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SIGAC.Core.Entities.Workspace", "Workspace")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AssigneA");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Dossier");
+
+                    b.Navigation("Workspace");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.CourrierHistorique", b =>
+                {
+                    b.HasOne("SIGAC.Core.Entities.Courrier", "Courrier")
+                        .WithMany("Historiques")
+                        .HasForeignKey("CourrierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SIGAC.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Courrier");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SIGAC.Core.Entities.Document", b =>
                 {
                     b.HasOne("SIGAC.Core.Entities.Dossier", "Dossier")
@@ -1526,6 +1723,11 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("SIGAC.Core.Entities.Courrier", b =>
+                {
+                    b.Navigation("Historiques");
                 });
 
             modelBuilder.Entity("SIGAC.Core.Entities.Dossier", b =>

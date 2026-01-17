@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace TaajiiScannerAgent
 {
@@ -81,68 +82,105 @@ namespace TaajiiScannerAgent
         }
 
         /// <summary>
-        /// Scan un document et retourne l'image en Base64
+        /// Scan un document et retourne l'image en Base64 (avec retry automatique)
         /// </summary>
-        public static string? ScanDocument(string? scannerId = null)
+        public static string? ScanDocument(string? scannerId = null, int maxRetries = 3)
         {
-            try
+            Exception? lastException = null;
+            
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                Type? deviceManagerType = Type.GetTypeFromProgID("WIA.DeviceManager");
-                if (deviceManagerType == null)
+                try
                 {
-                    throw new Exception("WIA n'est pas disponible sur ce système.");
+                    return PerformScan(scannerId);
                 }
-
-                dynamic deviceManager = Activator.CreateInstance(deviceManagerType)!;
-                dynamic? scanner = null;
-
-                // Chercher le scanner
-                foreach (dynamic deviceInfo in deviceManager.DeviceInfos)
+                catch (COMException ex)
                 {
-                    if ((int)deviceInfo.Type == 1) // Scanner
+                    uint errorCode = (uint)ex.ErrorCode;
+                    lastException = ex;
+                    
+                    // Si scanner occupé et qu'on a encore des tentatives, attendre et réessayer
+                    if (errorCode == 0x80210006 && attempt < maxRetries)
                     {
-                        if (string.IsNullOrEmpty(scannerId) || deviceInfo.DeviceID == scannerId)
-                        {
-                            scanner = deviceInfo.Connect();
-                            break;
-                        }
+                        Console.WriteLine($"Scanner occupé, tentative {attempt}/{maxRetries}. Réessai dans 2s...");
+                        Thread.Sleep(2000);
+                        continue;
+                    }
+                    
+                    // Sinon, lever l'exception avec message lisible
+                    string message = errorCode switch
+                    {
+                        0x80210006 => "Le scanner est occupé. Fermez les autres applications qui l'utilisent et réessayez.",
+                        0x80210016 => "Le capot du scanner est ouvert.",
+                        0x8021000C => "Pas de papier dans le chargeur automatique. Placez un document.",
+                        0x80210005 => "Le scanner est hors ligne. Vérifiez la connexion USB/réseau.",
+                        0x80210001 => "Erreur générale du scanner. Redémarrez-le.",
+                        0x80004005 => "Erreur d'accès au scanner. Vérifiez qu'il est allumé.",
+                        _ => $"Erreur scanner (0x{errorCode:X8}): {ex.Message}"
+                    };
+                    throw new Exception(message);
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    if (attempt < maxRetries)
+                    {
+                        Console.WriteLine($"Erreur scan, tentative {attempt}/{maxRetries}. Réessai...");
+                        Thread.Sleep(1000);
+                        continue;
+                    }
+                    throw;
+                }
+            }
+            
+            throw lastException ?? new Exception("Échec du scan après plusieurs tentatives");
+        }
+
+        /// <summary>
+        /// Effectue le scan proprement dit
+        /// </summary>
+        private static string? PerformScan(string? scannerId)
+        {
+            Type? deviceManagerType = Type.GetTypeFromProgID("WIA.DeviceManager");
+            if (deviceManagerType == null)
+            {
+                throw new Exception("WIA n'est pas disponible sur ce système.");
+            }
+
+            dynamic deviceManager = Activator.CreateInstance(deviceManagerType)!;
+            dynamic? scanner = null;
+
+            // Chercher le scanner
+            foreach (dynamic deviceInfo in deviceManager.DeviceInfos)
+            {
+                if ((int)deviceInfo.Type == 1) // Scanner
+                {
+                    if (string.IsNullOrEmpty(scannerId) || deviceInfo.DeviceID == scannerId)
+                    {
+                        scanner = deviceInfo.Connect();
+                        break;
                     }
                 }
-
-                if (scanner == null)
-                {
-                    throw new Exception("Aucun scanner trouvé. Vérifiez que votre scanner est allumé et connecté.");
-                }
-
-                // Récupérer l'item de scan (première source)
-                dynamic scannerItem = scanner.Items[1];
-
-                // Configurer les propriétés de scan
-                SetScannerProperties(scannerItem);
-
-                // Effectuer le scan - format PNG
-                dynamic imageFile = scannerItem.Transfer(WIA_FORMAT_PNG);
-
-                // Récupérer les données binaires
-                byte[] imageBytes = (byte[])imageFile.FileData.get_BinaryData();
-                
-                return Convert.ToBase64String(imageBytes);
             }
-            catch (COMException ex)
+
+            if (scanner == null)
             {
-                // Codes d'erreur WIA courants
-                uint errorCode = (uint)ex.ErrorCode;
-                string message = errorCode switch
-                {
-                    0x80210006 => "Le scanner est occupé. Veuillez réessayer.",
-                    0x80210016 => "Le capot du scanner est ouvert.",
-                    0x8021000C => "Pas de papier dans le chargeur automatique.",
-                    0x80210005 => "Le scanner est hors ligne. Vérifiez la connexion.",
-                    0x80210001 => "Erreur générale du scanner.",
-                    _ => $"Erreur scanner (0x{errorCode:X8}): {ex.Message}"
-                };
-                throw new Exception(message);
+                throw new Exception("Aucun scanner trouvé. Vérifiez que votre scanner est allumé et connecté.");
             }
+
+            // Récupérer l'item de scan (première source)
+            dynamic scannerItem = scanner.Items[1];
+
+            // Configurer les propriétés de scan
+            SetScannerProperties(scannerItem);
+
+            // Effectuer le scan - format PNG
+            dynamic imageFile = scannerItem.Transfer(WIA_FORMAT_PNG);
+
+            // Récupérer les données binaires
+            byte[] imageBytes = (byte[])imageFile.FileData.get_BinaryData();
+            
+            return Convert.ToBase64String(imageBytes);
         }
 
         /// <summary>

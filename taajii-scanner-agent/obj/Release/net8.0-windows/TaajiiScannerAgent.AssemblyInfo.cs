@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Taajii")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54ed51ab767ef9e2fbbf36cc2deb0f8a4a30f03f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7877ed191576cf54385430e70ec23cf1703d0058")]
 [assembly: System.Reflection.AssemblyProductAttribute("Taajii Scanner Agent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaajiiScannerAgent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
