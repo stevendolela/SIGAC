@@ -513,6 +513,12 @@ export default function DocumentsPage() {
                       Télécharger
                     </button>
                     <button 
+                      className="file-action-btn assign"
+                      onClick={() => { setSelectedDocument(doc); setShowAssignModal(true) }}
+                    >
+                      Assigner
+                    </button>
+                    <button 
                       className="file-action-btn danger"
                       onClick={async () => {
                         if (!confirm(`Supprimer ?`)) return
@@ -1047,167 +1053,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Liste des documents */}
-      {loading && <div className="info">⏳ Chargement des documents...</div>}
-      {error && <div className="error">{error}</div>}
 
-      {!selectedDossierId && !loading && (
-        <div className="info" style={{ textAlign: 'center', padding: 40 }}>
-          📁 Sélectionnez un dossier pour voir et gérer ses documents
-        </div>
-      )}
-
-      {selectedDossierId && !loading && filteredDocuments.length === 0 && (
-        <div className="info" style={{ textAlign: 'center', padding: 40 }}>
-          📄 Aucun document dans ce dossier - Uploadez-en un!
-        </div>
-      )}
-
-      {filteredDocuments.length > 0 && (
-        <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Nom du fichier</th>
-                <th>Dossier</th>
-                <th>Type</th>
-                <th>Taille</th>
-                <th>Date upload</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocuments.map(doc => {
-                const dossier = dossiers.find(d => d.id === doc.dossierId);
-                return (
-                  <tr key={doc.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 20 }}>📄</span>
-                        <span style={{ fontWeight: 600 }}>{doc.nomFichier}</span>
-                      </div>
-                    </td>
-                    <td>
-                      {dossier ? (
-                        <div 
-                          style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 6,
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setSelectedDossierDetailId(dossier.id)}
-                          title="Cliquer pour ouvrir le dossier"
-                        >
-                          <span style={{ 
-                            fontSize: 10, 
-                            fontWeight: 700, 
-                            color: '#6b7280',
-                            background: '#f3f4f6',
-                            padding: '2px 6px',
-                            borderRadius: 3,
-                            transition: 'all 0.2s'
-                          }}>
-                            {dossier.numeroDossier}
-                          </span>
-                          <span style={{ 
-                            fontSize: 13, 
-                            color: '#1e40af',
-                            textDecoration: 'underline',
-                            transition: 'all 0.2s'
-                          }}>
-                            {dossier.titre.length > 30 ? dossier.titre.substring(0, 30) + '...' : dossier.titre}
-                          </span>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
-                          Non assigné
-                        </span>
-                      )}
-                    </td>
-                    <td>{doc.typeDocument}</td>
-                    <td>{(doc.tailleFichier / 1024 / 1024).toFixed(2)} MB</td>
-                    <td>{new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</td>
-                    <td style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      title="Voir le document"
-                      style={{
-                        background: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        width: 32,
-                        height: 32,
-                        borderRadius: 4,
-                        fontSize: 16,
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => handlePreviewDocument(doc)}
-                    >
-                      👁️
-                    </button>
-                    <button
-                      title="Télécharger"
-                      style={{
-                        background: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        width: 32,
-                        height: 32,
-                        borderRadius: 4,
-                        fontSize: 16,
-                        cursor: 'pointer'
-                      }}
-                      onClick={async () => {
-                        const blob = await documentApi.download(doc.id)
-                        const url = URL.createObjectURL(blob)
-                        const link = document.createElement('a')
-                        link.href = url
-                        link.download = doc.nomFichier
-                        link.click()
-                      }}
-                    >
-                      ⬇️
-                    </button>
-                    <button
-                      title="Assigner à un dossier"
-                      style={{
-                        background: '#8b5cf6',
-                        color: 'white',
-                        border: 'none',
-                        width: 32,
-                        height: 32,
-                        borderRadius: 4,
-                        fontSize: 16,
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => { setSelectedDocument(doc); setShowAssignModal(true) }}
-                    >
-                      📎
-                    </button>
-                    <button
-                      title="Supprimer"
-                      style={{
-                        background: '#ef4444',
-                        color: 'white',
-                        border: 'none',
-                        width: 32,
-                        height: 32,
-                        borderRadius: 4,
-                        fontSize: 16,
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => handleDeleteDocument(doc.id)}
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {/* Modal Détail Dossier */}
       {selectedDossierDetailId && (

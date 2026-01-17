@@ -313,6 +313,15 @@
   color: #c62828;
 }
 
+.file-action-btn.assign {
+  color: #8b5cf6;
+}
+
+.file-action-btn.assign:hover {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
 /* Empty State */
 .docs-empty {
   display: flex;
