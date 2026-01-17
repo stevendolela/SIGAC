@@ -889,145 +889,139 @@ export default function DocumentsPage() {
               {/* ONGLET 2: Réseau */}
               {scannerModalTab === 'network' && (
                 <div>
-                  {networkScanners.length === 0 && !scanningNetwork && (
-                    <div style={{ textAlign: 'center', padding: 40 }}>
-                      <div style={{ fontSize: 56, marginBottom: 16 }}>🌐</div>
-                      <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Chercher les Scanners Réseau</p>
-                      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 24, lineHeight: '1.6' }}>
-                        Scannez votre réseau local pour découvrir<br/>les scanners disponibles
-                      </p>
-                      <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20 }}>
-                        ⏱️ La recherche peut prendre 10-15 secondes...
-                      </p>
-                      <button
-                        className="btn"
-                        onClick={searchNetworkScanners}
+                  <div style={{ textAlign: 'center', padding: '20px 0 30px' }}>
+                    <div style={{ fontSize: 48, marginBottom: 12 }}>🖨️</div>
+                    <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Scanner Réseau</p>
+                    <p style={{ color: '#6b7280', fontSize: 13, lineHeight: '1.6' }}>
+                      Entrez l'adresse IP de votre scanner réseau
+                    </p>
+                  </div>
+
+                  {/* Formulaire IP Manuel */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#374151', marginBottom: 8 }}>
+                      Adresse IP du scanner
+                    </label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="Ex: 192.168.1.100"
+                        value={networkScanners[0]?.ip || ''}
+                        onChange={(e) => setNetworkScanners([{ ip: e.target.value, port: 9100, status: 'unknown', name: '' }])}
                         style={{
-                          width: '100%',
-                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '14px 20px',
-                          fontSize: 16,
-                          fontWeight: 700,
+                          flex: 1,
+                          padding: '12px 14px',
+                          border: '1px solid #d1d5db',
                           borderRadius: 6,
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-                          transition: 'all 0.2s'
+                          fontSize: 14,
+                          fontFamily: 'monospace'
                         }}
-                      >
-                        🔍 Chercher des Scanners
-                      </button>
-                    </div>
-                  )}
-
-                  {scanningNetwork && (
-                    <div style={{ textAlign: 'center', padding: 40 }}>
-                      <div style={{ fontSize: 48, marginBottom: 16, animation: 'spin 1s linear infinite' }}>🔄</div>
-                      <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Recherche en cours...</p>
-                      <p style={{ fontSize: 12, color: '#6b7280' }}>
-                        Scanning votre réseau local pour détecter les scanners
-                      </p>
-                    </div>
-                  )}
-
-                  {!scanningNetwork && networkScanners.length > 0 && (
-                    <div>
-                      <div style={{ 
-                        background: '#ecfdf5', 
-                        padding: 12, 
-                        borderRadius: 6, 
-                        marginBottom: 16,
-                        border: '2px solid #d1fae5',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10
-                      }}>
-                        <span style={{ fontSize: 20 }}>✅</span>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#065f46' }}>
-                          {networkScanners.length} scanner(s) trouvé(s)
-                        </p>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, maxHeight: 350, overflow: 'auto' }}>
-                        {networkScanners.map((scanner, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              border: selectedNetworkScanner?.ip === scanner.ip ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                              borderRadius: 8,
-                              padding: 12,
-                              background: selectedNetworkScanner?.ip === scanner.ip ? '#eff6ff' : '#fff',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              boxShadow: selectedNetworkScanner?.ip === scanner.ip ? '0 2px 8px rgba(59, 130, 246, 0.2)' : 'none'
-                            }}
-                            onClick={() => setSelectedNetworkScanner(scanner)}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: 14, color: '#1f2937' }}>
-                                  🖨️ {scanner.name || `Scanner (${scanner.ip})`}
-                                </div>
-                                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, fontFamily: 'monospace' }}>
-                                  {scanner.ip}:{scanner.port}
-                                </div>
-                              </div>
-                              <div style={{
-                                background: scanner.status === 'online' ? '#dcfce7' : '#fee2e2',
-                                color: scanner.status === 'online' ? '#166534' : '#991b1b',
-                                padding: '4px 10px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 700
-                              }}>
-                                {scanner.status === 'online' ? '🟢 Online' : '� Offline'}
-                              </div>
-                            </div>
-                            <button
-                              className="btn"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                testScannerConnection(scanner)
-                              }}
-                              style={{
-                                width: '100%',
-                                background: '#3b82f6',
-                                color: 'white',
-                                border: 'none',
-                                padding: '8px 12px',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                borderRadius: 4,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              � Tester la Connexion
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        className="btn"
-                        onClick={searchNetworkScanners}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Port"
+                        value={networkScanners[0]?.port || 9100}
+                        onChange={(e) => setNetworkScanners([{ ...networkScanners[0], port: parseInt(e.target.value) || 9100 }])}
                         style={{
-                          width: '100%',
-                          background: '#f59e0b',
-                          color: 'white',
-                          border: 'none',
-                          padding: '10px 16px',
-                          fontSize: 13,
-                          fontWeight: 600,
+                          width: 80,
+                          padding: '12px 14px',
+                          border: '1px solid #d1d5db',
                           borderRadius: 6,
-                          cursor: 'pointer',
-                          marginBottom: 10
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                          textAlign: 'center'
                         }}
-                      >
-                        🔄 Chercher à nouveau
-                      </button>
+                      />
+                    </div>
+                    <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                      Ports courants: 9100 (standard), 80/8080 (web), 161 (SNMP)
+                    </p>
+                  </div>
+
+                  {/* Bouton Test Connexion */}
+                  <button
+                    className="btn"
+                    disabled={!networkScanners[0]?.ip || scanningNetwork}
+                    onClick={async () => {
+                      if (!networkScanners[0]?.ip) return
+                      setScanningNetwork(true)
+                      try {
+                        const result = await documentApi.testScannerConnection(
+                          networkScanners[0].ip, 
+                          networkScanners[0].port || 9100
+                        )
+                        if (result.success) {
+                          setSelectedNetworkScanner(networkScanners[0])
+                          setNetworkScanners([{ ...networkScanners[0], status: 'online', name: result.name || 'Scanner réseau' }])
+                          notify({ type: 'success', message: `✅ Scanner accessible à ${networkScanners[0].ip}` })
+                        } else {
+                          setNetworkScanners([{ ...networkScanners[0], status: 'offline' }])
+                          notify({ type: 'error', message: `❌ Scanner non accessible. Vérifiez l'IP et le port.` })
+                        }
+                      } catch (e: any) {
+                        notify({ type: 'error', message: 'Erreur lors du test de connexion' })
+                      } finally {
+                        setScanningNetwork(false)
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      background: scanningNetwork ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '14px 20px',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      borderRadius: 6,
+                      cursor: scanningNetwork || !networkScanners[0]?.ip ? 'not-allowed' : 'pointer',
+                      marginBottom: 12
+                    }}
+                  >
+                    {scanningNetwork ? '🔄 Test en cours...' : '🔌 Tester la Connexion'}
+                  </button>
+
+                  {/* Statut du scanner */}
+                  {networkScanners[0]?.status && networkScanners[0].status !== 'unknown' && (
+                    <div style={{
+                      background: networkScanners[0].status === 'online' ? '#ecfdf5' : '#fef2f2',
+                      border: `2px solid ${networkScanners[0].status === 'online' ? '#a7f3d0' : '#fecaca'}`,
+                      borderRadius: 8,
+                      padding: 16,
+                      marginBottom: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12
+                    }}>
+                      <span style={{ fontSize: 24 }}>
+                        {networkScanners[0].status === 'online' ? '✅' : '❌'}
+                      </span>
+                      <div>
+                        <div style={{ 
+                          fontWeight: 700, 
+                          fontSize: 14, 
+                          color: networkScanners[0].status === 'online' ? '#065f46' : '#991b1b' 
+                        }}>
+                          {networkScanners[0].status === 'online' ? 'Scanner connecté' : 'Scanner inaccessible'}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#6b7280', fontFamily: 'monospace', marginTop: 2 }}>
+                          {networkScanners[0].ip}:{networkScanners[0].port}
+                        </div>
+                      </div>
                     </div>
                   )}
+
+                  {/* Note informative */}
+                  <div style={{
+                    background: '#fef3c7',
+                    border: '1px solid #fcd34d',
+                    borderRadius: 6,
+                    padding: 12,
+                    marginBottom: 16
+                  }}>
+                    <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+                      <strong>💡 Astuce :</strong> Pour trouver l'IP de votre scanner, consultez les paramètres réseau de l'imprimante/scanner ou votre interface de routeur.
+                    </p>
+                  </div>
 
                   <button
                     className="btn"
