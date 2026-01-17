@@ -1,0 +1,5 @@
+C:\Users\snk\OneDrive - BCSYS\Documents\Dossier Perso\Projet Perso\SIGAC\taajii-scanner-agent\obj\Debug\net8.0-windows\TaajiiScannerAgent.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\snk\OneDrive - BCSYS\Documents\Dossier Perso\Projet Perso\SIGAC\taajii-scanner-agent\obj\Debug\net8.0-windows\TaajiiScannerAgent.AssemblyInfoInputs.cache
+C:\Users\snk\OneDrive - BCSYS\Documents\Dossier Perso\Projet Perso\SIGAC\taajii-scanner-agent\obj\Debug\net8.0-windows\TaajiiScannerAgent.AssemblyInfo.cs
+C:\Users\snk\OneDrive - BCSYS\Documents\Dossier Perso\Projet Perso\SIGAC\taajii-scanner-agent\obj\Debug\net8.0-windows\TaajiiScannerAgent.csproj.CoreCompileInputs.cache
+C:\Users\snk\OneDrive - BCSYS\Documents\Dossier Perso\Projet Perso\SIGAC\taajii-scanner-agent\obj\Debug\net8.0-windows\TaajiiScannerAgent.sourcelink.json

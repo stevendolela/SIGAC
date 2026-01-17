@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "6U8eCsZotLA=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\snk\\OneDrive - BCSYS\\Documents\\Dossier Perso\\Projet Perso\\SIGAC\\taajii-scanner-agent\\TaajiiScannerAgent.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\snk\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0\\microsoft.win32.systemevents.8.0.0.nupkg.sha512",
+    "C:\\Users\\snk\\.nuget\\packages\\system.drawing.common\\8.0.0\\system.drawing.common.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

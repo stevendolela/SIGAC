@@ -59,8 +59,13 @@ export default function DocumentsPage() {
   const [networkScanners, setNetworkScanners] = useState<any[]>([])
   const [scanningNetwork, setScanningNetwork] = useState(false)
   const [selectedNetworkScanner, setSelectedNetworkScanner] = useState<any>(null)
-  const [scannerModalTab, setScannerModalTab] = useState<'local' | 'network'>('local')
+  const [scannerModalTab, setScannerModalTab] = useState<'local' | 'network' | 'agent'>('agent')
   const [selectedDossierDetailId, setSelectedDossierDetailId] = useState<string | null>(null)
+  // Agent local state
+  const [agentStatus, setAgentStatus] = useState<'checking' | 'online' | 'offline'>('checking')
+  const [agentScanners, setAgentScanners] = useState<{id: string, name: string}[]>([])
+  const [selectedAgentScanner, setSelectedAgentScanner] = useState<string>('')
+  const [agentScanning, setAgentScanning] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -137,6 +142,86 @@ export default function DocumentsPage() {
       console.error('Erreur énumération appareils', e)
     }
   }
+
+  // Vérifier si l'agent local est disponible
+  const AGENT_URL = 'http://localhost:5588'
+  
+  async function checkAgentStatus() {
+    setAgentStatus('checking')
+    try {
+      const response = await fetch(`${AGENT_URL}/status`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(2000) 
+      })
+      if (response.ok) {
+        setAgentStatus('online')
+        // Récupérer la liste des scanners
+        const scannersResponse = await fetch(`${AGENT_URL}/scanners`)
+        if (scannersResponse.ok) {
+          const data = await scannersResponse.json()
+          setAgentScanners(data.scanners || [])
+          if (data.scanners?.length > 0) {
+            setSelectedAgentScanner(data.scanners[0].id)
+          }
+        }
+      } else {
+        setAgentStatus('offline')
+      }
+    } catch {
+      setAgentStatus('offline')
+    }
+  }
+
+  async function scanWithAgent() {
+    if (!selectedDossierId) {
+      notify({ type: 'error', message: 'Sélectionnez d\'abord un dossier' })
+      return
+    }
+    
+    setAgentScanning(true)
+    try {
+      const url = selectedAgentScanner 
+        ? `${AGENT_URL}/scan?scannerId=${encodeURIComponent(selectedAgentScanner)}`
+        : `${AGENT_URL}/scan`
+      
+      const response = await fetch(url, { method: 'GET' })
+      const data = await response.json()
+      
+      if (data.success && data.image) {
+        notify({ type: 'info', message: '📄 Document scanné, upload en cours...' })
+        
+        // Convertir base64 en Blob
+        const byteCharacters = atob(data.image)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: 'image/png' })
+        const file = new File([blob], `scan_${Date.now()}.png`, { type: 'image/png' })
+        
+        // Upload vers le backend
+        await documentApi.upload(selectedDossierId, file, 'Document scanné')
+        
+        notify({ type: 'success', message: '✅ Document scanné et importé!' })
+        fetchDocuments()
+        setShowScannerModal(false)
+      } else {
+        notify({ type: 'error', message: data.error || 'Erreur lors du scan' })
+      }
+    } catch (e: any) {
+      notify({ type: 'error', message: 'Erreur de connexion à l\'agent' })
+    } finally {
+      setAgentScanning(false)
+    }
+  }
+
+  // Vérifier l'agent quand on ouvre le modal scanner
+  useEffect(() => {
+    if (showScannerModal) {
+      checkAgentStatus()
+    }
+  }, [showScannerModal])
 
   useEffect(() => {
     // Charger les documents dès qu'on a les dossiers ou qu'on change de sélection
@@ -597,6 +682,36 @@ export default function DocumentsPage() {
               {/* Onglets */}
               <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
                 <button
+                  onClick={() => { setScannerModalTab('agent'); stopScanner(); setCameraPreview(null) }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    border: 'none',
+                    borderBottom: scannerModalTab === 'agent' ? '4px solid #10b981' : '2px solid #e5e7eb',
+                    background: scannerModalTab === 'agent' ? '#f9fafb' : '#ffffff',
+                    color: scannerModalTab === 'agent' ? '#10b981' : '#6b7280',
+                    fontWeight: scannerModalTab === 'agent' ? 700 : 500,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    borderRadius: '8px 8px 0 0',
+                    position: 'relative'
+                  }}
+                >
+                  🖨️ Scanner
+                  {agentStatus === 'online' && (
+                    <span style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      width: 8,
+                      height: 8,
+                      background: '#10b981',
+                      borderRadius: '50%'
+                    }} />
+                  )}
+                </button>
+                <button
                   onClick={() => { setScannerModalTab('local'); stopScanner(); setCameraPreview(null) }}
                   style={{
                     flex: 1,
@@ -612,7 +727,7 @@ export default function DocumentsPage() {
                     borderRadius: '8px 8px 0 0'
                   }}
                 >
-                  🎥 Appareil Local
+                  🎥 Webcam
                 </button>
                 <button
                   onClick={() => { setScannerModalTab('network'); stopScanner(); setCameraPreview(null) }}
@@ -630,13 +745,216 @@ export default function DocumentsPage() {
                     borderRadius: '8px 8px 0 0'
                   }}
                 >
-                  🌐 Réseau
+                  ℹ️ Aide
                 </button>
               </div>
             </div>
 
             {/* Contenu des onglets */}
             <div style={{ padding: 20 }}>
+
+              {/* ONGLET 0: Scanner via Agent */}
+              {scannerModalTab === 'agent' && (
+                <div>
+                  {agentStatus === 'checking' && (
+                    <div style={{ textAlign: 'center', padding: 40 }}>
+                      <div style={{ fontSize: 48, marginBottom: 16, animation: 'spin 1s linear infinite' }}>🔄</div>
+                      <p style={{ fontWeight: 600, color: '#374151' }}>Recherche de l'agent local...</p>
+                    </div>
+                  )}
+
+                  {agentStatus === 'offline' && (
+                    <div>
+                      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                        <div style={{ fontSize: 48, marginBottom: 12 }}>❌</div>
+                        <p style={{ fontWeight: 700, fontSize: 16, color: '#1f2937', marginBottom: 8 }}>Agent non détecté</p>
+                        <p style={{ color: '#6b7280', fontSize: 13 }}>L'agent Taajii Scanner n'est pas en cours d'exécution</p>
+                      </div>
+
+                      <div style={{
+                        background: '#fef3c7',
+                        border: '1px solid #fcd34d',
+                        borderRadius: 8,
+                        padding: 16,
+                        marginBottom: 16
+                      }}>
+                        <p style={{ fontSize: 13, color: '#92400e', margin: 0, fontWeight: 600, marginBottom: 8 }}>
+                          📥 Installation requise
+                        </p>
+                        <p style={{ fontSize: 12, color: '#78350f', margin: 0, lineHeight: 1.6 }}>
+                          Pour scanner directement depuis votre imprimante/scanner, vous devez installer 
+                          l'application "Taajii Scanner Agent" sur votre ordinateur.
+                        </p>
+                      </div>
+
+                      <div style={{
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: 8,
+                        padding: 16,
+                        marginBottom: 16
+                      }}>
+                        <p style={{ fontSize: 13, color: '#1e40af', margin: 0, fontWeight: 600, marginBottom: 8 }}>
+                          📋 Instructions
+                        </p>
+                        <ol style={{ fontSize: 12, color: '#1e3a8a', margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
+                          <li>Téléchargez "TaajiiScannerAgent.exe"</li>
+                          <li>Lancez l'application (elle reste en arrière-plan)</li>
+                          <li>Revenez ici et cliquez sur "Actualiser"</li>
+                        </ol>
+                      </div>
+
+                      <button
+                        onClick={checkAgentStatus}
+                        style={{
+                          width: '100%',
+                          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                          color: 'white',
+                          border: 'none',
+                          padding: '14px 20px',
+                          fontSize: 15,
+                          fontWeight: 700,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          marginBottom: 12
+                        }}
+                      >
+                        🔄 Actualiser
+                      </button>
+                    </div>
+                  )}
+
+                  {agentStatus === 'online' && (
+                    <div>
+                      <div style={{
+                        background: '#ecfdf5',
+                        border: '2px solid #a7f3d0',
+                        borderRadius: 8,
+                        padding: 16,
+                        marginBottom: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12
+                      }}>
+                        <span style={{ fontSize: 24 }}>✅</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: '#065f46' }}>
+                            Agent connecté
+                          </div>
+                          <div style={{ fontSize: 12, color: '#047857' }}>
+                            {agentScanners.length} scanner(s) détecté(s)
+                          </div>
+                        </div>
+                      </div>
+
+                      {agentScanners.length === 0 ? (
+                        <div style={{
+                          background: '#fef3c7',
+                          border: '1px solid #fcd34d',
+                          borderRadius: 8,
+                          padding: 16,
+                          marginBottom: 16,
+                          textAlign: 'center'
+                        }}>
+                          <p style={{ fontSize: 13, color: '#92400e', margin: 0 }}>
+                            ⚠️ Aucun scanner détecté. Vérifiez que votre scanner est allumé et connecté.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Sélection du scanner */}
+                          <div style={{ marginBottom: 20 }}>
+                            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#374151', marginBottom: 8 }}>
+                              Sélectionnez un scanner
+                            </label>
+                            <select
+                              value={selectedAgentScanner}
+                              onChange={(e) => setSelectedAgentScanner(e.target.value)}
+                              style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: 6,
+                                fontSize: 14,
+                                background: 'white'
+                              }}
+                            >
+                              {agentScanners.map(s => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Bouton Scanner */}
+                          <button
+                            onClick={scanWithAgent}
+                            disabled={agentScanning || !selectedDossierId}
+                            style={{
+                              width: '100%',
+                              background: agentScanning 
+                                ? '#9ca3af' 
+                                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              color: 'white',
+                              border: 'none',
+                              padding: '16px 20px',
+                              fontSize: 16,
+                              fontWeight: 700,
+                              borderRadius: 8,
+                              cursor: agentScanning || !selectedDossierId ? 'not-allowed' : 'pointer',
+                              boxShadow: agentScanning ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
+                              marginBottom: 12
+                            }}
+                          >
+                            {agentScanning ? '🔄 Scan en cours...' : '🖨️ Lancer le Scan'}
+                          </button>
+
+                          {!selectedDossierId && (
+                            <p style={{ fontSize: 12, color: '#ef4444', textAlign: 'center', margin: 0 }}>
+                              ⚠️ Sélectionnez d'abord un dossier dans le filtre ci-dessus
+                            </p>
+                          )}
+                        </>
+                      )}
+
+                      <button
+                        onClick={checkAgentStatus}
+                        style={{
+                          width: '100%',
+                          background: '#6b7280',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 16px',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          marginTop: 12
+                        }}
+                      >
+                        🔄 Actualiser les scanners
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => setShowScannerModal(false)}
+                    style={{
+                      width: '100%',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #d1d5db',
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      marginTop: 12
+                    }}
+                  >
+                    ❌ Fermer
+                  </button>
+                </div>
+              )}
 
               {/* ONGLET 1: Appareil Local */}
               {scannerModalTab === 'local' && (
