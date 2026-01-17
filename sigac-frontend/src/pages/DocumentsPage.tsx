@@ -889,120 +889,87 @@ export default function DocumentsPage() {
               {/* ONGLET 2: Réseau */}
               {scannerModalTab === 'network' && (
                 <div>
-                  <div style={{ textAlign: 'center', padding: '20px 0 30px' }}>
-                    <div style={{ fontSize: 48, marginBottom: 12 }}>🖨️</div>
+                  <div style={{ textAlign: 'center', padding: '20px 0 20px' }}>
+                    <div style={{ fontSize: 48, marginBottom: 12 }}>🚧</div>
                     <p style={{ marginBottom: 8, fontWeight: 700, fontSize: 16, color: '#1f2937' }}>Scanner Réseau</p>
                     <p style={{ color: '#6b7280', fontSize: 13, lineHeight: '1.6' }}>
-                      Entrez l'adresse IP de votre scanner réseau
+                      Fonctionnalité en cours de développement
                     </p>
                   </div>
 
-                  {/* Formulaire IP Manuel */}
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#374151', marginBottom: 8 }}>
-                      Adresse IP du scanner
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: 192.168.1.100"
-                      value={networkScanners[0]?.ip || ''}
-                      onChange={(e) => setNetworkScanners([{ ip: e.target.value, port: 9100, status: 'unknown', name: '' }])}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: 6,
-                        fontSize: 14,
-                        fontFamily: 'monospace',
-                        boxSizing: 'border-box'
-                      }}
-                    />
+                  {/* Message explicatif */}
+                  <div style={{
+                    background: '#fef3c7',
+                    border: '1px solid #fcd34d',
+                    borderRadius: 8,
+                    padding: 16,
+                    marginBottom: 20
+                  }}>
+                    <p style={{ fontSize: 13, color: '#92400e', margin: 0, lineHeight: 1.6, fontWeight: 600, marginBottom: 8 }}>
+                      ⚠️ Limitation technique
+                    </p>
+                    <p style={{ fontSize: 12, color: '#78350f', margin: 0, lineHeight: 1.6 }}>
+                      Le scanner réseau nécessite une connexion directe à votre réseau local. 
+                      Comme l'application est hébergée dans le cloud, elle ne peut pas accéder 
+                      aux appareils de votre réseau privé (192.168.x.x).
+                    </p>
                   </div>
 
-                  {/* Bouton Test Connexion */}
+                  {/* Alternatives */}
+                  <div style={{
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    borderRadius: 8,
+                    padding: 16,
+                    marginBottom: 20
+                  }}>
+                    <p style={{ fontSize: 13, color: '#065f46', margin: 0, lineHeight: 1.6, fontWeight: 600, marginBottom: 8 }}>
+                      ✅ Alternatives disponibles
+                    </p>
+                    <ul style={{ fontSize: 12, color: '#047857', margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
+                      <li><strong>Onglet "Local"</strong> : Utilisez votre webcam pour scanner des documents</li>
+                      <li><strong>Bouton "Importer"</strong> : Importez directement des fichiers depuis votre ordinateur</li>
+                      <li><strong>Scan préalable</strong> : Scannez avec votre scanner, puis importez le fichier PDF/image</li>
+                    </ul>
+                  </div>
+
                   <button
                     className="btn"
-                    disabled={!networkScanners[0]?.ip || scanningNetwork}
-                    onClick={async () => {
-                      if (!networkScanners[0]?.ip) return
-                      setScanningNetwork(true)
-                      try {
-                        const result = await documentApi.testScannerConnection(
-                          networkScanners[0].ip, 
-                          networkScanners[0].port || 9100
-                        )
-                        if (result.success) {
-                          setSelectedNetworkScanner(networkScanners[0])
-                          setNetworkScanners([{ ...networkScanners[0], status: 'online', name: result.name || 'Scanner réseau' }])
-                          notify({ type: 'success', message: `✅ Scanner accessible à ${networkScanners[0].ip}` })
-                        } else {
-                          setNetworkScanners([{ ...networkScanners[0], status: 'offline' }])
-                          notify({ type: 'error', message: `❌ Scanner non accessible. Vérifiez l'IP et le port.` })
-                        }
-                      } catch (e: any) {
-                        notify({ type: 'error', message: 'Erreur lors du test de connexion' })
-                      } finally {
-                        setScanningNetwork(false)
-                      }
-                    }}
+                    onClick={() => setScannerModalTab('local')}
                     style={{
                       width: '100%',
-                      background: scanningNetwork ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                       color: 'white',
                       border: 'none',
                       padding: '14px 20px',
                       fontSize: 15,
                       fontWeight: 700,
                       borderRadius: 6,
-                      cursor: scanningNetwork || !networkScanners[0]?.ip ? 'not-allowed' : 'pointer',
+                      cursor: 'pointer',
                       marginBottom: 12
                     }}
                   >
-                    {scanningNetwork ? '🔄 Test en cours...' : '🔌 Tester la Connexion'}
+                    📷 Utiliser le Scanner Local (Webcam)
                   </button>
 
-                  {/* Statut du scanner */}
-                  {networkScanners[0]?.status && networkScanners[0].status !== 'unknown' && (
-                    <div style={{
-                      background: networkScanners[0].status === 'online' ? '#ecfdf5' : '#fef2f2',
-                      border: `2px solid ${networkScanners[0].status === 'online' ? '#a7f3d0' : '#fecaca'}`,
-                      borderRadius: 8,
-                      padding: 16,
-                      marginBottom: 16,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12
-                    }}>
-                      <span style={{ fontSize: 24 }}>
-                        {networkScanners[0].status === 'online' ? '✅' : '❌'}
-                      </span>
-                      <div>
-                        <div style={{ 
-                          fontWeight: 700, 
-                          fontSize: 14, 
-                          color: networkScanners[0].status === 'online' ? '#065f46' : '#991b1b' 
-                        }}>
-                          {networkScanners[0].status === 'online' ? 'Scanner connecté' : 'Scanner inaccessible'}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#6b7280', fontFamily: 'monospace', marginTop: 2 }}>
-                          {networkScanners[0].ip}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Note informative */}
-                  <div style={{
-                    background: '#fef3c7',
-                    border: '1px solid #fcd34d',
-                    borderRadius: 6,
-                    padding: 12,
-                    marginBottom: 16
-                  }}>
-                    <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-                      <strong>💡 Astuce :</strong> Pour trouver l'IP de votre scanner, consultez les paramètres réseau de l'imprimante/scanner ou votre interface de routeur.
-                    </p>
-                  </div>
+                  <button
+                    className="btn"
+                    onClick={() => { setShowScannerModal(false); setShowUploadModal(true) }}
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '14px 20px',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      marginBottom: 12
+                    }}
+                  >
+                    📁 Importer un Fichier
+                  </button>
 
                   <button
                     className="btn"
