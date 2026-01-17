@@ -357,30 +357,30 @@ export default function DocumentsPage() {
   const pdfCount = filteredDocuments.filter(d => d.mimeType === 'application/pdf').length
   const imageCount = filteredDocuments.filter(d => d.mimeType?.startsWith('image/')).length
 
-  // Icônes de fichiers style Google Drive
-  const FileIcon = ({ type }: { type: string }) => {
+  // Icônes de fichiers colorées
+  const FileIcon = ({ type, size = 40 }: { type: string; size?: number }) => {
     if (type === 'pdf') return (
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="#ea4335">
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="#ea4335">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10.92,12.31C10.68,11.54 10.15,9.08 11.55,9.04C12.95,9 12.03,12.16 12.03,12.16C12.42,13.65 14.05,14.72 14.05,14.72C14.55,14.57 17.4,14.24 17,15.72C16.57,17.2 13.5,15.81 13.5,15.81C11.55,15.95 10.09,16.47 10.09,16.47C8.96,18.58 7.64,19.5 7.1,18.61C6.43,17.5 9.23,16.07 9.23,16.07C10.68,13.72 10.9,12.35 10.92,12.31Z"/>
       </svg>
     )
     if (type === 'image') return (
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="#4285f4">
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="#1a73e8">
         <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
       </svg>
     )
     if (type === 'word') return (
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="#4285f4">
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="#4285f4">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M15.2,20H13.8L12,13.2L10.2,20H8.8L6.6,11H8.1L9.5,17.8L11.3,11H12.6L14.4,17.8L15.8,11H17.3L15.2,20M13,9V3.5L18.5,9H13Z"/>
       </svg>
     )
     if (type === 'excel') return (
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="#0f9d58">
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="#0f9d58">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M15.8,20H14L12,16.6L10,20H8.2L11.1,15.5L8.2,11H10L12,14.4L14,11H15.8L12.9,15.5L15.8,20M13,9V3.5L18.5,9H13Z"/>
       </svg>
     )
     return (
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="#5f6368">
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="#5f6368">
         <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
       </svg>
     )
@@ -388,157 +388,163 @@ export default function DocumentsPage() {
 
   return (
     <div className="documents-page">
-      {/* Header */}
-      <div className="docs-header">
-        <h1>Documents</h1>
+      {/* Top Bar */}
+      <div className="docs-topbar">
+        <div className="docs-topbar-left">
+          <h1>Documents</h1>
+          {filteredDocuments.length > 0 && (
+            <span className="docs-count">{filteredDocuments.length}</span>
+          )}
+        </div>
+        <div className="docs-topbar-right">
+          <div className="docs-search">
+            <svg className="docs-search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          
+          <div className="docs-filter">
+            <select
+              value={selectedDossierId}
+              onChange={(e) => setSelectedDossierId(e.target.value)}
+            >
+              <option value="">Tous les dossiers</option>
+              {dossiers.map(d => (
+                <option key={d.id} value={d.id}>{d.numeroDossier}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className="docs-btn docs-btn-secondary"
+            onClick={() => setShowScannerModal(true)}
+            disabled={!selectedDossierId}
+          >
+            Scanner
+          </button>
+
+          <button
+            className="docs-btn docs-btn-primary"
+            onClick={() => setShowUploadModal(true)}
+            disabled={!selectedDossierId}
+          >
+            Importer
+          </button>
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="docs-toolbar">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Rechercher..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        
-        <select
-          className="filter-select"
-          value={selectedDossierId}
-          onChange={(e) => setSelectedDossierId(e.target.value)}
-        >
-          <option value="">Tous les dossiers</option>
-          {dossiers.map(d => (
-            <option key={d.id} value={d.id}>{d.numeroDossier}</option>
-          ))}
-        </select>
+      {/* Content */}
+      <div className="docs-content">
+        {/* Loading */}
+        {loading && (
+          <div className="docs-loading">
+            <div className="docs-spinner" />
+            Chargement...
+          </div>
+        )}
 
-        <div className="toolbar-spacer" />
+        {/* Empty State */}
+        {!loading && filteredDocuments.length === 0 && (
+          <div className="docs-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <h3>Aucun document</h3>
+            <p>{selectedDossierId ? "Importez votre premier fichier" : "Sélectionnez un dossier pour commencer"}</p>
+            {selectedDossierId && (
+              <button className="docs-btn docs-btn-primary" onClick={() => setShowUploadModal(true)}>
+                Importer un fichier
+              </button>
+            )}
+          </div>
+        )}
 
-        <button
-          className="btn btn-ghost"
-          onClick={() => { setShowScannerModal(true) }}
-          disabled={!selectedDossierId}
-        >
-          Scanner
-        </button>
-
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowUploadModal(true)}
-          disabled={!selectedDossierId}
-        >
-          Importer
-        </button>
-      </div>
-
-      {/* Loading */}
-      {loading && (
-        <div className="loading-state">
-          <div className="spinner" />
-          Chargement...
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && filteredDocuments.length === 0 && (
-        <div className="empty-state">
-          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#d0d0d0" strokeWidth="1">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <h3>Aucun document</h3>
-          <p>{selectedDossierId ? "Importez un fichier pour commencer" : "Sélectionnez un dossier"}</p>
-        </div>
-      )}
-
-      {/* Document List */}
-      {!loading && filteredDocuments.length > 0 && (
-        <div className="docs-list">
-          {filteredDocuments.map(doc => {
-            const fileType = getFileType(doc.mimeType)
-            return (
-              <div key={doc.id} className="doc-row" onClick={() => handlePreviewDocument(doc)}>
-                <div className="doc-icon">
-                  <FileIcon type={fileType} />
-                </div>
-                <div className="doc-info">
-                  <div className="doc-name">{doc.nomFichier}</div>
-                  <div className="doc-meta">
-                    {formatSize(doc.tailleFichier)} · {new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}
+        {/* Grid de Documents */}
+        {!loading && filteredDocuments.length > 0 && (
+          <div className="docs-grid">
+            {filteredDocuments.map(doc => {
+              const fileType = getFileType(doc.mimeType)
+              return (
+                <div key={doc.id} className="file-card" onClick={() => handlePreviewDocument(doc)}>
+                  <div className="file-card-preview">
+                    <FileIcon type={fileType} size={48} />
+                    <span className={`file-card-type ${fileType}`}>{fileType}</span>
+                  </div>
+                  <div className="file-card-info">
+                    <div className="file-card-name" title={doc.nomFichier}>{doc.nomFichier}</div>
+                    <div className="file-card-meta">
+                      {formatSize(doc.tailleFichier)} · {new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}
+                    </div>
+                  </div>
+                  <div className="file-card-actions" onClick={(e) => e.stopPropagation()}>
+                    <button 
+                      className="file-action-btn"
+                      onClick={async () => {
+                        try {
+                          const blob = await documentApi.download(doc.id)
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = doc.nomFichier
+                          a.click()
+                          URL.revokeObjectURL(url)
+                        } catch { notify({ type: 'error', message: 'Erreur' }) }
+                      }}
+                    >
+                      Télécharger
+                    </button>
+                    <button 
+                      className="file-action-btn danger"
+                      onClick={async () => {
+                        if (!confirm(`Supprimer ?`)) return
+                        try {
+                          await documentApi.remove(doc.id)
+                          setDocuments(prev => prev.filter(d => d.id !== doc.id))
+                          notify({ type: 'success', message: 'Supprimé' })
+                        } catch { notify({ type: 'error', message: 'Erreur' }) }
+                      }}
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </div>
-                <div className="doc-actions" onClick={(e) => e.stopPropagation()}>
-                  <button 
-                    className="action-btn"
-                    onClick={async () => {
-                      try {
-                        const blob = await documentApi.download(doc.id)
-                        const url = URL.createObjectURL(blob)
-                        const a = document.createElement('a')
-                        a.href = url
-                        a.download = doc.nomFichier
-                        a.click()
-                        URL.revokeObjectURL(url)
-                      } catch { notify({ type: 'error', message: 'Erreur' }) }
-                    }}
-                    title="Télécharger"
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="7 10 12 15 17 10"/>
-                      <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                  </button>
-                  <button 
-                    className="action-btn danger"
-                    onClick={async () => {
-                      if (!confirm(`Supprimer "${doc.nomFichier}" ?`)) return
-                      try {
-                        await documentApi.remove(doc.id)
-                        setDocuments(prev => prev.filter(d => d.id !== doc.id))
-                        notify({ type: 'success', message: 'Supprimé' })
-                      } catch { notify({ type: 'error', message: 'Erreur' }) }
-                    }}
-                    title="Supprimer"
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Modal Upload */}
       {showUploadModal && (
-        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Importer</h3>
-              <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
+        <div className="docs-modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="docs-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="docs-modal-header">
+              <h3>Importer des fichiers</h3>
+              <button className="docs-modal-close" onClick={() => setShowUploadModal(false)}>×</button>
             </div>
-            <div className="modal-body">
+            <div className="docs-modal-body">
               <div
-                className={`upload-zone ${dragActive ? 'active' : ''}`}
+                className={`docs-upload-zone ${dragActive ? 'active' : ''}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById('file-input')?.click()}
               >
-                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="17 8 12 3 7 8"/>
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
                 <h4>Glissez vos fichiers ici</h4>
-                <p>ou cliquez pour sélectionner</p>
+                <p>ou cliquez pour parcourir</p>
                 <input
                   type="file"
                   multiple
@@ -550,7 +556,8 @@ export default function DocumentsPage() {
               </div>
               {uploading && (
                 <div style={{ textAlign: 'center', marginTop: 16 }}>
-                  <div className="spinner" style={{ margin: '0 auto' }} />
+                  <div className="docs-spinner" style={{ margin: '0 auto' }} />
+                  <p style={{ marginTop: 8, color: '#666', fontSize: 13 }}>Import en cours...</p>
                 </div>
               )}
             </div>
