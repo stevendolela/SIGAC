@@ -902,40 +902,21 @@ export default function DocumentsPage() {
                     <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#374151', marginBottom: 8 }}>
                       Adresse IP du scanner
                     </label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        type="text"
-                        placeholder="Ex: 192.168.1.100"
-                        value={networkScanners[0]?.ip || ''}
-                        onChange={(e) => setNetworkScanners([{ ip: e.target.value, port: 9100, status: 'unknown', name: '' }])}
-                        style={{
-                          flex: 1,
-                          padding: '12px 14px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          fontSize: 14,
-                          fontFamily: 'monospace'
-                        }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Port"
-                        value={networkScanners[0]?.port || 9100}
-                        onChange={(e) => setNetworkScanners([{ ...networkScanners[0], port: parseInt(e.target.value) || 9100 }])}
-                        style={{
-                          width: 80,
-                          padding: '12px 14px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          fontSize: 14,
-                          fontFamily: 'monospace',
-                          textAlign: 'center'
-                        }}
-                      />
-                    </div>
-                    <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
-                      Ports courants: 9100 (standard), 80/8080 (web), 161 (SNMP)
-                    </p>
+                    <input
+                      type="text"
+                      placeholder="Ex: 192.168.1.100"
+                      value={networkScanners[0]?.ip || ''}
+                      onChange={(e) => setNetworkScanners([{ ip: e.target.value, port: 9100, status: 'unknown', name: '' }])}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: 6,
+                        fontSize: 14,
+                        fontFamily: 'monospace',
+                        boxSizing: 'border-box'
+                      }}
+                    />
                   </div>
 
                   {/* Bouton Test Connexion */}
@@ -1004,7 +985,7 @@ export default function DocumentsPage() {
                           {networkScanners[0].status === 'online' ? 'Scanner connecté' : 'Scanner inaccessible'}
                         </div>
                         <div style={{ fontSize: 12, color: '#6b7280', fontFamily: 'monospace', marginTop: 2 }}>
-                          {networkScanners[0].ip}:{networkScanners[0].port}
+                          {networkScanners[0].ip}
                         </div>
                       </div>
                     </div>
