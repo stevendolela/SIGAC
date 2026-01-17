@@ -336,12 +336,19 @@ export default function DocumentsPage() {
       notify({ type: 'success', message: `✅ ${deviceName} activé(e)` })
     } catch (error: any) {
       console.error('Erreur caméra/scanner:', error)
-      if (error.name === 'NotFoundError' || error.name === 'NotAllowedError') {
-        notify({ type: 'error', message: '❌ Appareil non trouvé ou permission refusée' })
-      } else {
-        notify({ type: 'error', message: '❌ Impossible d\'accéder à la caméra/scanner' })
-      }
       setScannerActive(false)
+      
+      if (error.name === 'NotFoundError') {
+        notify({ type: 'error', message: '❌ Aucune caméra détectée sur cet appareil' })
+      } else if (error.name === 'NotAllowedError') {
+        notify({ type: 'error', message: '❌ Permission caméra refusée. Autorisez l\'accès dans les paramètres du navigateur.' })
+      } else if (error.name === 'NotReadableError') {
+        notify({ type: 'error', message: '❌ Caméra déjà utilisée par une autre application. Fermez-la et réessayez.' })
+      } else if (error.name === 'OverconstrainedError') {
+        notify({ type: 'error', message: '❌ Caméra sélectionnée non disponible. Essayez une autre.' })
+      } else {
+        notify({ type: 'error', message: `❌ Erreur caméra: ${error.message || 'Impossible d\'accéder'}` })
+      }
     }
   }
 
@@ -375,9 +382,16 @@ export default function DocumentsPage() {
 
     try {
       setUploading(true)
-      // Convertir dataURL en Blob
-      const response = await fetch(cameraPreview)
-      const blob = await response.blob()
+      
+      // Convertir dataURL en Blob (sans fetch pour éviter CSP)
+      const base64Data = cameraPreview.split(',')[1]
+      const byteCharacters = atob(base64Data)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'image/png' })
       const file = new File([blob], `scan_${Date.now()}.png`, { type: 'image/png' })
       
       // Upload du fichier
