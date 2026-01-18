@@ -8,10 +8,11 @@
 
 /* ============== HEADER ============== */
 
+
 .courrier-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 32px;
   gap: 32px;
 }
@@ -22,10 +23,11 @@
   justify-content: center;
 }
 
+
 .header-actions {
   display: flex;
   gap: 18px;
-  align-items: flex-end;
+  align-items: center;
 }
 
 
