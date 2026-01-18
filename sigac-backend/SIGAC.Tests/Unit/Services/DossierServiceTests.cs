@@ -88,7 +88,8 @@ public class DossierServiceTests
             .Setup(s => s.SendAsync(
                 rapporteur.Email!,
                 It.Is<string>(sub => sub.Contains("attribué")),
-                It.Is<string>(body => body.Contains(dossier.NumeroDossier) && body.Contains($"/dossiers/{dossierId}"))))
+                It.Is<string>(body => body.Contains(dossier.NumeroDossier) && body.Contains($"/dossiers/{dossierId}")),
+                It.IsAny<string?>()))
             .Returns(Task.CompletedTask);
 
         // Act

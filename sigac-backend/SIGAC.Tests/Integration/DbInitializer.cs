@@ -22,7 +22,7 @@ public static class DbInitializer
         // CRÉATION DES UTILISATEURS
         // =====================================================
         
-        var adminId = Guid.NewGuid();
+        var adminId = Guid.Parse("10000000-0000-0000-0000-000000000001");
         var presidentId = Guid.NewGuid();
         var juge1Id = Guid.NewGuid();
         var juge2Id = Guid.NewGuid();
@@ -171,7 +171,7 @@ public static class DbInitializer
                 Defendeur = "Commission Électorale Nationale Indépendante (CENI)",
                 DateDepot = new DateTime(2024, 11, 1, 10, 0, 0, DateTimeKind.Utc),
                 DateAudience = new DateTime(2024, 11, 15, 9, 0, 0, DateTimeKind.Utc),
-                Status = StatusDossier.EnInstruction,
+                Status = StatusDossier.EnCours,
                 Priorite = PrioriteDossier.Haute,
                 Resume = "Contestation des résultats des élections législatives dans 5 circonscriptions du Nord-Kivu. Le demandeur allègue des irrégularités graves dans le processus de dépouillement et demande l'annulation des résultats proclamés.",
                 RapporteurId = juge1Id,
@@ -216,7 +216,7 @@ public static class DbInitializer
                 Demandeur = "Assemblée Nationale de la RDC",
                 DateDepot = new DateTime(2024, 10, 28, 15, 0, 0, DateTimeKind.Utc),
                 DateAudience = new DateTime(2024, 11, 10, 14, 0, 0, DateTimeKind.Utc),
-                Status = StatusDossier.EnDelibere,
+                Status = StatusDossier.EnValidation,
                 Priorite = PrioriteDossier.Urgente,
                 Resume = "Contrôle a priori de la conformité de la loi de finances 2025 avec la Constitution, notamment concernant les articles relatifs aux emprunts publics et à la répartition des recettes entre l'État central et les provinces.",
                 RapporteurId = juge2Id,
@@ -289,7 +289,7 @@ public static class DbInitializer
                 Demandeur = "Groupe Parlementaire Union pour la Démocratie et le Progrès Social",
                 DateDepot = new DateTime(2024, 10, 15, 9, 0, 0, DateTimeKind.Utc),
                 DateDecision = new DateTime(2024, 11, 3, 10, 0, 0, DateTimeKind.Utc),
-                Status = StatusDossier.Juge,
+                Status = StatusDossier.Valide,
                 Priorite = PrioriteDossier.Haute,
                 Resume = "Demande d'interprétation concernant la computation de la durée du mandat présidentiel et les conditions de renouvellement du mandat.",
                 RapporteurId = juge3Id,

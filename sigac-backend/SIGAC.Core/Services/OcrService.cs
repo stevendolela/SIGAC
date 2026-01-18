@@ -1,9 +1,12 @@
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using SIGAC.Core.DTOs;
 using SIGAC.Core.Interfaces;
 using Tesseract;
+using Tesseract.Interop;
 
 namespace SIGAC.Core.Services;
 
@@ -73,24 +76,37 @@ public class OcrService : IOcrService
                 return ExtractWithoutTesseract(imageData);
             }
 
-            using var engine = new TesseractEngine(_tessDataPath, _language, EngineMode.Default);
-            using var img = Pix.LoadFromMemory(imageData);
-            using var page = engine.Process(img);
-            
-            var text = page.GetText();
-            var confidence = (int)(page.GetMeanConfidence() * 100);
-
-            var result = new OcrResultDto
+            // Conversion en Bitmap pour crop
+            using (var ms = new MemoryStream(imageData))
+            using (var bmp = new System.Drawing.Bitmap(ms))
             {
-                Success = true,
-                TexteComplet = text,
-                Confiance = confidence
-            };
+                int headerHeight = (int)(bmp.Height * 0.2);
+                if (headerHeight < 40) headerHeight = Math.Min(40, bmp.Height); // minimum 40px
+                var rect = new System.Drawing.Rectangle(0, 0, bmp.Width, headerHeight);
+                using (var headerBmp = bmp.Clone(rect, bmp.PixelFormat))
+                using (var croppedStream = new MemoryStream())
+                {
+                    headerBmp.Save(croppedStream, System.Drawing.Imaging.ImageFormat.Png);
+                    croppedStream.Position = 0;
+                    using var headerImg = Pix.LoadFromMemory(croppedStream.ToArray());
+                    using var engine = new TesseractEngine(_tessDataPath, _language, EngineMode.Default);
+                    using var page = engine.Process(headerImg);
+                    var text = page.GetText();
+                    var confidence = (int)(page.GetMeanConfidence() * 100);
 
-            // Extraire les métadonnées de l'en-tête
-            ExtractMetadata(text, result);
+                    var result = new OcrResultDto
+                    {
+                        Success = true,
+                        TexteComplet = text,
+                        Confiance = confidence
+                    };
 
-            return result;
+                    // Extraire les métadonnées de l'en-tête
+                    ExtractMetadata(text, result);
+
+                    return result;
+                }
+            }
         }
         catch (Exception ex)
         {
