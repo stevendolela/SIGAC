@@ -162,7 +162,7 @@ export const courrierApi = {
    */
   async getStatistiques(workspaceId?: string): Promise<CourrierStatsDto> {
     const qs = workspaceId ? `?workspaceId=${workspaceId}` : ''
-    const resp = await api.get<CourrierStatsDto>(`/Courrier/statistiques${qs}`)
+    const resp = await api.get<CourrierStatsDto>(`/Courrier/stats${qs}`)
     return resp.data
   }
 }

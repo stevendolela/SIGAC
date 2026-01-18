@@ -403,7 +403,7 @@ export default function CourrierPage() {
                     {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
                   </td>
                   <td>
-                    <span className={`type-badge ${courrier.type.toLowerCase()}`}>
+                    <span className={`type-badge ${(courrier.type || 'entrant').toLowerCase()}`}>
                       {TYPE_COURRIER_LABELS[courrier.type]}
                     </span>
                   </td>
@@ -700,7 +700,7 @@ export default function CourrierPage() {
                   <h3>Informations générales</h3>
                   <div className="detail-row">
                     <span className="detail-label">Type:</span>
-                    <span className={`type-badge ${selectedCourrier.type.toLowerCase()}`}>
+                    <span className={`type-badge ${(selectedCourrier.type || 'entrant').toLowerCase()}`}>
                       {TYPE_COURRIER_LABELS[selectedCourrier.type]}
                     </span>
                   </div>
