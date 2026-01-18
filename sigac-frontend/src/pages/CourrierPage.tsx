@@ -248,11 +248,21 @@ export default function CourrierPage() {
           <span className="subtitle">{totalItems} courrier(s) au total</span>
         </div>
         <div className="header-actions">
-          <button className="btn btn-secondary" onClick={() => setShowOcrModal(true)}>
-            📷 Scanner & OCR
+          <button className="ocr-btn" onClick={() => setShowOcrModal(true)}>
+            {/* Icône scan SVG moderne */}
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+              <rect x="3" y="7" width="18" height="10" rx="2" fill="#1e3a8a"/>
+              <rect x="7" y="11" width="10" height="2" rx="1" fill="#38bdf8"/>
+              <rect x="10" y="14" width="4" height="1" rx="0.5" fill="#38bdf8"/>
+            </svg>
+            Scanner & OCR
           </button>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            ➕ Nouveau Courrier
+            {/* Icône plus SVG moderne */}
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Nouveau Courrier
           </button>
         </div>
       </div>

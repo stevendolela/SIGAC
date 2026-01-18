@@ -24,10 +24,64 @@
 }
 
 
+
 .header-actions {
   display: flex;
-  gap: 18px;
+  gap: 24px;
   align-items: center;
+}
+
+.header-actions .btn,
+.header-actions .ocr-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 28px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.header-actions .btn {
+  background: linear-gradient(90deg, #1e3a8a 0%, #38bdf8 100%);
+  color: #fff;
+  border: none;
+}
+
+.header-actions .btn:hover {
+  box-shadow: 0 6px 24px rgba(59,130,246,0.15);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.header-actions .btn svg {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.header-actions .ocr-btn {
+  background: #fff;
+  color: #1e3a8a;
+  border: 2px solid #1e3a8a;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.05);
+}
+
+.header-actions .ocr-btn:hover {
+  background: #e0f2fe;
+  border-color: #38bdf8;
+  color: #0ea5e9;
+  transform: translateY(-2px) scale(1.03);
+}
+
+.header-actions .ocr-btn svg {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 
