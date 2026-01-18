@@ -118,15 +118,49 @@ public class OcrService : IOcrService
 
     private OcrResultDto AnalyzePdf(byte[] pdfData)
     {
-        // Pour les PDFs, on peut utiliser une bibliothèque comme PdfPig ou iTextSharp
-        // Pour l'instant, on retourne une extraction simulée
-        return new OcrResultDto
+        // Extraction de l'en-tête du PDF (haut de la première page) via PdfPig
+        try
         {
-            Success = true,
-            TexteComplet = "[Extraction PDF - Installez PdfPig pour le support complet]",
-            Confiance = 0,
-            Erreur = "Le support PDF nécessite une bibliothèque supplémentaire"
-        };
+            using (var ms = new MemoryStream(pdfData))
+            {
+                var headerText = string.Empty;
+                int confidence = 100; // PdfPig ne fournit pas de score, on met 100 par défaut
+                using (var pdf = UglyToad.PdfPig.PdfDocument.Open(ms))
+                {
+                    var firstPage = pdf.GetPage(1);
+                    // On récupère les textes du haut de la page (top 20%)
+                    var pageHeight = firstPage.Height;
+                    var headerZone = pageHeight * 0.2;
+                    var words = firstPage.GetWords();
+                    var headerWords = words
+                        .Where(w => w.BoundingBox.Bottom >= (pageHeight - headerZone))
+                        .OrderBy(w => w.BoundingBox.Left)
+                        .ThenByDescending(w => w.BoundingBox.Bottom)
+                        .Select(w => w.Text);
+                    headerText = string.Join(" ", headerWords);
+
+                    var result = new OcrResultDto
+                    {
+                        Success = true,
+                        TexteComplet = headerText,
+                        Confiance = confidence
+                    };
+                    // Extraction des métadonnées de l'en-tête si besoin
+                    ExtractMetadata(headerText, result);
+                    return result;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            return new OcrResultDto
+            {
+                Success = false,
+                TexteComplet = string.Empty,
+                Confiance = 0,
+                Erreur = $"Erreur extraction PDF: {ex.Message}"
+            };
+        }
     }
 
     private OcrResultDto ExtractWithoutTesseract(byte[] imageData)
