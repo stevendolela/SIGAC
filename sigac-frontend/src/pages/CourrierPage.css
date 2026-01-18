@@ -7,15 +7,30 @@
 }
 
 /* ============== HEADER ============== */
+
 .courrier-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  gap: 32px;
 }
 
+.header-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+}
+
+
 .header-title h1 {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
@@ -24,10 +39,11 @@
   gap: 12px;
 }
 
+
 .header-title .subtitle {
   color: #64748b;
-  font-size: 14px;
-  margin-top: 4px;
+  font-size: 15px;
+  margin-top: 8px;
 }
 
 .header-actions {
