@@ -1,3 +1,5 @@
+    // Fichier joint (upload ou scan)
+    const [newCourrierFile, setNewCourrierFile] = useState<File | null>(null);
   // Handler pour ScanJS (open source)
   const handleScanJs = async () => {
     try {
@@ -180,10 +182,18 @@ export default function CourrierPage() {
     }
   }
 
+  // Création courrier avec document joint (upload ou scan)
   const handleCreateCourrier = async () => {
     try {
-      await courrierApi.create(newCourrier)
-      setShowCreateModal(false)
+      const formData = new FormData();
+      Object.entries(newCourrier).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) formData.append(key, value as string);
+      });
+      if (newCourrierFile) {
+        formData.append('file', newCourrierFile);
+      }
+      await courrierApi.createWithFile(formData);
+      setShowCreateModal(false);
       setNewCourrier({
         type: 'Entrant',
         objet: '',
@@ -191,11 +201,35 @@ export default function CourrierPage() {
         destinataire: '',
         dateCourrier: new Date().toISOString().split('T')[0],
         urgence: 'Normale'
-      })
-      loadCourriers()
-      loadStats()
+      });
+      setNewCourrierFile(null);
+      loadCourriers();
+      loadStats();
     } catch (e: any) {
-      setError(e.message || 'Erreur lors de la création du courrier')
+      setError(e.message || 'Erreur lors de la création du courrier');
+    }
+  }
+  // Handler pour upload fichier
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewCourrierFile(e.target.files[0]);
+    }
+  }
+  // Handler ScanJS pour remplir le fichier joint
+  const handleScanJsForCourrier = async () => {
+    try {
+      const response = await fetch('http://localhost:27275/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: 'pdf' })
+      });
+      if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
+      const blob = await response.blob();
+      const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
+      setNewCourrierFile(scannedFile);
+      alert('Scan terminé ! Document prêt à être joint.');
+    } catch (err) {
+      alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
     }
   }
 
@@ -530,6 +564,19 @@ export default function CourrierPage() {
                 </button>
               </div>
               <div className="form-row">
+                <div className="form-group">
+                  <label>Document joint</label>
+                  <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+                  {newCourrierFile && (
+                    <div style={{ marginTop: 4 }}>
+                      <span>📎 {newCourrierFile.name}</span>
+                      <button className="btn btn-sm btn-danger" style={{ marginLeft: 8 }} onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
+                    </div>
+                  )}
+                  <button className="btn btn-outline-info" type="button" style={{ marginTop: 6 }} onClick={handleScanJsForCourrier}>
+                    <span role="img" aria-label="scanjs">📠</span> Scanner avec ScanJS
+                  </button>
+                </div>
                 <div className="form-group">
                   <label>Type *</label>
                   <select
