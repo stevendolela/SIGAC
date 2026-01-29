@@ -9,8 +9,9 @@
     });
     return resp.data;
   },
-import api from './api-client'
-import type { PaginatedResult } from '../types/pagination'
+
+import api from './api-client';
+import type { PaginatedResult } from '../types/pagination';
 import type {
   CourrierListDto,
   CourrierDetailDto,
@@ -23,7 +24,7 @@ import type {
   TypeCourrier,
   StatutCourrier,
   UrgenceCourrier
-} from '../types/courrier'
+} from '../types/courrier';
 
 export const courrierApi = {
   /**
