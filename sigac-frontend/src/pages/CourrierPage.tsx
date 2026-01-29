@@ -1,34 +1,8 @@
-    // Fichier joint (upload ou scan)
-    const [newCourrierFile, setNewCourrierFile] = useState<File | null>(null);
-  // Handler pour ScanJS (open source)
-  const handleScanJs = async () => {
-    try {
-      // Appel à l'API locale ScanJS (http://localhost:27275/scan)
-      const response = await fetch('http://localhost:27275/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: 'pdf' }) // ou 'jpg' selon besoin
-      });
-      if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
-      const blob = await response.blob();
-      // Créer un objet File pour l'intégrer au flux OCR
-      const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
-      setOcrFile(scannedFile);
-      alert('Scan terminé ! Document prêt pour OCR.');
-    } catch (err) {
-      alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
-    }
-  }
 
-  // Handler pour scan physique (à compléter selon l'intégration agent scanner)
-  const handlePhysicalScan = async () => {
-    // TODO: Intégration avec l'agent scanner (ex: via WebSocket, API locale, ou protocole custom)
-    alert('Fonction de scan physique à intégrer (connexion au scanner physique)');
-  }
-import { useEffect, useState, useCallback, useRef } from 'react'
-import courrierApi from '../api/courrierApi'
-import workspaceApi from '../api/workspaceApi'
-import { userApi } from '../api/userApi'
+import { useEffect, useState, useCallback, useRef } from 'react';
+import courrierApi from '../api/courrierApi';
+import workspaceApi from '../api/workspaceApi';
+import { userApi } from '../api/userApi';
 import type {
   CourrierListDto,
   CourrierDetailDto,
@@ -38,17 +12,19 @@ import type {
   UrgenceCourrier,
   CourrierStatsDto,
   ReceptionCourrierOcrDto
-} from '../types/courrier'
+} from '../types/courrier';
 import {
   TYPE_COURRIER_LABELS,
   STATUT_COURRIER_LABELS,
   URGENCE_COURRIER_LABELS,
   STATUT_COURRIER_COLORS,
   URGENCE_COURRIER_COLORS
-} from '../types/courrier'
-import type { WorkspaceDto } from '../types/workspace'
-import type { UserDto } from '../types/user'
-import './CourrierPage.css'
+} from '../types/courrier';
+import type { WorkspaceDto } from '../types/workspace';
+import type { UserDto } from '../types/user';
+import './CourrierPage.css';
+
+// ...existing code (handlers, hooks, etc.)...
 
 export default function CourrierPage() {
   // États
