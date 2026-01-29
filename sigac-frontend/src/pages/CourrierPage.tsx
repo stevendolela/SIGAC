@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader } from 'lucide-react';
+import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader, FileUp, X } from 'lucide-react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
@@ -829,51 +829,80 @@ export default function CourrierPage() {
       {/* Modal Création */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '800px', padding: 0, overflow: 'hidden', borderRadius: '24px'}}>
+          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '900px', padding: 0, overflow: 'hidden', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'}}>
+            {/* Header */}
             <div style={{ 
               background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              padding: '24px 32px',
+              padding: '32px',
               color: 'white',
               position: 'relative'
             }}>
-              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700 }}>📬 Nouveau Courrier</h2>
-              <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ color: 'white', top: '18px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                <Mail size={32} />
+                <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 800, letterSpacing: '-0.5px' }}>Nouveau Courrier</h2>
+              </div>
+              <p style={{ margin: '8px 0 0 44px', color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>Enregistrez un nouveau courrier entrant ou sortant</p>
+              <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ color: 'white', top: '20px', right: '24px', background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', padding: 0, lineHeight: 1 }}>
+                <X size={24} />
+              </button>
             </div>
-            <div className="modal-nc-scrollable">
-              <section className="modal-nc-section">
-                <h3 className="modal-nc-section-title">Document joint <span className="modal-nc-doc-prec">(optionnel)</span></h3>
-                <div className="modal-nc-doc-row modal-nc-doc-row-ergonomique">
-                  <span className="modal-nc-doc-choix">Choisir un fichier</span>
-                  <label className="modal-nc-file-label">
-                    <input type="file" accept=".pdf,image/*" onChange={handleFileChange} className="modal-nc-file-input" />
-                    <span className="modal-nc-file-btn">Parcourir</span>
+
+            {/* Body scrollable */}
+            <div className="modal-nc-scrollable" style={{ padding: '32px', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto', background: '#fff' }}>
+              {/* Section Document */}
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <FileUp size={20} style={{ color: '#4f46e5' }} />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Document Joint</h3>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>(optionnel)</span>
+                </div>
+                <div style={{ background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: '#4f46e5', flex: 1, minWidth: '150px' }}>
+                    <FileUp size={18} />
+                    <span>Choisir un fichier</span>
+                    <input type="file" accept=".pdf,image/*" onChange={handleFileChange} style={{ display: 'none' }} />
                   </label>
-                  <span className="modal-nc-doc-ou">ou</span>
-                  <button className="btn btn-outline-info modal-nc-scan-btn" type="button" onClick={handleScanJsForCourrier}>
-                    <span role="img" aria-label="scanjs">📠</span> Scanner
+                  <div style={{ color: '#94a3b8', fontWeight: 600 }}>ou</div>
+                  <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                    📠 Scanner
                   </button>
                   {newCourrierFile && (
-                    <div className="modal-nc-doc-file">
-                      <span>📎 {newCourrierFile.name}</span>
-                      <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
+                    <div style={{ marginTop: '12px', width: '100%', background: '#e0e7ff', border: '1px solid #c7d2fe', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4f46e5', fontWeight: 600 }}>
+                        <Paperclip size={16} /> {newCourrierFile.name}
+                      </span>
+                      <button className="btn btn-sm" onClick={() => setNewCourrierFile(null)} type="button" style={{ background: '#fecaca', color: '#991b1b', border: 'none', fontWeight: 600 }}>Retirer</button>
                     </div>
                   )}
                 </div>
-                <small>PDF ou image, max 50 Mo</small>
+                <small style={{ color: '#64748b', fontSize: '13px', marginTop: '8px', display: 'block' }}>PDF ou image, max 50 Mo</small>
               </section>
-              <section className="modal-nc-section">
-                <h3 className="modal-nc-section-title">Informations principales</h3>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
+
+              {/* Section Type et Urgence */}
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <Inbox size={20} style={{ color: '#3b82f6' }} />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Classification</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <label>Type *</label>
-                    <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                      Type <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })} style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, background: '#fff', cursor: 'pointer'
+                    }}>
                       <option value="Entrant">📥 Entrant</option>
                       <option value="Sortant">📤 Sortant</option>
                     </select>
                   </div>
                   <div>
-                    <label>Urgence *</label>
-                    <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                      Urgence <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })} style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, background: '#fff', cursor: 'pointer'
+                    }}>
                       <option value="Normale">🟢 Normale</option>
                       <option value="Importante">🟡 Importante</option>
                       <option value="Urgente">🟠 Urgente</option>
@@ -881,49 +910,107 @@ export default function CourrierPage() {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label>Objet *</label>
-                  <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
+              </section>
+
+              {/* Section Contenu */}
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <MailOpen size={20} style={{ color: '#8b5cf6' }} />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Contenu du Courrier</h3>
                 </div>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
-                  <div>
-                    <label>Expéditeur *</label>
-                    <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
-                  </div>
-                  <div>
-                    <label>Destinataire *</label>
-                    <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
-                  </div>
-                </div>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
-                  <div>
-                    <label>Date du courrier *</label>
-                    <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
-                  </div>
-                  <div>
-                    <label>Référence externe</label>
-                    <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
-                  </div>
-                </div>
-                {workspaces.length > 0 && (
-                  <div>
-                    <label>Workspace</label>
-                    <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
-                      <option value="">-- Sélectionner --</option>
-                      {workspaces.map(ws => (
-                        <option key={ws.id} value={ws.id}>{ws.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label>Notes</label>
-                  <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                    Objet <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Sujet/Objet du courrier" style={{
+                    width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box'
+                  }} />
                 </div>
               </section>
+
+              {/* Section Correspondants */}
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <Send size={20} style={{ color: '#06b6d4' }} />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Correspondants</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                      Expéditeur <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box'
+                    }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                      Destinataire <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box'
+                    }} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Section Dates et Références */}
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <Clock size={20} style={{ color: '#f59e0b' }} />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>Dates et Références</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>
+                      Date du courrier <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box'
+                    }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>Référence externe</label>
+                    <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" style={{
+                      width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box'
+                    }} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Section Workspace et Notes */}
+              {workspaces.length > 0 && (
+                <section style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>Workspace</label>
+                  <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })} style={{
+                    width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, background: '#fff', cursor: 'pointer', boxSizing: 'border-box'
+                  }}>
+                    <option value="">-- Sélectionner --</option>
+                    {workspaces.map(ws => (
+                      <option key={ws.id} value={ws.id}>{ws.name}</option>
+                    ))}
+                  </select>
+                </section>
+              )}
+
+              <section>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', color: '#334155', marginBottom: '8px' }}>Notes</label>
+                <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} style={{
+                  width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical'
+                }} />
+              </section>
             </div>
-            <div className="modal-nc-footer modal-nc-footer-fixed">
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button">
+
+            {/* Footer */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: '12px', 
+              padding: '20px 32px', 
+              background: '#f8fafc', 
+              borderTop: '1px solid #e2e8f0'
+            }}>
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ fontWeight: 600 }}>
                 Annuler
               </button>
               <button
@@ -931,8 +1018,29 @@ export default function CourrierPage() {
                 onClick={handleCreateCourrier}
                 disabled={loadingCreateCourrier || !newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire}
                 type="button"
+                style={{ 
+                  background: loadingCreateCourrier || !newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire 
+                    ? '#cbd5e1' 
+                    : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  border: 'none',
+                  boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
               >
-                {loadingCreateCourrier ? 'Création...' : 'Créer le courrier'}
+                {loadingCreateCourrier ? (
+                  <>
+                    <Loader size={18} className="animate-spin" /> Création...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={18} /> Créer le courrier
+                  </>
+                )}
               </button>
             </div>
           </div>
