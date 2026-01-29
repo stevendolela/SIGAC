@@ -1,3 +1,7 @@
+  // Handler pour scan physique (placeholder)
+  const handlePhysicalScan = () => {
+    alert('Fonction de scan physique à intégrer (connexion au scanner physique)');
+  }
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import courrierApi from '../api/courrierApi';
