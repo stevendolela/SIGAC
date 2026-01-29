@@ -44,6 +44,9 @@ public class ApplicationDbContext : DbContext
     
     // System settings
     public DbSet<SystemSetting> SystemSettings { get; set; }
+    
+    // Gestion des droits d'accès
+    public DbSet<RoleModulePermission> RoleModulePermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

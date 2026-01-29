@@ -317,34 +317,38 @@ export default function CourrierPage() {
   }
 
   return (
-    <div className="courrier-page">
+    <div className="courrier-page" style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh' }}>
       {/* Header avec statistiques */}
-      <div className="courrier-header">
-        <div className="header-title">
-          <h1>📬 Gestion du Courrier</h1>
-          <span className="subtitle">{totalItems} courrier(s) au total</span>
+      <div className="courrier-header" style={{ marginBottom: '40px' }}>
+        <div className="header-title" style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', margin: 0 }}>
+            📬 Gestion du Courrier
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '15px', marginTop: '8px' }}>
+            Consultez et gérez l'ensemble des flux documentaires de votre organisation.
+          </p>
         </div>
         {stats && (
-          <div className="courrier-stats" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: '4px solid #6366f1' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.total}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Courriers</div>
+          <div className="courrier-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+              <div style={{ color: '#64748b', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Total Courriers</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.total}</div>
             </div>
-            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.Recu}` }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.recu}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nouveaux / Reçus</div>
+            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.Recu}` }}>
+              <div style={{ color: STATUT_COURRIER_COLORS.Recu, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Nouveaux</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.recu}</div>
             </div>
-            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.EnTraitement}` }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.enTraitement}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>En cours</div>
+            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.EnTraitement}` }}>
+              <div style={{ color: STATUT_COURRIER_COLORS.EnTraitement, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>En cours</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.enTraitement}</div>
             </div>
-            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.Traite}` }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.traite}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Traités</div>
+            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.Traite}` }}>
+              <div style={{ color: STATUT_COURRIER_COLORS.Traite, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Traités</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.traite}</div>
             </div>
           </div>
         )}
-        <div className="header-actions" style={{ background: 'white', padding: '12px 20px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="header-actions" style={{ background: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', border: '1px solid #e2e8f0' }}>
           <div className="search-box">
             <span className="search-icon">🔍</span>
             <input 
@@ -402,10 +406,13 @@ export default function CourrierPage() {
           </select>
         )}
 
-          <button className="btn btn-secondary" onClick={() => setShowOcrModal(true)}>
+          <button className="btn btn-secondary" onClick={() => loadCourriers()} title="Rafraîchir" style={{ padding: '10px 14px' }}>
+            🔄
+          </button>
+          <button className="btn btn-secondary" onClick={() => setShowOcrModal(true)} style={{ padding: '10px 20px', fontWeight: 600 }}>
             📷 OCR
           </button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '10px 24px', fontWeight: 600, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', border: 'none', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}>
             ➕ Nouveau
           </button>
         </div>
@@ -423,16 +430,17 @@ export default function CourrierPage() {
       <div className="courrier-list">
         {loading ? (
           <div className="loading-state">⏳ Chargement...</div>
-        ) : courriers.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">📭</span>
-            <p>Aucun courrier trouvé</p>
-            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+        ) : courriers.length === 0 && !loading ? (
+          <div className="empty-state" style={{ padding: '60px', textAlign: 'center', background: 'white', borderRadius: '16px', border: '2px dashed #e2e8f0', marginTop: '20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
+            <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>Aucun courrier trouvé</h3>
+            <p style={{ color: '#64748b', marginBottom: '24px' }}>Commencez par ajouter un nouveau courrier ou ajustez vos filtres.</p>
+            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '12px 24px' }}>
               Créer un premier courrier
             </button>
           </div>
         ) : (
-          <table className="courrier-table">
+          <table className="courrier-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
             <thead>
               <tr>
                 <th>Référence</th>
@@ -452,10 +460,10 @@ export default function CourrierPage() {
                   key={courrier.id} 
                   onClick={() => handleViewCourrier(courrier)} 
                   className="courrier-row"
-                  style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                  style={{ cursor: 'pointer', transition: 'all 0.2s', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
                 >
-                  <td className="ref-cell">
-                    <span className="reference">{courrier.reference}</span>
+                  <td className="ref-cell" style={{ padding: '20px', borderRadius: '16px 0 0 16px', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderLeft: '1px solid #e2e8f0' }}>
+                    <span className="reference" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '14px' }}>{courrier.reference}</span>
                     {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
                   </td>
                   <td>
@@ -463,16 +471,16 @@ export default function CourrierPage() {
                       {TYPE_COURRIER_LABELS[courrier.type]}
                     </span>
                   </td>
-                  <td className="objet-cell" title={courrier.objet}>
+                  <td className="objet-cell" title={courrier.objet} style={{ fontWeight: 600, color: '#1e293b' }}>
                     {courrier.objet.length > 40 ? courrier.objet.substring(0, 40) + '...' : courrier.objet}
                   </td>
-                  <td>{courrier.expediteur}</td>
-                  <td>{courrier.destinataire}</td>
-                  <td>{formatDate(courrier.dateCourrier)}</td>
+                  <td style={{ color: '#475569' }}>{courrier.expediteur}</td>
+                  <td style={{ color: '#475569' }}>{courrier.destinataire}</td>
+                  <td style={{ color: '#94a3b8', fontSize: '13px' }}>{formatDate(courrier.dateCourrier)}</td>
                   <td>
                     <span
                       className="statut-badge"
-                      style={{ backgroundColor: STATUT_COURRIER_COLORS[courrier.statut] }}
+                      style={{ backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}
                     >
                       {STATUT_COURRIER_LABELS[courrier.statut]}
                     </span>
@@ -480,13 +488,13 @@ export default function CourrierPage() {
                   <td>
                     <span
                       className="urgence-badge"
-                      style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}
+                      style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], border: '1px solid', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
                       <span className="dot" style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}></span>
                       {URGENCE_COURRIER_LABELS[courrier.urgence]}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ padding: '20px', borderRadius: '0 16px 16px 0', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
                     <button
                       className="btn btn-icon"
                       onClick={(e) => { e.stopPropagation(); handleViewCourrier(courrier) }}
@@ -504,7 +512,7 @@ export default function CourrierPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pagination">
+        <div className="pagination" style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
           <button
             disabled={page === 1}
             onClick={() => setPage(p => p - 1)}
@@ -512,7 +520,7 @@ export default function CourrierPage() {
           >
             ← Précédent
           </button>
-          <span className="page-info">Page {page} / {totalPages}</span>
+          <span className="page-info" style={{ fontWeight: 600, color: '#64748b' }}>Page {page} sur {totalPages}</span>
           <button
             disabled={page === totalPages}
             onClick={() => setPage(p => p + 1)}
@@ -526,14 +534,14 @@ export default function CourrierPage() {
       {/* Modal Création */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '750px', padding: 0, overflow: 'hidden', borderRadius: '16px'}}>
+          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '800px', padding: 0, overflow: 'hidden', borderRadius: '24px'}}>
             <div style={{ 
               background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              padding: '20px 32px',
+              padding: '24px 32px',
               color: 'white',
               position: 'relative'
             }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>📬 Nouveau Courrier</h2>
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700 }}>📬 Nouveau Courrier</h2>
               <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ color: 'white', top: '18px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             <div className="modal-nc-scrollable">
@@ -639,14 +647,14 @@ export default function CourrierPage() {
       {/* Modal OCR */}
       {showOcrModal && (
         <div className="modal-overlay" onClick={() => setShowOcrModal(false)}>
-          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '650px', padding: 0, overflow: 'hidden', borderRadius: '16px'}}>
+          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px', padding: 0, overflow: 'hidden', borderRadius: '24px'}}>
             <div style={{ 
               background: 'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)',
-              padding: '20px 32px',
+              padding: '24px 32px',
               color: 'white',
               position: 'relative'
             }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>📷 Analyse Intelligente (OCR)</h2>
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700 }}>📷 Analyse Intelligente (OCR)</h2>
               <button className="close-btn" onClick={() => setShowOcrModal(false)} style={{ color: 'white', top: '18px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             <div className="modal-body">

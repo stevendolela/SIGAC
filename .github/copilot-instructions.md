@@ -79,6 +79,48 @@ Gestion des équipes et collaboration:
 - **Link**: Équipes liées à un `Workspace` spécifique
 - **Applications**: Équipes juridiques, équipes projet, équipes médicales, groupes de travail
 
+### 6. Appels Vidéo (VideoCall) - NOUVELLE FEATURE
+Intégration d'appels vidéo P2P et groupe:
+- **Entities**: `VideoCall` (status: Initiating, Ringing, Connected, Ended, Rejected, Missed)
+- **Types**: 1-to-1 conversations ou groupe (ChatConversation/ChatGroup)
+- **UI**: `VideoCallModal`, `IncomingCallNotification`
+- **Intégration**: WebRTC simulé/placeholder pour expansion future
+- **Cas d'usage**: Consultations médicales, réunions juridiques, support client
+
+### 7. Notifications (Push & In-App) - NOUVELLE FEATURE
+Système de notifications complètes:
+- **Entity**: `Notification` (titre, message, lien, estLue, dateLue)
+- **API**: CRUD complet + GetMyNotificationsAsync avec top limit
+- **Unread Badges**: Affichage des notifications non-lues en UI
+- **Cas d'usage**: Alertes de dossiers, assignations, changements d'état
+
+### 8. Import de Documents Externes - NOUVELLE FEATURE
+Import batch de documents depuis sources externes (FTP, HTTP, S3):
+- **Entities**: `ExternalDocumentImport` (config de source + statut du processus)
+- **Service**: `ExternalDocumentImportService` + `IExternalDocumentSourceProvider` (extensible)
+- **Workflow**: Récupération → Validation → Ingestion → Traçabilité
+- **Validation**: SHA256 pour détection de doublons, validation MIME type
+- **Cas d'usage**: Bulk import de jurisprudence, documents d'archive, dossiers patients
+
+### 9. Gestion des Droits (Rights Management) - NOUVELLE FEATURE
+Gestion granulaire des permissions par rôle et module:
+- **Page**: `RightsManagementPage` (matrice permissions/rôles)
+- **Modules configurables**: Dashboard, Projets, Documents, Courriers, Événements, Formations, Équipe, Chat, Admin
+- **Rôles étendus**: Admin, Manager, Collaborator, Assistant, AssistantJunior, Consultant
+- **Cas d'usage**: Configuration flexible des accès selon organisation/secteur
+
+### 10. Pièce Jointe Chat (ChatAttachment) - NOUVELLE FEATURE
+Support des fichiers dans le chat:
+- **Entity**: `ChatAttachment` (référence Message/GroupMessage)
+- **Stockage**: Même pattern que Document (SHA256, validation MIME)
+- **Cas d'usage**: Partage rapide de fichiers sans créer formal Document
+
+### 11. Courrier (Mailing) - NOUVELLE FEATURE
+Gestion des flux de courriers entrants/sortants:
+- **Entity**: `Courrier` (expéditeur, destinataire, statut, date)
+- **Intégration**: Service d'email SMTP configurable
+- **Cas d'usage**: Notification utilisateurs, communication officielle
+
 ---
 
 ## Patterns d'Implémentation
@@ -122,21 +164,27 @@ public class DossierRepository : IDossierRepository
 ```csharp
 // Dans IDossierService.cs
 Task<PaginatedResult<DossierListDto>> GetDossiersAsync(
-    int page, int pageSize, string? search, TypeAffaire? type, 
+    int page, int pageSize, string? search, Guid? typeAffaireId, 
     StatusDossier? status, PrioriteDossier? priorite, 
     DateTime? dateDebutMin, DateTime? dateDebutMax, 
-    Guid? rapporteurId, Guid userId, UserRole userRole);  // ← Requis!
+    Guid? rapporteurId, Guid? workspaceId, Guid userId, UserRole userRole);  // ← Requis!
 
-// Implémentation: Les juges ne voient que LEURS dossiers
-if (userRole == UserRole.JugeConstitutionnel) {
+// Implémentation: Les collaborateurs ne voient que LEURS dossiers assignés
+if (userRole == UserRole.Collaborator)
+{
     filtreRapporteur = userId;  // Force le filtre au utilisateur connecté
 }
+// Les admins sans workspaceId voient TOUS les dossiers (y compris ceux sans workspace)
+bool includeAllForAdmin = userRole == UserRole.Admin && !workspaceId.HasValue;
 ```
 
 **Rôles définis** (en `SIGAC.Core/Enums/UserRole.cs`):
-- `Admin`: Accès complet
-- `President`: Gestion globale des dossiers
-- `JugeConstitutionnel`: Accès restreint à ses dossiers assignés
+- `Admin`: Accès système complet, gestion de configuration
+- `Manager`: Gestion globale des dossiers et équipes (cadre)
+- `Collaborator`: Accès standard (agent, collaborateur)
+- `Assistant`: Accès limité avec assistance
+- `AssistantJunior`: Accès très limité (apprenti)
+- `Consultant`: Accès en lecture seulement (externe)
 
 ### 3. DTOs et Entities Séparés
 
@@ -478,89 +526,142 @@ sigac-frontend/src/
 
 ### API Client Pattern
 
+**Implémentation actuelle avec Axios + auto-refresh**:
+
+```typescript
+// src/api/api-client.ts - Client HTTP centralisé
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 30000
+})
+
+// Attach Bearer token si présent
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`
+  }
+  return config
+})
+
+// Auto-refresh token on 401
+let isRefreshing = false
+let pendingRequests: Array<(token: string | null) => void> = []
+
+async function refreshToken(): Promise<string | null> {
+  if (isRefreshing) {
+    return new Promise((resolve) => pendingRequests.push(resolve))
+  }
+  
+  isRefreshing = true
+  const refreshToken = localStorage.getItem('refreshToken')
+  try {
+    const response = await axios.post('/api/auth/refresh', { refreshToken })
+    const newToken = response.data.token
+    localStorage.setItem('token', newToken)
+    
+    pendingRequests.forEach(cb => cb(newToken))
+    return newToken
+  } catch {
+    localStorage.removeItem('token')
+    return null
+  } finally {
+    isRefreshing = false
+    pendingRequests = []
+  }
+}
+
+api.interceptors.response.use(null, async (error) => {
+  if (error.response?.status === 401 && !error.config._retry) {
+    error.config._retry = true
+    const newToken = await refreshToken()
+    if (newToken) {
+      error.config.headers['Authorization'] = `Bearer ${newToken}`
+      return api(error.config)
+    }
+  }
+  return Promise.reject(error)
+})
+
+export default api
+```
+
+**Utilisation dans les API client classes**:
+
 ```typescript
 // src/api/dossierApi.ts
+import api from './api-client'
+
 export class DossierApi {
-  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5210/api';
-  
   async getDossiers(page: number, pageSize: number, filters?: DossierFilters) {
-    const response = await this.fetchWithAuth(
-      `${this.baseUrl}/dossiers?page=${page}&pageSize=${pageSize}`,
-      { 
-        method: 'GET',
-        headers: this.getHeaders()
-      }
-    );
-    return response.json() as Promise<PaginatedResult<DossierListDto>>;
+    const response = await api.get(`/dossiers`, {
+      params: { page, pageSize, ...filters }
+    })
+    return response.data as PaginatedResult<DossierListDto>
   }
   
-  private async fetchWithAuth(url: string, options: RequestInit) {
-    const token = localStorage.getItem('token');
-    if (!token) throw new UnauthorizedError();
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...options.headers, 'Authorization': `Bearer ${token}` }
-    });
-    
-    // Auto-refresh si 401
-    if (response.status === 401) {
-      await this.refreshToken();
-      return fetch(url, options); // Retry
-    }
-    
-    return response;
+  async createDossier(dto: CreateDossierDto) {
+    const response = await api.post(`/dossiers`, dto)
+    return response.data as DossierDto
   }
   
-  private async refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
-    const response = await fetch(`${this.baseUrl}/auth/refresh`, {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken })
-    });
-    const data = await response.json();
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken);
+  async updateDossier(id: Guid, dto: UpdateDossierDto) {
+    const response = await api.put(`/dossiers/${id}`, dto)
+    return response.data as DossierDto
   }
 }
 ```
 
 ### Global Store Pattern (Zustand)
 
-```typescript
-// src/store/authStore.ts
-import { create } from 'zustand';
+**Implémentation actuelle**:
 
-interface AuthState {
-  token: string | null;
-  user: UserDto | null;
-  isAuthenticated: boolean;
-  login: (token: string, refreshToken: string, user: UserDto) => void;
-  logout: () => void;
-  setUser: (user: UserDto) => void;
+```typescript
+// src/store/workspaceStore.ts - Store Zustand centralisé
+import { create } from 'zustand'
+
+interface WorkspaceState {
+  workspaceId: Guid | null
+  workspaceName: string | null
+  selectedWorkspaceId: Guid | null
+  setSelectedWorkspaceId: (id: Guid | null) => void
+  clearWorkspace: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem('token'),
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  isAuthenticated: !!localStorage.getItem('token'),
+export const useWorkspaceStore = create<WorkspaceState>((set) => ({
+  workspaceId: null,
+  workspaceName: null,
+  selectedWorkspaceId: localStorage.getItem('selectedWorkspaceId') 
+    ? JSON.parse(localStorage.getItem('selectedWorkspaceId')!) 
+    : null,
   
-  login: (token, refreshToken, user) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('user', JSON.stringify(user));
-    set({ token, user, isAuthenticated: true });
+  setSelectedWorkspaceId: (id: Guid | null) => {
+    if (id) {
+      localStorage.setItem('selectedWorkspaceId', JSON.stringify(id))
+    } else {
+      localStorage.removeItem('selectedWorkspaceId')
+    }
+    set({ selectedWorkspaceId: id })
   },
   
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    set({ token: null, user: null, isAuthenticated: false });
-  },
+  clearWorkspace: () => {
+    localStorage.removeItem('selectedWorkspaceId')
+    set({ workspaceId: null, workspaceName: null, selectedWorkspaceId: null })
+  }
+}))
+
+// Utilisation dans les pages
+function MyPage() {
+  const { selectedWorkspaceId, setSelectedWorkspaceId } = useWorkspaceStore()
   
-  setUser: (user) => set({ user })
-}));
+  useEffect(() => {
+    if (selectedWorkspaceId) {
+      // Charger les données du workspace
+    }
+  }, [selectedWorkspaceId])
+}
 ```
 
 ### Conventions Frontend
@@ -765,21 +866,21 @@ public class DossierServiceTests
 
 ## Rôles Utilisateurs Étendus
 
-Au-delà des 3 rôles principaux en `SIGAC.Core/Enums/UserRole.cs`:
-- `Admin`: Accès système complet
-- `President`: Gestion globale des dossiers
-- `JugeConstitutionnel`: Accès en lecture/écriture dossiers assignés seulement
-- `Greffier`: Gestion administrative des dossiers (optionnel)
-- `GreffierAdjoint`: Support du greffier (optionnel)
-- `Consultant`: Accès en lecture sur dossiers assignés (optionnel)
+Les rôles en `SIGAC.Core/Enums/UserRole.cs` définissent l'accès granulaire:
+- `Admin`: Accès système complet, gestion de configuration, superadmin
+- `Manager`: Gestion globale des dossiers, équipes, audit (cadre)
+- `Collaborator`: Accès standard (agent, collaborateur) - voir uniquement ses propres dossiers
+- `Assistant`: Accès limité avec assistance 
+- `AssistantJunior`: Accès très limité (apprenti)
+- `Consultant`: Accès en lecture seulement (externe)
 
-**Chaque service reçoit userId + userRole et applique filtrage automatique.**
+**Chaque service reçoit userId + userRole et applique filtrage automatique.** Aucun endpoint ne doit exposer plus de données que le rôle n'y donne accès.
 
 **Note**: Les noms de rôles sont adaptables selon le secteur:
-- Juridique: Juge, Greffier, Avocat
-- Santé: Médecin, Infirmier, Administratif
-- Entreprise: Manager, Collaborateur, Consultant
-- Administration: Directeur, Agent, Superviseur
+- Juridique: Judge, Clerk, Lawyer, Paralegal
+- Santé: Doctor, Nurse, Admin, Technician  
+- Entreprise: Manager, Employee, Consultant, Director
+- Administration: Director, Officer, Supervisor, Clerk
 
 ---
 
@@ -815,9 +916,43 @@ juge.kabongo / Juge@2024! → JugeConstitutionnel
 
 **Dossiers de Test**: 5 dossiers exemples avec workflow complet et historiques associés.
 
----
+## Nouvelles Services Clés à Connaître
 
-## Ressources Clés
+### ExternalDocumentImportService
+Importe des documents par batch depuis sources externes (FTP, HTTP, S3). Pattern:
+- `IExternalDocumentSourceProvider`: Interface extensible pour ajouter de nouvelles sources
+- `ExternalDocumentImportConfigDto`: Configuration de la source (credentials, filters, mappings)
+- Workflow: Fetch → Validate (MIME, SHA256) → Ingest → Audit
+- Évite les doublons via SHA256, crée TypeAffaire automatiquement si nécessaire
+- Use: `ExternalDocumentImportController` exposes `/api/external-imports/*`
+
+### VideoCallService
+Gère les appels vidéo P2P et groupe:
+- Statuts: Initiating → Ringing → Connected → Ended/Rejected/Missed
+- Supporte conversations 1-to-1 et groupes (ChatConversation/ChatGroup)
+- Évolution: Intégration WebRTC future (placeholder actuellement)
+- Use: `VideoCallController` + `VideoCallModal`, `IncomingCallNotification` components
+
+### NotificationService
+Système de notifications utilisateur:
+- CRUD: CreateAsync, GetMyNotificationsAsync (avec top limit), MarkAsReadAsync
+- Champ `EstLue` + `DateLue` pour tracking
+- Éviter références circulaires en sérialisant uniquement champs primitifs en audit
+- Use: `NotificationsController` + unread badge UI integration
+
+### BulkDocumentImportService & BulkImportService
+Import de documents par lot:
+- Validation batch, gestion des erreurs partielles
+- Progress tracking pour UI feedback
+- Use: `ImportController` pour workflows de bulk operations
+
+### RightsManagementPage (Frontend)
+Interface pour configurer permissions par rôle/module:
+- Modules: Dashboard, Projets, Documents, Courriers, Événements, Formations, Équipe, Chat, Admin
+- Rôles: Admin, Manager, Collaborator, Assistant, AssistantJunior, Consultant
+- Matrice de permissions persistée (normalement via API - currently hardcoded for UI prototype)
+
+---
 
 - **Swagger API Docs**: http://localhost:5210/swagger (Bearer token authentification)
 - **Logs Backend**: `sigac-backend/logs/sigac-YYYY-MM-DD.txt` (rolling daily, Serilog)

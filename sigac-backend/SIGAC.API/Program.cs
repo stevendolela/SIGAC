@@ -161,6 +161,7 @@ builder.Services.AddScoped<IBulkDocumentImportService, BulkDocumentImportService
 builder.Services.AddScoped<IExternalDocumentImportService, ExternalDocumentImportService>();
 builder.Services.AddScoped<IOcrService, OcrService>();
 builder.Services.AddScoped<ICourrierService, SIGAC.Infrastructure.Services.CourrierService>();
+builder.Services.AddScoped<IRoleModulePermissionService, RoleModulePermissionService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
@@ -181,6 +182,7 @@ builder.Services.AddScoped<ISmtpConfigurationRepository, SmtpConfigurationReposi
 builder.Services.AddScoped<ITypeAffaireRepository, TypeAffaireRepository>();
 builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
 builder.Services.AddScoped<ICourrierRepository, CourrierRepository>();
+builder.Services.AddScoped<IRoleModulePermissionRepository, RoleModulePermissionRepository>();
 
 // Configuration Rate Limiting (Protection contre brute-force et DDoS)
 builder.Services.AddRateLimiting(builder.Configuration);
