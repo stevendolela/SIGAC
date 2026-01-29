@@ -490,7 +490,7 @@ export default function CourrierPage() {
                 <button
                   className="btn btn-outline-primary"
                   type="button"
-                  onClick={() => handlePhysicalScan()}
+                  onClick={handlePhysicalScan}
                   style={{ marginBottom: 8 }}
                 >
                   <span role="img" aria-label="scanner">🖨️</span> Scanner un document (physique)
@@ -498,31 +498,32 @@ export default function CourrierPage() {
                 <button
                   className="btn btn-outline-info"
                   type="button"
-                  onClick={() => handleScanJs()}
+                  onClick={handleScanJs}
                   style={{ marginLeft: 8, marginBottom: 8 }}
                 >
                   <span role="img" aria-label="scanjs">📠</span> Scanner avec ScanJS
                 </button>
               </div>
-                  // Handler pour ScanJS (open source)
-                  const handleScanJs = async () => {
-                    try {
-                      // Appel à l'API locale ScanJS (http://localhost:27275/scan)
-                      const response = await fetch('http://localhost:27275/scan', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ format: 'pdf' }) // ou 'jpg' selon besoin
-                      });
-                      if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
-                      const blob = await response.blob();
-                      // Créer un objet File pour l'intégrer au flux OCR
-                      const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
-                      setOcrFile(scannedFile);
-                      alert('Scan terminé ! Document prêt pour OCR.');
-                    } catch (err) {
-                      alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
-                    }
+                // Handler pour ScanJS (open source)
+                const handleScanJs = async () => {
+                  try {
+                    // Appel à l'API locale ScanJS (http://localhost:27275/scan)
+                    const response = await fetch('http://localhost:27275/scan', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ format: 'pdf' }) // ou 'jpg' selon besoin
+                    });
+                    if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
+                    const blob = await response.blob();
+                    // Créer un objet File pour l'intégrer au flux OCR
+                    const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
+                    setOcrFile(scannedFile);
+                    alert('Scan terminé ! Document prêt pour OCR.');
+                  } catch (err) {
+                    alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
                   }
+                }
+
                 // Handler pour scan physique (à compléter selon l'intégration agent scanner)
                 const handlePhysicalScan = async () => {
                   // TODO: Intégration avec l'agent scanner (ex: via WebSocket, API locale, ou protocole custom)
