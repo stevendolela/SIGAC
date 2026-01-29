@@ -28,6 +28,18 @@ import type {
 
 export const courrierApi = {
   /**
+   * Crée un nouveau courrier avec document joint (FormData)
+   */
+  createWithFile: async (formData: FormData): Promise<CourrierDetailDto> => {
+    const resp = await api.post<CourrierDetailDto>('/Courrier', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return resp.data;
+  },
+export const courrierApi = {
+  /**
    * Liste les courriers avec filtres et pagination
    */
   async list(params: {
