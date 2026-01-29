@@ -1011,7 +1011,16 @@ export default function CourrierPage() {
               background: '#f8fafc', 
               borderTop: '1px solid #e2e8f0'
             }}>
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ fontWeight: 600, minWidth: '140px' }}>
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ 
+                fontWeight: 600, 
+                minWidth: '160px',
+                padding: '12px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                fontSize: '14px'
+              }}>
                 Annuler
               </button>
               <button
@@ -1031,9 +1040,10 @@ export default function CourrierPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  minWidth: '180px',
+                  minWidth: '160px',
                   justifyContent: 'center',
-                  padding: '12px 24px'
+                  padding: '12px 24px',
+                  fontSize: '14px'
                 }}
               >
                 {loadingCreateCourrier ? (
@@ -1042,7 +1052,7 @@ export default function CourrierPage() {
                   </>
                 ) : (
                   <>
-                    <Plus size={18} /> Créer le courrier
+                    <Plus size={18} /> Créer
                   </>
                 )}
               </button>
