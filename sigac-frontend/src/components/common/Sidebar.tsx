@@ -16,7 +16,8 @@ import {
   DoorOpen,
   History,
   Download,
-  Mail
+  Mail,
+  Shield
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -44,6 +45,7 @@ type ViewType =
   | 'login-history'
   | 'import-dossiers'
   | 'external-import'
+  | 'rights-management'
 
 interface MenuItem {
   view: ViewType
@@ -205,6 +207,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     ...(userRole === 'Admin' ? [{
       section: 'Système',
       items: [
+        {
+          view: 'rights-management' as ViewType,
+          label: 'Gestion des Droits',
+          icon: Shield,
+          color: '#ef4444'
+        },
         {
           view: 'system-config' as ViewType,
           label: 'Configuration',
