@@ -28,7 +28,6 @@ export const courrierApi = {
     });
     return resp.data;
   },
-export const courrierApi = {
   /**
    * Liste les courriers avec filtres et pagination
    */
