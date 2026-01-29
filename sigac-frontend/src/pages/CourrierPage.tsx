@@ -73,6 +73,12 @@ export default function CourrierPage() {
   const [users, setUsers] = useState<UserDto[]>([])
   const [stats, setStats] = useState<CourrierStatsDto | null>(null)
 
+  // Sélection multiple (Bulk actions)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  const [bulkAction, setBulkAction] = useState<'statut' | 'urgence' | 'delete' | null>(null)
+  const [bulkActionValue, setBulkActionValue] = useState<string>('')
+
   // Modales
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -300,14 +306,6 @@ export default function CourrierPage() {
 
   async function handleViewCourrier(courrier: CourrierListDto) {
     try {
-      // On essaie de récupérer le détail complet si l'API le permet, sinon on utilise le DTO de liste
-      // Comme l'API getById n'est pas explicitement visible, on suppose qu'elle existe ou on utilise le DTO liste
-      // Pour l'instant on utilise le DTO liste casté, mais idéalement il faudrait un appel API
-      // Si courrierApi.getById existe :
-      // const detail = await courrierApi.getById(courrier.id);
-      // setSelectedCourrier(detail);
-      
-      // Fallback sur le DTO liste (il manque peut-être l'historique)
       setSelectedCourrier(courrier as unknown as CourrierDetailDto);
       setActiveDetailTab('infos');
       setShowDetailModal(true);
@@ -315,6 +313,44 @@ export default function CourrierPage() {
       console.error(e);
     }
   }
+
+  // Gestion sélection multiple
+  const handleSelectCourrier = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === courriers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(courriers.map(c => c.id)));
+    }
+  };
+
+  // Bulk actions
+  const handleBulkStatutChange = async (newStatut: StatutCourrier) => {
+    try {
+      let completed = 0;
+      for (const id of Array.from(selectedIds)) {
+        try {
+          await courrierApi.changerStatut(id, newStatut);
+          completed++;
+        } catch (e) { /* skip */ }
+      }
+      notify({ type: 'success', message: `✅ ${completed} courrier(s) mis à jour` });
+      setSelectedIds(new Set());
+      loadCourriers();
+      loadStats();
+    } catch (e) {
+      notify({ type: 'error', message: 'Erreur lors de la mise à jour' });
+    }
+  };
 
   return (
     <div className="courrier-page" style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh' }}>
@@ -371,6 +407,126 @@ export default function CourrierPage() {
             </div>
           </div>
         )}
+
+        {/* Quick Filters */}
+        <div className="quick-filters" style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              if (filterStatut === 'Recu' && filterUrgence === '') {
+                setFilterStatut('');
+              } else {
+                setFilterStatut('Recu');
+                setFilterUrgence('');
+              }
+              setPage(1);
+            }}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '20px',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: filterStatut === 'Recu' ? '#3b82f6' : '#f1f5f9',
+              color: filterStatut === 'Recu' ? 'white' : '#64748b',
+              boxShadow: filterStatut === 'Recu' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
+            }}
+          >
+            📬 Nouveaux
+          </button>
+
+          <button
+            onClick={() => {
+              const toTrait = filterStatut === 'EnTraitement' ? '' : 'EnTraitement';
+              setFilterStatut(toTrait);
+              setPage(1);
+            }}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '20px',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: filterStatut === 'EnTraitement' ? '#f59e0b' : '#f1f5f9',
+              color: filterStatut === 'EnTraitement' ? 'white' : '#64748b',
+              boxShadow: filterStatut === 'EnTraitement' ? '0 4px 12px rgba(245, 158, 11, 0.3)' : 'none'
+            }}
+          >
+            ⚙️ En cours
+          </button>
+
+          <button
+            onClick={() => {
+              const urgents = filterUrgence === 'TresUrgente' ? '' : 'TresUrgente';
+              setFilterUrgence(urgents);
+              setPage(1);
+            }}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '20px',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: filterUrgence === 'TresUrgente' ? '#ef4444' : '#f1f5f9',
+              color: filterUrgence === 'TresUrgente' ? 'white' : '#64748b',
+              boxShadow: filterUrgence === 'TresUrgente' ? '0 4px 12px rgba(239, 68, 68, 0.3)' : 'none'
+            }}
+          >
+            🔴 Urgents
+          </button>
+
+          <button
+            onClick={() => {
+              const archived = filterStatut === 'Archive' ? '' : 'Archive';
+              setFilterStatut(archived);
+              setPage(1);
+            }}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '20px',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: filterStatut === 'Archive' ? '#6b7280' : '#f1f5f9',
+              color: filterStatut === 'Archive' ? 'white' : '#64748b',
+              boxShadow: filterStatut === 'Archive' ? '0 4px 12px rgba(107, 114, 128, 0.3)' : 'none'
+            }}
+          >
+            📦 Archivés
+          </button>
+
+          {(filterStatut !== '' || filterUrgence !== '') && (
+            <button
+              onClick={() => {
+                setFilterStatut('');
+                setFilterUrgence('');
+                setPage(1);
+              }}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '20px',
+                border: '1px solid #e2e8f0',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: 'white',
+                color: '#64748b',
+                marginLeft: 'auto'
+              }}
+            >
+              ✕ Réinitialiser
+            </button>
+          )}
+        </div>
+
         <div className="header-actions" style={{ background: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', border: '1px solid #e2e8f0' }}>
           <div className="search-box">
             <span className="search-icon">🔍</span>
@@ -463,73 +619,149 @@ export default function CourrierPage() {
             </button>
           </div>
         ) : (
-          <table className="courrier-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
-            <thead>
-              <tr>
-                <th>Référence</th>
-                <th>Type</th>
-                <th>Objet</th>
-                <th>Expéditeur</th>
-                <th>Destinataire</th>
-                <th>Date</th>
-                <th>Statut</th>
-                <th>Urgence</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {courriers.map(courrier => (
-                <tr 
-                  key={courrier.id} 
-                  onClick={() => handleViewCourrier(courrier)} 
-                  className="courrier-row"
-                  style={{ cursor: 'pointer', transition: 'all 0.2s', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
-                >
-                  <td className="ref-cell" style={{ padding: '20px', borderRadius: '16px 0 0 16px', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderLeft: '1px solid #e2e8f0' }}>
-                    <span className="reference" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '14px' }}>{courrier.reference}</span>
-                    {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
-                  </td>
-                  <td>
-                    <span className={`type-badge ${(courrier.type || 'entrant').toLowerCase()}`}>
-                      {TYPE_COURRIER_LABELS[courrier.type]}
-                    </span>
-                  </td>
-                  <td className="objet-cell" title={courrier.objet} style={{ fontWeight: 600, color: '#1e293b' }}>
-                    {courrier.objet.length > 40 ? courrier.objet.substring(0, 40) + '...' : courrier.objet}
-                  </td>
-                  <td style={{ color: '#475569' }}>{courrier.expediteur}</td>
-                  <td style={{ color: '#475569' }}>{courrier.destinataire}</td>
-                  <td style={{ color: '#94a3b8', fontSize: '13px' }}>{formatDate(courrier.dateCourrier)}</td>
-                  <td>
-                    <span
-                      className="statut-badge"
-                      style={{ backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}
-                    >
-                      {STATUT_COURRIER_LABELS[courrier.statut]}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className="urgence-badge"
-                      style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], border: '1px solid', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <span className="dot" style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}></span>
-                      {URGENCE_COURRIER_LABELS[courrier.urgence]}
-                    </span>
-                  </td>
-                  <td style={{ padding: '20px', borderRadius: '0 16px 16px 0', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
-                    <button
-                      className="btn btn-icon"
-                      onClick={(e) => { e.stopPropagation(); handleViewCourrier(courrier) }}
-                      title="Voir détails"
-                    >
-                      👁️
-                    </button>
-                  </td>
+          <>
+            {/* Barre d'actions bulk */}
+            {selectedIds.size > 0 && (
+              <div style={{ background: '#e0f2fe', border: '1px solid #0ea5e9', padding: '16px 24px', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 600, color: '#0c4a6e' }}>
+                  {selectedIds.size} courrier(s) sélectionné(s)
+                </span>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={() => setBulkAction('statut')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                  >
+                    🔄 Changer statut
+                  </button>
+                  <button 
+                    onClick={() => setBulkAction('urgence')}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                  >
+                    ⚡ Urgence
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('Êtes-vous sûr de vouloir supprimer ces courriers?')) {
+                        // TODO: Impl delete bulk
+                      }
+                    }}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                  >
+                    🗑️ Supprimer
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Modal choix statut bulk */}
+            {bulkAction === 'statut' && (
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setBulkAction(null)}>
+                <div style={{ background: 'white', padding: '24px', borderRadius: '12px', minWidth: '300px' }} onClick={(e) => e.stopPropagation()}>
+                  <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Nouveau statut</h3>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    {(['Recu', 'EnTraitement', 'Traite', 'Archive'] as StatutCourrier[]).map(statut => (
+                      <button
+                        key={statut}
+                        onClick={() => {
+                          handleBulkStatutChange(statut);
+                          setBulkAction(null);
+                        }}
+                        style={{ padding: '12px', border: '1px solid #e2e8f0', background: 'white', borderRadius: '8px', cursor: 'pointer', textAlign: 'left' }}
+                      >
+                        {STATUT_COURRIER_LABELS[statut]}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setBulkAction(null)} style={{ marginTop: '16px', width: '100%', padding: '10px', border: '1px solid #e2e8f0', background: 'white', borderRadius: '8px', cursor: 'pointer' }}>
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <table className="courrier-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+              <thead>
+                <tr>
+                  <th style={{ width: '40px' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === courriers.length && courriers.length > 0}
+                      onChange={handleSelectAll}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </th>
+                  <th>Référence</th>
+                  <th>Type</th>
+                  <th>Objet</th>
+                  <th>Expéditeur</th>
+                  <th>Destinataire</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                  <th>Urgence</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {courriers.map(courrier => (
+                  <tr 
+                    key={courrier.id} 
+                    className="courrier-row"
+                    style={{ cursor: 'pointer', transition: 'all 0.2s', background: selectedIds.has(courrier.id) ? '#eff6ff' : 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: selectedIds.has(courrier.id) ? '2px solid #3b82f6' : '1px solid transparent' }}
+                  >
+                    <td style={{ padding: '20px', width: '40px' }} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(courrier.id)}
+                        onChange={() => handleSelectCourrier(courrier.id)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)} className="ref-cell" style={{ padding: '20px', borderRadius: '16px 0 0 16px', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderLeft: '1px solid #e2e8f0' }}>
+                      <span className="reference" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '14px' }}>{courrier.reference}</span>
+                      {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)}>
+                      <span className={`type-badge ${(courrier.type || 'entrant').toLowerCase()}`}>
+                        {TYPE_COURRIER_LABELS[courrier.type]}
+                      </span>
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)} className="objet-cell" title={courrier.objet} style={{ fontWeight: 600, color: '#1e293b' }}>
+                      {courrier.objet.length > 40 ? courrier.objet.substring(0, 40) + '...' : courrier.objet}
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#475569' }}>{courrier.expediteur}</td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#475569' }}>{courrier.destinataire}</td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#94a3b8', fontSize: '13px' }}>{formatDate(courrier.dateCourrier)}</td>
+                    <td onClick={() => handleViewCourrier(courrier)}>
+                      <span
+                        className="statut-badge"
+                        style={{ backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}
+                      >
+                        {STATUT_COURRIER_LABELS[courrier.statut]}
+                      </span>
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)}>
+                      <span
+                        className="urgence-badge"
+                        style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], border: '1px solid', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span className="dot" style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}></span>
+                        {URGENCE_COURRIER_LABELS[courrier.urgence]}
+                      </span>
+                    </td>
+                    <td style={{ padding: '20px', borderRadius: '0 16px 16px 0', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="btn btn-icon"
+                        onClick={() => handleViewCourrier(courrier)}
+                        title="Voir détails"
+                      >
+                        👁️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
 
