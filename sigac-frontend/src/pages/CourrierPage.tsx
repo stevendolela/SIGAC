@@ -114,102 +114,108 @@ export default function CourrierPage() {
         search: search || undefined,
         type: filterType || undefined,
         statut: filterStatut || undefined,
-        urgence: filterUrgence || undefined,
-        workspaceId: filterWorkspace || undefined
-      })
-      setCourriers(result.data)
-      setTotalPages(result.pagination.totalPages)
-      setTotalItems(result.pagination.totalItems)
-      setError(null)
-    } catch (e: any) {
-      setError(e.message || 'Erreur lors du chargement des courriers')
-    } finally {
-      setLoading(false)
-    }
-  }, [page, search, filterType, filterStatut, filterUrgence, filterWorkspace])
-
-  const loadStats = async () => {
-    try {
-      const statsData = await courrierApi.getStatistiques(filterWorkspace || undefined)
-      setStats(statsData)
-    } catch (e) {
-      console.error('Erreur chargement stats:', e)
-    }
-  }
-
-  const loadWorkspaces = async () => {
-    try {
-      const ws = await workspaceApi.getUserWorkspaces()
-      setWorkspaces(ws || [])
-    } catch (e) {
-      console.error('Erreur chargement workspaces:', e)
-    }
-  }
-
-  const loadUsers = async () => {
-    try {
-      const result = await userApi.list(1, 100)
-      setUsers(result.data || [])
-    } catch (e) {
-      console.error('Erreur chargement users:', e)
-    }
-  }
-
-  const handleViewCourrier = async (courrier: CourrierListDto) => {
-    try {
-      const detail = await courrierApi.getById(courrier.id)
-      setSelectedCourrier(detail)
-      setShowDetailModal(true)
-    } catch (e: any) {
-      setError(e.message || 'Erreur lors du chargement du courrier')
-    }
-  }
-
-  // Création courrier avec document joint (upload ou scan)
-  const handleCreateCourrier = async () => {
-    try {
-      const formData = new FormData();
-      Object.entries(newCourrier).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) formData.append(key, value as string);
-      });
-      if (newCourrierFile) {
-        formData.append('file', newCourrierFile);
-      }
-      await courrierApi.createWithFile(formData);
-      setShowCreateModal(false);
-      setNewCourrier({
-        type: 'Entrant',
-        objet: '',
-        expediteur: '',
-        destinataire: '',
-        dateCourrier: new Date().toISOString().split('T')[0],
-        urgence: 'Normale'
-      });
-      setNewCourrierFile(null);
-      loadCourriers();
-      loadStats();
-    } catch (e: any) {
-      setError(e.message || 'Erreur lors de la création du courrier');
-    }
-  }
-  // Handler pour upload fichier
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setNewCourrierFile(e.target.files[0]);
-    }
-  }
-  // Handler ScanJS pour remplir le fichier joint
-  const handleScanJsForCourrier = async () => {
-    try {
-      const response = await fetch('http://localhost:27275/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: 'pdf' })
-      });
-      if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
-      const blob = await response.blob();
-      const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
-      setNewCourrierFile(scannedFile);
+        {showCreateModal && (
+          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+            <div className="modal-content" style={{ maxWidth: 520, borderRadius: 18, boxShadow: '0 8px 32px #1a2a4a22', background: 'linear-gradient(120deg,#fafdff 80%,#eaf1fa 100%)' }} onClick={e => e.stopPropagation()}>
+              <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+                <h2 style={{ fontWeight: 700, color: '#1a2a4a', letterSpacing: 1, fontSize: 24, margin: 0 }}>Nouveau courrier</h2>
+                <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ fontSize: 22, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+              </div>
+              <div className="modal-body" style={{ paddingTop: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {/* Bloc document joint modernisé */}
+                  <div style={{ background: '#f3f7fb', borderRadius: 10, padding: 14, border: '1px solid #e0e6ed', marginBottom: 0 }}>
+                    <label style={{ fontWeight: 600, color: '#2a5d9f', marginBottom: 6, display: 'block' }}>Document joint (optionnel)</label>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input type="file" accept=".pdf,image/*" onChange={handleFileChange} style={{ flex: 1, background: '#fff', border: '1px solid #d0d7e2', borderRadius: 6, padding: 6 }} />
+                      <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier} style={{ fontSize: 15, padding: '6px 12px' }}>
+                        <span role="img" aria-label="scanjs">📠</span> Scanner
+                      </button>
+                      {newCourrierFile && (
+                        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ color: '#2a5d9f', fontWeight: 500, fontSize: 15 }}>📎 {newCourrierFile.name}</span>
+                          <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
+                        </div>
+                      )}
+                    </div>
+                    <small style={{ color: '#888', marginLeft: 2 }}>PDF ou image, max 50 Mo</small>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>Type *</label>
+                      <select
+                        value={newCourrier.type}
+                        onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}
+                        style={{ width: '100%', borderRadius: 6, padding: 6, border: '1px solid #d0d7e2', background: '#fff' }}
+                      >
+                        <option value="Entrant">📥 Entrant</option>
+                        <option value="Sortant">📤 Sortant</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>Urgence *</label>
+                      <select
+                        value={newCourrier.urgence}
+                        onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}
+                        style={{ width: '100%', borderRadius: 6, padding: 6, border: '1px solid #d0d7e2', background: '#fff' }}
+                      >
+                        <option value="Normale">🟢 Normale</option>
+                        <option value="Importante">🟡 Importante</option>
+                        <option value="Urgente">🟠 Urgente</option>
+                        <option value="TresUrgente">🔴 Très Urgente</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 500 }}>Objet *</label>
+                    <input
+                      type="text"
+                      value={newCourrier.objet}
+                      onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })}
+                      placeholder="Objet du courrier"
+                      style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>Expéditeur *</label>
+                      <input
+                        type="text"
+                        value={newCourrier.expediteur}
+                        onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })}
+                        placeholder="Nom de l'expéditeur"
+                        style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>Destinataire *</label>
+                      <input
+                        type="text"
+                        value={newCourrier.destinataire}
+                        onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })}
+                        placeholder="Nom du destinataire"
+                        style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 500 }}>Date du courrier *</label>
+                    <input
+                      type="date"
+                      value={newCourrier.dateCourrier}
+                      onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })}
+                      style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                    <button className="btn btn-primary" style={{ minWidth: 120, fontWeight: 600 }} onClick={handleCreateCourrier}>Créer le courrier</button>
+                    <button className="btn btn-secondary" style={{ minWidth: 90 }} onClick={() => setShowCreateModal(false)}>Annuler</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       alert('Scan terminé ! Document prêt à être joint.');
     } catch (err) {
       alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
