@@ -601,14 +601,11 @@ export default function CourrierPage() {
           </select>
         )}
 
-          <button className="btn btn-secondary" onClick={() => loadCourriers()} title="Rafraîchir" style={{ padding: '10px 14px' }}>
-            🔄
+          <button className="btn btn-secondary" onClick={() => loadCourriers()} title="Rafraîchir" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <RotateCw size={18} />
           </button>
-          <button className="btn btn-secondary" onClick={() => setShowOcrModal(true)} style={{ padding: '10px 20px', fontWeight: 600 }}>
-            📷 OCR
-          </button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '10px 24px', fontWeight: 600, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', border: 'none', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}>
-            ➕ Nouveau
+          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '10px 24px', fontWeight: 600, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', border: 'none', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={20} /> Nouveau
           </button>
         </div>
       </div>
