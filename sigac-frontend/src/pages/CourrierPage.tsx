@@ -26,7 +26,7 @@
     alert('Fonction de scan physique à intégrer (connexion au scanner physique)');
   }
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { courrierApi } from '../api/courrierApi'
+import courrierApi from '../api/courrierApi'
 import workspaceApi from '../api/workspaceApi'
 import { userApi } from '../api/userApi'
 import type {
@@ -985,3 +985,7 @@ export default function CourrierPage() {
     </div>
   )
 }
+function setOcrFile(scannedFile: File) {
+  throw new Error('Function not implemented.');
+}
+

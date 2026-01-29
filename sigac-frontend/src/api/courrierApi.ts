@@ -16,7 +16,7 @@ import type {
   UrgenceCourrier
 } from '../types/courrier';
 
-export const courrierApi = {
+const courrierApi = {
   /**
    * Crée un nouveau courrier avec document joint (FormData)
    */
@@ -180,4 +180,4 @@ export const courrierApi = {
   }
 }
 
-export default courrierApi
+export default courrierApi;
