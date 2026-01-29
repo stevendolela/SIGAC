@@ -512,49 +512,40 @@ export default function CourrierPage() {
       {/* Modal Création */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content" style={{ maxWidth: 520, borderRadius: 16, boxShadow: '0 8px 32px #1a2a4a22', background: '#fff' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 28, color: '#2563eb' }}>📬</span>
-              <h2 style={{ fontWeight: 700, color: '#1a2a4a', letterSpacing: 1, fontSize: 22, margin: 0, flex: 1 }}>Nouveau courrier</h2>
-              <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ fontSize: 22, color: '#888', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()}>
+            <div className="modal-nc-header">
+              <span className="modal-nc-icone">📬</span>
+              <h2 className="modal-nc-title">Nouveau courrier</h2>
+              <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
             </div>
-            <div className="modal-body" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {/* Bloc document joint modernisé */}
-              <div className="form-group" style={{ background: '#f3f7fb', borderRadius: 10, padding: 14, border: '1px solid #e0e6ed', marginBottom: 0 }}>
-                <label style={{ fontWeight: 600, color: '#2a5d9f', marginBottom: 6, display: 'block' }}>Document joint (optionnel)</label>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <input type="file" accept=".pdf,image/*" onChange={handleFileChange} style={{ flex: 1, background: '#fff', border: '1px solid #d0d7e2', borderRadius: 6, padding: 6 }} />
-                  <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier} style={{ fontSize: 15, padding: '6px 12px' }}>
+            <div className="modal-nc-body">
+              <div className="modal-nc-doc">
+                <label>Document joint (optionnel)</label>
+                <div className="modal-nc-doc-row">
+                  <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+                  <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier}>
                     <span role="img" aria-label="scanjs">📠</span> Scanner
                   </button>
                   {newCourrierFile && (
-                    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: '#2a5d9f', fontWeight: 500, fontSize: 15 }}>📎 {newCourrierFile.name}</span>
+                    <div className="modal-nc-doc-file">
+                      <span>📎 {newCourrierFile.name}</span>
                       <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
                     </div>
                   )}
                 </div>
-                <small style={{ color: '#888', marginLeft: 2 }}>PDF ou image, max 50 Mo</small>
+                <small>PDF ou image, max 50 Mo</small>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Type *</label>
-                  <select
-                    value={newCourrier.type}
-                    onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}
-                    style={{ width: '100%', borderRadius: 6, padding: 6, border: '1px solid #d0d7e2', background: '#fff' }}
-                  >
+              <div className="modal-nc-row">
+                <div>
+                  <label>Type *</label>
+                  <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
                     <option value="Entrant">📥 Entrant</option>
                     <option value="Sortant">📤 Sortant</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Urgence *</label>
-                  <select
-                    value={newCourrier.urgence}
-                    onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}
-                    style={{ width: '100%', borderRadius: 6, padding: 6, border: '1px solid #d0d7e2', background: '#fff' }}
-                  >
+                <div>
+                  <label>Urgence *</label>
+                  <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
                     <option value="Normale">🟢 Normale</option>
                     <option value="Importante">🟡 Importante</option>
                     <option value="Urgente">🟠 Urgente</option>
@@ -563,66 +554,33 @@ export default function CourrierPage() {
                 </div>
               </div>
               <div>
-                <label style={{ fontWeight: 500 }}>Objet *</label>
-                <input
-                  type="text"
-                  value={newCourrier.objet}
-                  onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })}
-                  placeholder="Objet du courrier"
-                  style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                />
+                <label>Objet *</label>
+                <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Expéditeur *</label>
-                  <input
-                    type="text"
-                    value={newCourrier.expediteur}
-                    onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })}
-                    placeholder="Nom de l'expéditeur"
-                    style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                  />
+              <div className="modal-nc-row">
+                <div>
+                  <label>Expéditeur *</label>
+                  <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Destinataire *</label>
-                  <input
-                    type="text"
-                    value={newCourrier.destinataire}
-                    onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })}
-                    placeholder="Nom du destinataire"
-                    style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                  />
+                <div>
+                  <label>Destinataire *</label>
+                  <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Date du courrier *</label>
-                  <input
-                    type="date"
-                    value={newCourrier.dateCourrier}
-                    onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })}
-                    style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                  />
+              <div className="modal-nc-row">
+                <div>
+                  <label>Date du courrier *</label>
+                  <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontWeight: 500 }}>Référence externe</label>
-                  <input
-                    type="text"
-                    value={newCourrier.referenceExterne || ''}
-                    onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })}
-                    placeholder="Réf. externe (optionnel)"
-                    style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                  />
+                <div>
+                  <label>Référence externe</label>
+                  <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
                 </div>
               </div>
               {workspaces.length > 0 && (
-                <div className="form-group">
-                  <label style={{ fontWeight: 500 }}>Workspace</label>
-                  <select
-                    value={newCourrier.workspaceId || ''}
-                    onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}
-                    style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                  >
+                <div>
+                  <label>Workspace</label>
+                  <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
                     <option value="">-- Sélectionner --</option>
                     {workspaces.map(ws => (
                       <option key={ws.id} value={ws.id}>{ws.name}</option>
@@ -631,25 +589,18 @@ export default function CourrierPage() {
                 </div>
               )}
               <div>
-                <label style={{ fontWeight: 500 }}>Notes</label>
-                <textarea
-                  value={newCourrier.notes || ''}
-                  onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })}
-                  placeholder="Notes supplémentaires..."
-                  rows={3}
-                  style={{ width: '100%', borderRadius: 6, padding: 7, border: '1px solid #d0d7e2', background: '#fff' }}
-                />
+                <label>Notes</label>
+                <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
               </div>
             </div>
-            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} style={{ minWidth: 90 }}>
+            <div className="modal-footer modal-nc-footer">
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
                 Annuler
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleCreateCourrier}
                 disabled={!newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire}
-                style={{ minWidth: 120, fontWeight: 600 }}
               >
                 Créer le courrier
               </button>
