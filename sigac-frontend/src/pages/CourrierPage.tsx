@@ -41,6 +41,9 @@ export default function CourrierPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
+  // Fichier joint (upload ou scan)
+  const [newCourrierFile, setNewCourrierFile] = useState<File | null>(null);
+
   // Filtres
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<TypeCourrier | ''>('')
