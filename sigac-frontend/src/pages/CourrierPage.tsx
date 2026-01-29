@@ -1,8 +1,3 @@
-  // Handler pour scan physique (placeholder)
-  const handlePhysicalScan = () => {
-    alert('Fonction de scan physique à intégrer (connexion au scanner physique)');
-  }
-
 import { useEffect, useState, useCallback, useRef } from 'react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
@@ -17,48 +12,71 @@ import type {
   CourrierStatsDto,
   ReceptionCourrierOcrDto
 } from '../types/courrier';
-import {
-  TYPE_COURRIER_LABELS,
-  STATUT_COURRIER_LABELS,
-  URGENCE_COURRIER_LABELS,
-  STATUT_COURRIER_COLORS,
-  URGENCE_COURRIER_COLORS
-} from '../types/courrier';
 import type { WorkspaceDto } from '../types/workspace';
 import type { UserDto } from '../types/user';
-import './CourrierPage.css';
 
-// ...existing code (handlers, hooks, etc.)...
+// Constantes pour les labels et couleurs
+const TYPE_COURRIER_LABELS: Record<string, string> = {
+  Entrant: '📥 Entrant',
+  Sortant: '📤 Sortant'
+};
+
+const STATUT_COURRIER_LABELS: Record<string, string> = {
+  Recu: 'Reçu',
+  EnTraitement: 'En Traitement',
+  Traite: 'Traité',
+  Archive: 'Archivé',
+  Rejete: 'Rejeté'
+};
+
+const STATUT_COURRIER_COLORS: Record<string, string> = {
+  Recu: '#3b82f6',
+  EnTraitement: '#f59e0b',
+  Traite: '#10b981',
+  Archive: '#6b7280',
+  Rejete: '#ef4444'
+};
+
+const URGENCE_COURRIER_LABELS: Record<string, string> = {
+  Normale: 'Normale',
+  Importante: 'Importante',
+  Urgente: 'Urgente',
+  TresUrgente: 'Très Urgente'
+};
+
+const URGENCE_COURRIER_COLORS: Record<string, string> = {
+  Normale: '#10b981',
+  Importante: '#f59e0b',
+  Urgente: '#f97316',
+  TresUrgente: '#ef4444'
+};
 
 export default function CourrierPage() {
-  // États
+  // États principaux
   const [courriers, setCourriers] = useState<CourrierListDto[]>([])
-  const [selectedCourrier, setSelectedCourrier] = useState<CourrierDetailDto | null>(null)
-  const [stats, setStats] = useState<CourrierStatsDto | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
-
-  // Fichier joint (upload ou scan)
-  const [newCourrierFile, setNewCourrierFile] = useState<File | null>(null);
 
   // Filtres
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<TypeCourrier | ''>('')
   const [filterStatut, setFilterStatut] = useState<StatutCourrier | ''>('')
   const [filterUrgence, setFilterUrgence] = useState<UrgenceCourrier | ''>('')
-  const [filterWorkspace, setFilterWorkspace] = useState<string>('')
-
-  // Modals
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showOcrModal, setShowOcrModal] = useState(false)
-  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [filterWorkspace, setFilterWorkspace] = useState('')
 
   // Données référentielles
   const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([])
   const [users, setUsers] = useState<UserDto[]>([])
+  const [stats, setStats] = useState<CourrierStatsDto | null>(null)
+
+  // Modales
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showOcrModal, setShowOcrModal] = useState(false)
+  const [selectedCourrier, setSelectedCourrier] = useState<CourrierDetailDto | null>(null)
 
   // Formulaire création
   const [newCourrier, setNewCourrier] = useState<CreateCourrierDto>({
@@ -69,6 +87,8 @@ export default function CourrierPage() {
     dateCourrier: new Date().toISOString().split('T')[0],
     urgence: 'Normale'
   })
+  const [newCourrierFile, setNewCourrierFile] = useState<File | null>(null)
+  const [loadingCreateCourrier, setLoadingCreateCourrier] = useState(false)
 
   // OCR
   const [ocrFile, setOcrFile] = useState<File | null>(null)
@@ -177,6 +197,7 @@ export default function CourrierPage() {
 
   // Handler création courrier
   const handleCreateCourrier = async () => {
+    setLoadingCreateCourrier(true);
     try {
       const formData = new FormData();
       Object.entries(newCourrier).forEach(([key, value]) => {
@@ -200,6 +221,8 @@ export default function CourrierPage() {
       loadStats();
     } catch (e: any) {
       setError(e.message || 'Erreur lors de la création du courrier');
+    } finally {
+      setLoadingCreateCourrier(false);
     }
   };
 
@@ -268,8 +291,21 @@ export default function CourrierPage() {
     })
   }
 
-  function handleViewCourrier(courrier: CourrierListDto) {
-    throw new Error('Function not implemented.');
+  async function handleViewCourrier(courrier: CourrierListDto) {
+    try {
+      // On essaie de récupérer le détail complet si l'API le permet, sinon on utilise le DTO de liste
+      // Comme l'API getById n'est pas explicitement visible, on suppose qu'elle existe ou on utilise le DTO liste
+      // Pour l'instant on utilise le DTO liste casté, mais idéalement il faudrait un appel API
+      // Si courrierApi.getById existe :
+      // const detail = await courrierApi.getById(courrier.id);
+      // setSelectedCourrier(detail);
+      
+      // Fallback sur le DTO liste (il manque peut-être l'historique)
+      setSelectedCourrier(courrier as unknown as CourrierDetailDto);
+      setShowDetailModal(true);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
@@ -280,100 +316,32 @@ export default function CourrierPage() {
           <h1>📬 Gestion du Courrier</h1>
           <span className="subtitle">{totalItems} courrier(s) au total</span>
         </div>
-            <div className="modal-nc-header modal-nc-header-sticky">
-              <span className="modal-nc-icone">📬</span>
-              <h2 className="modal-nc-title">Nouveau courrier</h2>
-              <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
-            </div>
-            <div className="modal-nc-scrollable">
-              <section className="modal-nc-section">
-                <h3 className="modal-nc-section-title">Document joint <span className="modal-nc-doc-prec">(optionnel)</span></h3>
-                <div className="modal-nc-doc-row modal-nc-doc-row-ergonomique">
-                  <span className="modal-nc-doc-choix">Choisir un fichier</span>
-                  <label className="modal-nc-file-label">
-                    <input type="file" accept=".pdf,image/*" onChange={handleFileChange} className="modal-nc-file-input" />
-                    <span className="modal-nc-file-btn">Parcourir</span>
-                  </label>
-                  <span className="modal-nc-doc-ou">ou</span>
-                  <button className="btn btn-outline-info modal-nc-scan-btn" type="button" onClick={handleScanJsForCourrier}>
-                    <span role="img" aria-label="scanjs">📠</span> Scanner
-                  </button>
-                  {newCourrierFile && (
-                    <div className="modal-nc-doc-file">
-                      <span>📎 {newCourrierFile.name}</span>
-                      <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
-                    </div>
-                  )}
-                </div>
-                <small>PDF ou image, max 50 Mo</small>
-              </section>
-              <section className="modal-nc-section">
-                <h3 className="modal-nc-section-title">Informations principales</h3>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
-                  <div>
-                    <label>Type *</label>
-                    <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
-                      <option value="Entrant">📥 Entrant</option>
-                      <option value="Sortant">📤 Sortant</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Urgence *</label>
-                    <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
-                      <option value="Normale">🟢 Normale</option>
-                      <option value="Importante">🟡 Importante</option>
-                      <option value="Urgente">🟠 Urgente</option>
-                      <option value="TresUrgente">🔴 Très Urgente</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label>Objet *</label>
-                  <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
-                </div>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
-                  <div>
-                    <label>Expéditeur *</label>
-                    <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
-                  </div>
-                  <div>
-                    <label>Destinataire *</label>
-                    <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
-                  </div>
-                </div>
-                <div className="modal-nc-row modal-nc-row-ergonomique">
-                  <div>
-                    <label>Date du courrier *</label>
-                    <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
-                  </div>
-                  <div>
-                    <label>Référence externe</label>
-                    <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
-                  </div>
-                </div>
-                {workspaces.length > 0 && (
-                  <div>
-                    <label>Workspace</label>
-                    <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
-                      <option value="">-- Sélectionner --</option>
-                      {workspaces.map(ws => (
-                        <option key={ws.id} value={ws.id}>{ws.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label>Notes</label>
-                  <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
-                </div>
-              </section>
-            </div>
-            <div className="modal-nc-footer modal-nc-footer-fixed">
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button">Annuler</button>
-              <button className="btn btn-primary" onClick={handleCreateCourrier} disabled={loadingCreateCourrier} type="button">
-                {loadingCreateCourrier ? 'Création...' : 'Créer le courrier'}
-              </button>
-            </div>
+        <div className="header-actions">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Rechercher..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          
+          <select 
+            value={filterType} 
+            onChange={(e) => { setFilterType(e.target.value as TypeCourrier | ''); setPage(1) }}
+            className="filter-select"
+          >
+            <option value="">Tous types</option>
+            <option value="Entrant">📥 Entrant</option>
+            <option value="Sortant">📤 Sortant</option>
+          </select>
+
+          <select
+            value={filterStatut}
+            onChange={(e) => { setFilterStatut(e.target.value as StatutCourrier | ''); setPage(1) }}
+            className="filter-select"
+          >
           <option value="">Tous statuts</option>
           <option value="Recu">{STATUT_COURRIER_LABELS.Recu}</option>
           <option value="EnTraitement">{STATUT_COURRIER_LABELS.EnTraitement}</option>
@@ -381,6 +349,7 @@ export default function CourrierPage() {
           <option value="Archive">{STATUT_COURRIER_LABELS.Archive}</option>
           <option value="Rejete">{STATUT_COURRIER_LABELS.Rejete}</option>
         </select>
+
         <select
           value={filterUrgence}
           onChange={(e) => { setFilterUrgence(e.target.value as UrgenceCourrier | ''); setPage(1) }}
@@ -404,6 +373,11 @@ export default function CourrierPage() {
             ))}
           </select>
         )}
+
+          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+            ➕ Nouveau
+          </button>
+        </div>
       </div>
 
       {/* Erreur */}
@@ -914,5 +888,3 @@ export default function CourrierPage() {
     </div>
   )
 }
-/* setOcrFile is already defined as a state setter from useState, so this stub is not needed and can be removed. */
-

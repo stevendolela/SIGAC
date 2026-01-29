@@ -1367,3 +1367,115 @@
     padding: 0 0 10px 0;
   }
 }
+
+/* --- PAGE COURRIER UX PRO --- */
+.courrier-page-pro {
+  background: #f6f8fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.courrier-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 32px 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.courrier-title-pro {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a2233;
+  margin: 0;
+}
+.courrier-actions-pro {
+  display: flex;
+  gap: 12px;
+}
+.courrier-btn-nouveau-pro {
+  font-size: 1.08em;
+  padding: 8px 22px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.courrier-main-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.courrier-table-container-pro {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #e0e7ef;
+  overflow-x: auto;
+  padding: 0 0 8px 0;
+}
+.courrier-table-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1.01em;
+}
+.courrier-table-pro th, .courrier-table-pro td {
+  padding: 12px 10px;
+  text-align: left;
+}
+.courrier-table-pro th {
+  background: #f3f6fa;
+  font-weight: 600;
+  color: #1a2233;
+  border-bottom: 1.5px solid #e0e7ef;
+}
+.courrier-table-pro tr {
+  border-bottom: 1px solid #e0e7ef;
+}
+.courrier-table-pro tr:last-child {
+  border-bottom: none;
+}
+.courrier-table-pro td {
+  color: #2d3748;
+  background: #fff;
+}
+.courrier-table-pro tr:hover td {
+  background: #f1f5f9;
+}
+.courrier-pagination-pro {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  margin: 18px 0 0 0;
+}
+@media (max-width: 900px) {
+  .courrier-header-sticky, .courrier-main-scrollable {
+    padding-left: 4vw;
+    padding-right: 4vw;
+  }
+  .courrier-table-container-pro {
+    border-radius: 0;
+    box-shadow: none;
+    border-left: none;
+    border-right: none;
+  }
+}
+@media (max-width: 600px) {
+  .courrier-header-sticky, .courrier-main-scrollable {
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+  .courrier-title-pro {
+    font-size: 1.2rem;
+  }
+  .courrier-table-pro th, .courrier-table-pro td {
+    padding: 8px 4px;
+    font-size: 0.98em;
+  }
+}
