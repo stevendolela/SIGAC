@@ -1,7 +1,7 @@
   /**
    * Crée un nouveau courrier avec document joint (FormData)
    */
-  async createWithFile(formData: FormData): Promise<CourrierDetailDto> {
+  createWithFile: async (formData: FormData): Promise<CourrierDetailDto> => {
     const resp = await api.post<CourrierDetailDto>('/Courrier', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
