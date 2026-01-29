@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader, FileUp, X } from 'lucide-react';
+import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader, FileUp, X, Scan } from 'lucide-react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
@@ -864,7 +864,7 @@ export default function CourrierPage() {
                   </label>
                   <div style={{ color: '#94a3b8', fontWeight: 600 }}>ou</div>
                   <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                    📠 Scanner
+                    <Scan size={18} /> Scanner
                   </button>
                   {newCourrierFile && (
                     <div style={{ marginTop: '12px', width: '100%', background: '#e0e7ff', border: '1px solid #c7d2fe', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
@@ -1004,13 +1004,14 @@ export default function CourrierPage() {
             {/* Footer */}
             <div style={{ 
               display: 'flex', 
-              justifyContent: 'flex-end', 
-              gap: '12px', 
-              padding: '20px 32px', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              gap: '16px', 
+              padding: '24px 32px', 
               background: '#f8fafc', 
               borderTop: '1px solid #e2e8f0'
             }}>
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ fontWeight: 600 }}>
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ fontWeight: 600, minWidth: '140px' }}>
                 Annuler
               </button>
               <button
@@ -1029,7 +1030,10 @@ export default function CourrierPage() {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  minWidth: '180px',
+                  justifyContent: 'center',
+                  padding: '12px 24px'
                 }}
               >
                 {loadingCreateCourrier ? (
