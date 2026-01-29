@@ -216,16 +216,13 @@ export default function RightsManagementPage() {
     <div className="rights-management-page" style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Shield size={32} color="#4f46e5" /> Gestion des Droits d'Accès
             </h1>
-            <p style={{ color: '#64748b', fontSize: '15px', marginTop: '8px' }}>
-              Configurez les permissions d'accès aux modules applicatifs pour chaque rôle utilisateur.
-            </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
             <button 
               className="btn btn-secondary" 
               onClick={loadPermissions} 
@@ -278,6 +275,9 @@ export default function RightsManagementPage() {
             </button>
           </div>
         </div>
+        <p style={{ color: '#64748b', fontSize: '15px', marginTop: '8px', marginBottom: 0 }}>
+          Configurez les permissions d'accès aux modules applicatifs pour chaque rôle utilisateur.
+        </p>
       </div>
 
       {/* Messages d'erreur */}
