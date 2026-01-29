@@ -522,7 +522,9 @@ export default function CourrierPage() {
               <div className="modal-nc-doc">
                 <label>Document joint (optionnel)</label>
                 <div className="modal-nc-doc-row">
+                  <span className="modal-nc-doc-choix">Choisir un fichier</span>
                   <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+                  <span className="modal-nc-doc-ou">ou</span>
                   <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier}>
                     <span role="img" aria-label="scanjs">📠</span> Scanner
                   </button>
@@ -593,7 +595,7 @@ export default function CourrierPage() {
                 <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
               </div>
             </div>
-            <div className="modal-footer modal-nc-footer">
+            <div className="modal-footer modal-nc-footer modal-nc-footer-align">
               <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
                 Annuler
               </button>

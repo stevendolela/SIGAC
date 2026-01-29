@@ -1132,55 +1132,29 @@
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
-.modal-nc-doc-file {
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #2a5d9f;
-  font-weight: 500;
+.modal-nc-doc-choix {
   font-size: 15px;
-}
-.modal-nc-row {
-  display: flex;
-  gap: 12px;
-}
-.modal-nc-row > div {
-  flex: 1;
-}
-.modal-nc-body label {
+  color: #1e293b;
   font-weight: 500;
+  margin-right: 2px;
 }
-.modal-nc-body input,
-.modal-nc-body select,
-.modal-nc-body textarea {
-  width: 100%;
-  border-radius: 6px;
-  padding: 7px;
-  border: 1px solid #d0d7e2;
-  background: #fff;
-  margin-top: 2px;
+.modal-nc-doc-ou {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 6px;
 }
-.modal-nc-footer {
+.modal-nc-footer-align {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
-  padding: 18px 24px 18px 24px;
-  border-top: 1px solid #e5e7eb;
+  gap: 12px;
+  align-items: center;
 }
 @media (max-width: 600px) {
-  .modal-nouveau-courrier {
-    max-width: 98vw;
-    margin: 8px;
-  }
-  .modal-nc-header, .modal-nc-body, .modal-nc-footer {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  .modal-nc-row {
-    flex-direction: column;
-    gap: 6px;
+  .modal-nc-footer-align {
+    flex-direction: column-reverse;
+    gap: 8px;
+    align-items: stretch;
   }
 }
