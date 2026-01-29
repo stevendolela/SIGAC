@@ -1009,17 +1009,23 @@ export default function CourrierPage() {
               gap: '16px', 
               padding: '24px 32px', 
               background: '#f8fafc', 
-              borderTop: '1px solid #e2e8f0'
+              borderTop: '1px solid #e2e8f0',
+              maxWidth: '400px',
+              margin: '0 auto'
             }}>
               <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ 
-                fontWeight: 600, 
-                minWidth: '160px',
+                flex: 1,
+                fontWeight: 700, 
                 padding: '12px 24px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                fontSize: '14px'
+                fontSize: '14px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#f1f5f9',
+                color: '#334155'
               }}>
                 Annuler
               </button>
@@ -1029,18 +1035,19 @@ export default function CourrierPage() {
                 disabled={loadingCreateCourrier || !newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire}
                 type="button"
                 style={{ 
+                  flex: 1,
                   background: loadingCreateCourrier || !newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire 
                     ? '#cbd5e1' 
                     : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                   color: '#fff',
                   fontWeight: 700,
                   border: 'none',
+                  borderRadius: '8px',
                   boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  minWidth: '160px',
                   justifyContent: 'center',
                   padding: '12px 24px',
                   fontSize: '14px'
