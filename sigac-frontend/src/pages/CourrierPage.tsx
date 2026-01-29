@@ -537,7 +537,7 @@ export default function CourrierPage() {
                 <button
                   className="btn btn-outline-info"
                   type="button"
-                  onClick={handleScanJs}
+                  onClick={handleScanJsForCourrier}
                   style={{ marginLeft: 8, marginBottom: 8 }}
                 >
                   <span role="img" aria-label="scanjs">📠</span> Scanner avec ScanJS
