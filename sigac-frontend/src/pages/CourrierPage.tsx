@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader } from 'lucide-react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
@@ -18,8 +19,8 @@ import type { UserDto } from '../types/user';
 
 // Constantes pour les labels et couleurs
 const TYPE_COURRIER_LABELS: Record<string, string> = {
-  Entrant: '📥 Entrant',
-  Sortant: '📤 Sortant'
+  Entrant: 'Entrant',
+  Sortant: 'Sortant'
 };
 
 const STATUT_COURRIER_LABELS: Record<string, string> = {
@@ -357,8 +358,8 @@ export default function CourrierPage() {
       {/* Header avec statistiques */}
       <div className="courrier-header" style={{ marginBottom: '40px' }}>
         <div className="header-title" style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', margin: 0 }}>
-            📬 Gestion du Courrier
+          <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b', letterSpacing: '-1px', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Mail size={32} style={{ color: '#3b82f6' }} /> Gestion du Courrier
           </h1>
           <p style={{ color: '#64748b', fontSize: '15px', marginTop: '8px' }}>
             Consultez et gérez l'ensemble des flux documentaires de votre organisation.
@@ -370,7 +371,7 @@ export default function CourrierPage() {
             <div className="stat-card stat-total" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</span>
-                <span style={{ fontSize: '24px' }}>📬</span>
+                <Mail size={20} style={{ color: '#3b82f6' }} />
               </div>
               <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.totalCourriers}</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>tous les courriers</div>
@@ -380,7 +381,7 @@ export default function CourrierPage() {
             <div className="stat-card stat-warning" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #f59e0b`, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>À traiter</span>
-                <span style={{ fontSize: '24px' }}>⚡</span>
+                <Zap size={20} style={{ color: '#f59e0b' }} />
               </div>
               <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{(stats.recu || 0) + (stats.enTraitement || 0)}</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>nouveaux + en cours</div>
@@ -390,7 +391,7 @@ export default function CourrierPage() {
             <div className="stat-card stat-urgent" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #ef4444`, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Urgents</span>
-                <span style={{ fontSize: '24px' }}>🔴</span>
+                <AlertCircle size={20} style={{ color: '#ef4444' }} />
               </div>
               <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.urgents || 0}</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>marqés urgents</div>
@@ -400,7 +401,7 @@ export default function CourrierPage() {
             <div className="stat-card stat-success" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #10b981`, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Traités</span>
-                <span style={{ fontSize: '24px' }}>✅</span>
+                <CheckCircle2 size={20} style={{ color: '#10b981' }} />
               </div>
               <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.traites || 0}</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>processus terminés</div>
@@ -430,10 +431,13 @@ export default function CourrierPage() {
               transition: 'all 0.2s',
               background: filterStatut === 'Recu' ? '#3b82f6' : '#f1f5f9',
               color: filterStatut === 'Recu' ? 'white' : '#64748b',
-              boxShadow: filterStatut === 'Recu' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
+              boxShadow: filterStatut === 'Recu' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            📬 Nouveaux
+            <Mail size={16} /> Nouveaux
           </button>
 
           <button
@@ -452,10 +456,13 @@ export default function CourrierPage() {
               transition: 'all 0.2s',
               background: filterStatut === 'EnTraitement' ? '#f59e0b' : '#f1f5f9',
               color: filterStatut === 'EnTraitement' ? 'white' : '#64748b',
-              boxShadow: filterStatut === 'EnTraitement' ? '0 4px 12px rgba(245, 158, 11, 0.3)' : 'none'
+              boxShadow: filterStatut === 'EnTraitement' ? '0 4px 12px rgba(245, 158, 11, 0.3)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            ⚙️ En cours
+            <RotateCw size={16} /> En cours
           </button>
 
           <button
@@ -474,10 +481,13 @@ export default function CourrierPage() {
               transition: 'all 0.2s',
               background: filterUrgence === 'TresUrgente' ? '#ef4444' : '#f1f5f9',
               color: filterUrgence === 'TresUrgente' ? 'white' : '#64748b',
-              boxShadow: filterUrgence === 'TresUrgente' ? '0 4px 12px rgba(239, 68, 68, 0.3)' : 'none'
+              boxShadow: filterUrgence === 'TresUrgente' ? '0 4px 12px rgba(239, 68, 68, 0.3)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🔴 Urgents
+            <AlertCircle size={16} /> Urgents
           </button>
 
           <button
@@ -496,10 +506,13 @@ export default function CourrierPage() {
               transition: 'all 0.2s',
               background: filterStatut === 'Archive' ? '#6b7280' : '#f1f5f9',
               color: filterStatut === 'Archive' ? 'white' : '#64748b',
-              boxShadow: filterStatut === 'Archive' ? '0 4px 12px rgba(107, 114, 128, 0.3)' : 'none'
+              boxShadow: filterStatut === 'Archive' ? '0 4px 12px rgba(107, 114, 128, 0.3)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            📦 Archivés
+            <Mail size={16} /> Archivés
           </button>
 
           {(filterStatut !== '' || filterUrgence !== '') && (
@@ -519,10 +532,13 @@ export default function CourrierPage() {
                 transition: 'all 0.2s',
                 background: 'white',
                 color: '#64748b',
-                marginLeft: 'auto'
+                marginLeft: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
-              ✕ Réinitialiser
+              <Filter size={16} /> Réinitialiser
             </button>
           )}
         </div>
@@ -599,20 +615,25 @@ export default function CourrierPage() {
 
       {/* Erreur */}
       {error && (
-        <div className="error-banner">
-          ❌ {error}
-          <button onClick={() => setError(null)}>✕</button>
+        <div className="error-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px' }}>
+          <AlertCircle size={18} style={{ color: '#ef4444', flexShrink: 0 }} /> {error}
+          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', fontSize: '20px', padding: '0', lineHeight: '1' }}>×</button>
         </div>
       )}
 
       {/* Liste des courriers */}
       <div className="courrier-list">
         {loading ? (
-          <div className="loading-state">⏳ Chargement...</div>
+          <div className="loading-state" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '60px 20px', background: 'white', borderRadius: '16px' }}>
+            <Loader size={20} className="animate-spin" style={{ color: '#3b82f6' }} /> 
+            <span style={{ fontSize: '15px', color: '#64748b', fontWeight: 500 }}>Chargement des courriers...</span>
+          </div>
         ) : courriers.length === 0 && !loading ? (
-          <div className="empty-state" style={{ padding: '60px', textAlign: 'center', background: 'white', borderRadius: '16px', border: '2px dashed #e2e8f0', marginTop: '20px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
-            <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>Aucun courrier trouvé</h3>
+          <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center', background: 'white', borderRadius: '16px', border: '2px dashed #e2e8f0', marginTop: '20px' }}>
+            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+              <MailOpen size={48} style={{ color: '#cbd5e1' }} />
+            </div>
+            <h3 style={{ color: '#1e293b', marginBottom: '8px', fontSize: '18px', fontWeight: 600 }}>Aucun courrier trouvé</h3>
             <p style={{ color: '#64748b', marginBottom: '24px' }}>Commencez par ajouter un nouveau courrier ou ajustez vos filtres.</p>
             <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '12px 24px' }}>
               Créer un premier courrier
@@ -629,15 +650,15 @@ export default function CourrierPage() {
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button 
                     onClick={() => setBulkAction('statut')}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🔄 Changer statut
+                    <RotateCw size={14} /> Changer statut
                   </button>
                   <button 
                     onClick={() => setBulkAction('urgence')}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    ⚡ Urgence
+                    <Zap size={14} /> Urgence
                   </button>
                   <button 
                     onClick={() => {
@@ -645,9 +666,9 @@ export default function CourrierPage() {
                         // TODO: Impl delete bulk
                       }
                     }}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🗑️ Supprimer
+                    <Trash2 size={14} /> Supprimer
                   </button>
                 </div>
               </div>
@@ -727,12 +748,12 @@ export default function CourrierPage() {
                         style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                       />
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', borderRadius: '12px 0 0 12px', fontWeight: 700, color: '#4f46e5', fontSize: '13px' }}>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', borderRadius: '12px 0 0 12px', fontWeight: 700, color: '#4f46e5', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {courrier.reference}
-                      {courrier.hasDocument && <span style={{ marginLeft: '8px' }} title="Document joint">📎</span>}
+                      {courrier.hasDocument && <Paperclip size={14} style={{ color: '#f59e0b' }} title="Document joint" />}
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 8px', textAlign: 'center', fontSize: '18px' }}>
-                      {courrier.type === 'Entrant' ? '📥' : '📤'}
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 8px', textAlign: 'center' }}>
+                      {courrier.type === 'Entrant' ? <Inbox size={18} style={{ color: '#3b82f6' }} /> : <Send size={18} style={{ color: '#8b5cf6' }} />}
                     </td>
                     <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', fontWeight: 500, color: '#1e293b', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={courrier.objet}>
                       {courrier.objet}
