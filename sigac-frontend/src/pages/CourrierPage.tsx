@@ -91,10 +91,19 @@ export default function CourrierPage() {
       setIsAdmin(user.role === 'Admin' || user.role === 'Manager')
       setCurrentUserId(user.id)
     }
-    // Chargement workspaces et users (placeholder)
-    // TODO: Remplacer par vraies fonctions si besoin
-    const loadWorkspaces = () => {};
-    const loadUsers = () => {};
+    // Chargement workspaces et users
+    const loadWorkspaces = async () => {
+      try {
+        const ws = await workspaceApi.list();
+        setWorkspaces(ws);
+      } catch (e) { /* ignore */ }
+    };
+    const loadUsers = async () => {
+      try {
+        const us = await userApi.list();
+        setUsers(us);
+      } catch (e) { /* ignore */ }
+    };
     loadWorkspaces();
     loadUsers();
   }, [])
@@ -109,15 +118,89 @@ export default function CourrierPage() {
     loadStats();
   }, [filterWorkspace]);
 
-  // Fonctions utilitaires placeholders
-  const loadCourriers = useCallback(async () => {}, []);
-  const loadStats = () => {};
+  // Chargement des courriers
+  const loadCourriers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await courrierApi.list({
+        page,
+        pageSize: 15,
+        search: search || undefined,
+        type: filterType || undefined,
+        statut: filterStatut || undefined,
+        urgence: filterUrgence || undefined,
+        workspaceId: filterWorkspace || undefined
+      });
+      setCourriers(result.data);
+      setTotalPages(result.pagination.totalPages);
+      setTotalItems(result.pagination.totalItems);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message || 'Erreur lors du chargement des courriers');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, search, filterType, filterStatut, filterUrgence, filterWorkspace]);
 
-  // Handlers placeholders à compléter selon besoin
-  const handleFileChange = () => {};
-  const handleScanJsForCourrier = () => {};
-  const handleCreateCourrier = () => {
-    alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
+  // Chargement des stats
+  const loadStats = useCallback(async () => {
+    try {
+      const statsData = await courrierApi.getStatistiques(filterWorkspace || undefined);
+      setStats(statsData);
+    } catch (e) { /* ignore */ }
+  }, [filterWorkspace]);
+
+  // Handler fichier joint
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewCourrierFile(e.target.files[0]);
+    }
+  };
+
+  // Handler scan JS
+  const handleScanJsForCourrier = async () => {
+    try {
+      const response = await fetch('http://localhost:27275/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: 'pdf' })
+      });
+      if (!response.ok) throw new Error('Erreur ScanJS: ' + response.statusText);
+      const blob = await response.blob();
+      const scannedFile = new File([blob], 'scanjs-document.pdf', { type: blob.type });
+      setNewCourrierFile(scannedFile);
+      alert('Scan terminé ! Document prêt à être joint.');
+    } catch (err) {
+      alert('Erreur lors du scan avec ScanJS. Vérifiez que ScanJS est bien lancé sur votre poste.');
+    }
+  };
+
+  // Handler création courrier
+  const handleCreateCourrier = async () => {
+    try {
+      const formData = new FormData();
+      Object.entries(newCourrier).forEach(([key, value]) => {
+        if (value) formData.append(key, value as string);
+      });
+      if (newCourrierFile) {
+        formData.append('file', newCourrierFile);
+      }
+      await courrierApi.createWithFile(formData);
+      setShowCreateModal(false);
+      setNewCourrierFile(null);
+      setNewCourrier({
+        type: 'Entrant',
+        objet: '',
+        expediteur: '',
+        destinataire: '',
+        dateCourrier: new Date().toISOString().split('T')[0],
+        urgence: 'Normale'
+      });
+      loadCourriers();
+      loadStats();
+    } catch (e: any) {
+      setError(e.message || 'Erreur lors de la création du courrier');
+    }
   };
 
   const handleOcrReception = async () => {
@@ -183,6 +266,10 @@ export default function CourrierPage() {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  function handleViewCourrier(courrier: CourrierListDto) {
+    throw new Error('Function not implemented.');
   }
 
   return (
