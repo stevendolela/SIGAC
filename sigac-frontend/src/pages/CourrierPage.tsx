@@ -329,22 +329,45 @@ export default function CourrierPage() {
           </p>
         </div>
         {stats && (
-          <div className="courrier-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-              <div style={{ color: '#64748b', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Total Courriers</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.total}</div>
+          <div className="courrier-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+            {/* Stat: Total */}
+            <div className="stat-card stat-total" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</span>
+                <span style={{ fontSize: '24px' }}>📬</span>
+              </div>
+              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.totalCourriers}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>tous les courriers</div>
             </div>
-            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.Recu}` }}>
-              <div style={{ color: STATUT_COURRIER_COLORS.Recu, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Nouveaux</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.recu}</div>
+
+            {/* Stat: À traiter */}
+            <div className="stat-card stat-warning" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #f59e0b`, transition: 'all 0.2s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>À traiter</span>
+                <span style={{ fontSize: '24px' }}>⚡</span>
+              </div>
+              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{(stats.recu || 0) + (stats.enTraitement || 0)}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>nouveaux + en cours</div>
             </div>
-            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.EnTraitement}` }}>
-              <div style={{ color: STATUT_COURRIER_COLORS.EnTraitement, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>En cours</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.enTraitement}</div>
+
+            {/* Stat: Urgents */}
+            <div className="stat-card stat-urgent" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #ef4444`, transition: 'all 0.2s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Urgents</span>
+                <span style={{ fontSize: '24px' }}>🔴</span>
+              </div>
+              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.urgents || 0}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>marqés urgents</div>
             </div>
-            <div className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `6px solid ${STATUT_COURRIER_COLORS.Traite}` }}>
-              <div style={{ color: STATUT_COURRIER_COLORS.Traite, fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Traités</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{stats.traite}</div>
+
+            {/* Stat: Traités */}
+            <div className="stat-card stat-success" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #10b981`, transition: 'all 0.2s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Traités</span>
+                <span style={{ fontSize: '24px' }}>✅</span>
+              </div>
+              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{stats.traites || 0}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>processus terminés</div>
             </div>
           </div>
         )}
