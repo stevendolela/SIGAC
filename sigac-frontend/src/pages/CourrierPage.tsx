@@ -527,24 +527,22 @@ export default function CourrierPage() {
               <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              {/* Ajout bouton scan physique */}
-              <div className="form-group">
-                <button
-                  className="btn btn-outline-primary"
-                  type="button"
-                  onClick={handlePhysicalScan}
-                  style={{ marginBottom: 8 }}
-                >
-                  <span role="img" aria-label="scanner">🖨️</span> Scanner un document (physique)
-                </button>
-                <button
-                  className="btn btn-outline-info"
-                  type="button"
-                  onClick={handleScanJsForCourrier}
-                  style={{ marginLeft: 8, marginBottom: 8 }}
-                >
-                  <span role="img" aria-label="scanjs">📠</span> Scanner avec ScanJS
-                </button>
+              {/* Bloc document joint ergonomique */}
+              <div className="form-group" style={{ background: '#f7fafd', borderRadius: 8, padding: 16, marginBottom: 16, border: '1px solid #e0e6ed' }}>
+                <label style={{ fontWeight: 600 }}>Document joint (optionnel)</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input type="file" accept=".pdf,image/*" onChange={handleFileChange} style={{ flex: 1 }} />
+                  <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier}>
+                    <span role="img" aria-label="scanjs">📠</span> Scanner avec ScanJS
+                  </button>
+                  {newCourrierFile && (
+                    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: '#2a5d9f', fontWeight: 500 }}>📎 {newCourrierFile.name}</span>
+                      <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
+                    </div>
+                  )}
+                </div>
+                <small style={{ color: '#888' }}>PDF ou image, max 50 Mo</small>
               </div>
               <div className="form-row">
                 <div className="form-group">
