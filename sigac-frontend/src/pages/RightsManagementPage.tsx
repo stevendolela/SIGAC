@@ -298,52 +298,51 @@ export default function RightsManagementPage() {
         </div>
       )}
 
-      {/* Matrice des permissions */}
+      {/* Matrice des permissions - Vue en cartes */}
       {!loading && permissions.length > 0 && (
-        <div style={{ background: 'white', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #e2e8f0' }}>
-                  <th style={{ padding: '20px 24px', textAlign: 'left', color: '#475569', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '300px' }}>
-                    Module Applicatif
-                  </th>
-                  {ROLES.map(role => (
-                    <th key={role} style={{ padding: '20px 16px', textAlign: 'center', color: '#475569', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '140px' }}>
-                      {ROLE_LABELS[role]}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {permissions.map((mod, idx) => (
-                  <tr key={mod.moduleKey} style={{ borderBottom: idx === permissions.length - 1 ? 'none' : '1px solid #f1f5f9', transition: 'background 0.2s' }} className="hover-row">
-                    <td style={{ padding: '20px 24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f0f4ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {mod.icon}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '15px' }}>{mod.label}</div>
-                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{mod.description}</div>
-                        </div>
-                      </div>
-                    </td>
+        <div>
+          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e293b' }}>Matrice des Permissions</h2>
+            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500 }}>({permissions.length} modules)</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', gap: '16px' }}>
+            {permissions.map((mod) => (
+              <div key={mod.moduleKey} style={{ background: 'white', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0', overflow: 'hidden', transition: 'all 0.2s' }}>
+                {/* Module Header */}
+                <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f0f4ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {mod.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '14px' }}>{mod.label}</div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{mod.description}</div>
+                  </div>
+                </div>
+
+                {/* Roles Grid */}
+                <div style={{ padding: '16px 20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     {ROLES.map(role => {
                       const permissionData = mod.roles[role];
                       const isRestricted = role === 'Admin' && mod.moduleKey === 'admin';
                       const hasChanged = changedPermissions.has(`${mod.moduleKey}:${role}`);
                       
                       return (
-                        <td key={role} style={{ padding: '16px', textAlign: 'center', background: hasChanged ? '#f0f4ff' : 'transparent' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                        <div key={role} style={{ 
+                          padding: '12px', 
+                          background: hasChanged ? '#f0f4ff' : '#f9fafb',
+                          borderRadius: '10px',
+                          border: hasChanged ? '1px solid #dbeafe' : '1px solid #e5e7eb',
+                          transition: 'all 0.2s'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             {/* Toggle hasAccess */}
                             <button
                               onClick={() => handleToggle(mod.moduleKey, role, 'hasAccess')}
                               disabled={isRestricted}
                               title={permissionData?.hasAccess ? 'Accès autorisé' : 'Accès refusé'}
                               style={{
-                                width: '44px',
+                                width: '40px',
                                 height: '24px',
                                 borderRadius: '12px',
                                 border: 'none',
@@ -352,7 +351,8 @@ export default function RightsManagementPage() {
                                 cursor: isRestricted ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.3s ease',
                                 opacity: isRestricted ? 0.6 : 1,
-                                padding: 0
+                                padding: 0,
+                                flexShrink: 0
                               }}
                             >
                               <div style={{
@@ -362,7 +362,7 @@ export default function RightsManagementPage() {
                                 background: 'white',
                                 position: 'absolute',
                                 top: '3px',
-                                left: permissionData?.hasAccess ? '23px' : '3px',
+                                left: permissionData?.hasAccess ? '21px' : '1px',
                                 transition: 'all 0.3s ease',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -372,107 +372,102 @@ export default function RightsManagementPage() {
                                 {permissionData?.hasAccess ? <Check size={12} color="#10b981" strokeWidth={3} /> : <X size={12} color="#94a3b8" strokeWidth={3} />}
                               </div>
                             </button>
-
-                            {/* Additional permissions (if hasAccess) */}
-                            {permissionData?.hasAccess && !isRestricted && (
-                              <div style={{ display: 'flex', gap: '6px', fontSize: '11px', justifyContent: 'center' }}>
-                                <button
-                                  onClick={() => handleToggle(mod.moduleKey, role, 'canCreate')}
-                                  title="Créer"
-                                  style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    background: permissionData?.canCreate ? '#3b82f6' : '#e5e7eb',
-                                    color: permissionData?.canCreate ? 'white' : '#6b7280',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  }}
-                                >
-                                  C
-                                </button>
-                                <button
-                                  onClick={() => handleToggle(mod.moduleKey, role, 'canUpdate')}
-                                  title="Modifier"
-                                  style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    background: permissionData?.canUpdate ? '#8b5cf6' : '#e5e7eb',
-                                    color: permissionData?.canUpdate ? 'white' : '#6b7280',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  }}
-                                >
-                                  U
-                                </button>
-                                <button
-                                  onClick={() => handleToggle(mod.moduleKey, role, 'canDelete')}
-                                  title="Supprimer"
-                                  style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    background: permissionData?.canDelete ? '#ef4444' : '#e5e7eb',
-                                    color: permissionData?.canDelete ? 'white' : '#6b7280',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  }}
-                                >
-                                  D
-                                </button>
-                                <button
-                                  onClick={() => handleToggle(mod.moduleKey, role, 'canExport')}
-                                  title="Exporter"
-                                  style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    background: permissionData?.canExport ? '#06b6d4' : '#e5e7eb',
-                                    color: permissionData?.canExport ? 'white' : '#6b7280',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                  }}
-                                >
-                                  E
-                                </button>
-                              </div>
-                            )}
-
-                            {/* Lock icon for restricted permissions */}
-                            {isRestricted && (
-                              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500 }}>
-                                <Lock size={10} style={{ display: 'inline' }} /> Requis
-                              </div>
-                            )}
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', flex: 1 }}>{ROLE_LABELS[role]}</span>
+                            {isRestricted && <Lock size={14} color="#94a3b8" />}
                           </div>
-                        </td>
+
+                          {/* Additional permissions (if hasAccess) */}
+                          {permissionData?.hasAccess && !isRestricted && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                              <button
+                                onClick={() => handleToggle(mod.moduleKey, role, 'canCreate')}
+                                title="Créer"
+                                style={{
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: permissionData?.canCreate ? '#3b82f6' : '#e5e7eb',
+                                  color: permissionData?.canCreate ? 'white' : '#6b7280',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                C
+                              </button>
+                              <button
+                                onClick={() => handleToggle(mod.moduleKey, role, 'canUpdate')}
+                                title="Modifier"
+                                style={{
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: permissionData?.canUpdate ? '#8b5cf6' : '#e5e7eb',
+                                  color: permissionData?.canUpdate ? 'white' : '#6b7280',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                U
+                              </button>
+                              <button
+                                onClick={() => handleToggle(mod.moduleKey, role, 'canDelete')}
+                                title="Supprimer"
+                                style={{
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: permissionData?.canDelete ? '#ef4444' : '#e5e7eb',
+                                  color: permissionData?.canDelete ? 'white' : '#6b7280',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                D
+                              </button>
+                              <button
+                                onClick={() => handleToggle(mod.moduleKey, role, 'canExport')}
+                                title="Exporter"
+                                style={{
+                                  height: '24px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: permissionData?.canExport ? '#06b6d4' : '#e5e7eb',
+                                  color: permissionData?.canExport ? 'white' : '#6b7280',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                E
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
