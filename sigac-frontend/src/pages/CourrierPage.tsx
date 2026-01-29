@@ -679,26 +679,25 @@ export default function CourrierPage() {
               </div>
             )}
 
-            <table className="courrier-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+            <table className="courrier-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
               <thead>
-                <tr>
-                  <th style={{ width: '40px' }}>
+                <tr style={{ backgroundColor: '#f8fafc', borderRadius: '12px' }}>
+                  <th style={{ width: '40px', textAlign: 'center', padding: '14px 8px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <input
                       type="checkbox"
                       checked={selectedIds.size === courriers.length && courriers.length > 0}
                       onChange={handleSelectAll}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                     />
                   </th>
-                  <th>Référence</th>
-                  <th>Type</th>
-                  <th>Objet</th>
-                  <th>Expéditeur</th>
-                  <th>Destinataire</th>
-                  <th>Date</th>
-                  <th>Statut</th>
-                  <th>Urgence</th>
-                  <th>Actions</th>
+                  <th style={{ textAlign: 'left', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Référence</th>
+                  <th style={{ textAlign: 'center', padding: '14px 8px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
+                  <th style={{ textAlign: 'left', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Objet</th>
+                  <th style={{ textAlign: 'left', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expéditeur</th>
+                  <th style={{ textAlign: 'left', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destinataire</th>
+                  <th style={{ textAlign: 'center', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date</th>
+                  <th style={{ textAlign: 'center', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Statut</th>
+                  <th style={{ textAlign: 'center', padding: '14px 16px', fontWeight: 600, color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Urgence</th>
                 </tr>
               </thead>
               <tbody>
@@ -706,56 +705,79 @@ export default function CourrierPage() {
                   <tr 
                     key={courrier.id} 
                     className="courrier-row"
-                    style={{ cursor: 'pointer', transition: 'all 0.2s', background: selectedIds.has(courrier.id) ? '#eff6ff' : 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: selectedIds.has(courrier.id) ? '2px solid #3b82f6' : '1px solid transparent' }}
+                    style={{ 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s ease-in-out', 
+                      backgroundColor: selectedIds.has(courrier.id) ? '#eff6ff' : 'white',
+                      boxShadow: selectedIds.has(courrier.id) 
+                        ? '0 0 0 2px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.15)' 
+                        : '0 2px 8px rgba(0,0,0,0.04)',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      borderColor: selectedIds.has(courrier.id) ? '#3b82f6' : '#e2e8f0'
+                    }}
+                    onMouseEnter={(e) => !selectedIds.has(courrier.id) && (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)')}
+                    onMouseLeave={(e) => !selectedIds.has(courrier.id) && (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)')}
                   >
-                    <td style={{ padding: '20px', width: '40px' }} onClick={(e) => e.stopPropagation()}>
+                    <td style={{ padding: '16px 8px', width: '40px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.has(courrier.id)}
                         onChange={() => handleSelectCourrier(courrier.id)}
-                        style={{ cursor: 'pointer' }}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                       />
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)} className="ref-cell" style={{ padding: '20px', borderRadius: '16px 0 0 16px', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderLeft: '1px solid #e2e8f0' }}>
-                      <span className="reference" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '14px' }}>{courrier.reference}</span>
-                      {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', borderRadius: '12px 0 0 12px', fontWeight: 700, color: '#4f46e5', fontSize: '13px' }}>
+                      {courrier.reference}
+                      {courrier.hasDocument && <span style={{ marginLeft: '8px' }} title="Document joint">📎</span>}
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)}>
-                      <span className={`type-badge ${(courrier.type || 'entrant').toLowerCase()}`}>
-                        {TYPE_COURRIER_LABELS[courrier.type]}
-                      </span>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 8px', textAlign: 'center', fontSize: '18px' }}>
+                      {courrier.type === 'Entrant' ? '📥' : '📤'}
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)} className="objet-cell" title={courrier.objet} style={{ fontWeight: 600, color: '#1e293b' }}>
-                      {courrier.objet.length > 40 ? courrier.objet.substring(0, 40) + '...' : courrier.objet}
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', fontWeight: 500, color: '#1e293b', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={courrier.objet}>
+                      {courrier.objet}
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#475569' }}>{courrier.expediteur}</td>
-                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#475569' }}>{courrier.destinataire}</td>
-                    <td onClick={() => handleViewCourrier(courrier)} style={{ color: '#94a3b8', fontSize: '13px' }}>{formatDate(courrier.dateCourrier)}</td>
-                    <td onClick={() => handleViewCourrier(courrier)}>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', color: '#475569', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={courrier.expediteur}>
+                      {courrier.expediteur && courrier.expediteur !== 'À déterminer' ? courrier.expediteur : '-'}
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', color: '#475569', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={courrier.destinataire}>
+                      {courrier.destinataire && courrier.destinataire !== 'À déterminer' ? courrier.destinataire : '-'}
+                    </td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', color: '#64748b', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'center' }}>{formatDate(courrier.dateCourrier)}</td>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', textAlign: 'center' }}>
                       <span
-                        className="statut-badge"
-                        style={{ backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}
+                        style={{ 
+                          backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], 
+                          color: 'white', 
+                          padding: '6px 12px', 
+                          borderRadius: '20px', 
+                          fontSize: '11px', 
+                          fontWeight: 700,
+                          display: 'inline-block',
+                          minWidth: '85px'
+                        }}
                       >
                         {STATUT_COURRIER_LABELS[courrier.statut]}
                       </span>
                     </td>
-                    <td onClick={() => handleViewCourrier(courrier)}>
+                    <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', textAlign: 'center', borderRadius: '0 12px 12px 0' }}>
                       <span
-                        className="urgence-badge"
-                        style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], border: '1px solid', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        style={{ 
+                          color: URGENCE_COURRIER_COLORS[courrier.urgence], 
+                          borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], 
+                          border: '2px solid', 
+                          padding: '5px 10px', 
+                          borderRadius: '20px', 
+                          fontSize: '11px', 
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
                       >
-                        <span className="dot" style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}></span>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence], display: 'inline-block' }}></span>
                         {URGENCE_COURRIER_LABELS[courrier.urgence]}
                       </span>
-                    </td>
-                    <td style={{ padding: '20px', borderRadius: '0 16px 16px 0', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="btn btn-icon"
-                        onClick={() => handleViewCourrier(courrier)}
-                        title="Voir détails"
-                      >
-                        👁️
-                      </button>
                     </td>
                   </tr>
                 ))}
