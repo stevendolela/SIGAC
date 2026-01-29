@@ -77,6 +77,7 @@ export default function CourrierPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showOcrModal, setShowOcrModal] = useState(false)
   const [selectedCourrier, setSelectedCourrier] = useState<CourrierDetailDto | null>(null)
+  const [activeDetailTab, setActiveDetailTab] = useState<'infos' | 'document' | 'historique'>('infos')
 
   // Formulaire création
   const [newCourrier, setNewCourrier] = useState<CreateCourrierDto>({
@@ -302,6 +303,7 @@ export default function CourrierPage() {
       
       // Fallback sur le DTO liste (il manque peut-être l'historique)
       setSelectedCourrier(courrier as unknown as CourrierDetailDto);
+      setActiveDetailTab('infos');
       setShowDetailModal(true);
     } catch (e) {
       console.error(e);
@@ -316,6 +318,26 @@ export default function CourrierPage() {
           <h1>📬 Gestion du Courrier</h1>
           <span className="subtitle">{totalItems} courrier(s) au total</span>
         </div>
+        {stats && (
+          <div className="courrier-stats">
+            <div className="stat-card">
+              <span className="stat-value">{stats.total}</span>
+              <span className="stat-label">Total</span>
+            </div>
+            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.Recu} as React.CSSProperties}>
+              <span className="stat-value">{stats.recu}</span>
+              <span className="stat-label">Reçus</span>
+            </div>
+            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.EnTraitement} as React.CSSProperties}>
+              <span className="stat-value">{stats.enTraitement}</span>
+              <span className="stat-label">En Traitement</span>
+            </div>
+            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.Traite} as React.CSSProperties}>
+              <span className="stat-value">{stats.traite}</span>
+              <span className="stat-label">Traités</span>
+            </div>
+          </div>
+        )}
         <div className="header-actions">
           <div className="search-box">
             <span className="search-icon">🔍</span>
@@ -374,6 +396,9 @@ export default function CourrierPage() {
           </select>
         )}
 
+          <button className="btn btn-secondary" onClick={() => setShowOcrModal(true)}>
+            📷 OCR
+          </button>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
             ➕ Nouveau
           </button>
@@ -417,7 +442,7 @@ export default function CourrierPage() {
             </thead>
             <tbody>
               {courriers.map(courrier => (
-                <tr key={courrier.id} onClick={() => handleViewCourrier(courrier)}>
+                <tr key={courrier.id} onClick={() => handleViewCourrier(courrier)} className="courrier-row">
                   <td className="ref-cell">
                     <span className="reference">{courrier.reference}</span>
                     {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
@@ -444,8 +469,9 @@ export default function CourrierPage() {
                   <td>
                     <span
                       className="urgence-badge"
-                      style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}
+                      style={{ color: URGENCE_COURRIER_COLORS[courrier.urgence], borderColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}
                     >
+                      <span className="dot" style={{ backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence] }}></span>
                       {URGENCE_COURRIER_LABELS[courrier.urgence]}
                     </span>
                   </td>
@@ -489,15 +515,15 @@ export default function CourrierPage() {
       {/* Modal Création */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()}>
-            <div className="modal-nc-header modal-nc-header-compact">
+          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '700px'}}>
+            <div className="modal-nc-header modal-nc-header-sticky">
               <span className="modal-nc-icone">📬</span>
               <h2 className="modal-nc-title">Nouveau courrier</h2>
               <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
             </div>
-            <div className="modal-nc-body modal-nc-body-ergonomique">
-              <div className="modal-nc-doc modal-nc-doc-ergonomique">
-                <label>Document joint <span className="modal-nc-doc-prec">(optionnel)</span></label>
+            <div className="modal-nc-scrollable">
+              <section className="modal-nc-section">
+                <h3 className="modal-nc-section-title">Document joint <span className="modal-nc-doc-prec">(optionnel)</span></h3>
                 <div className="modal-nc-doc-row modal-nc-doc-row-ergonomique">
                   <span className="modal-nc-doc-choix">Choisir un fichier</span>
                   <label className="modal-nc-file-label">
@@ -516,75 +542,79 @@ export default function CourrierPage() {
                   )}
                 </div>
                 <small>PDF ou image, max 50 Mo</small>
-              </div>
-              <div className="modal-nc-row modal-nc-row-ergonomique">
-                <div>
-                  <label>Type *</label>
-                  <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
-                    <option value="Entrant">📥 Entrant</option>
-                    <option value="Sortant">📤 Sortant</option>
-                  </select>
+              </section>
+              <section className="modal-nc-section">
+                <h3 className="modal-nc-section-title">Informations principales</h3>
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Type *</label>
+                    <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
+                      <option value="Entrant">📥 Entrant</option>
+                      <option value="Sortant">📤 Sortant</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Urgence *</label>
+                    <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
+                      <option value="Normale">🟢 Normale</option>
+                      <option value="Importante">🟡 Importante</option>
+                      <option value="Urgente">🟠 Urgente</option>
+                      <option value="TresUrgente">🔴 Très Urgente</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label>Urgence *</label>
-                  <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
-                    <option value="Normale">🟢 Normale</option>
-                    <option value="Importante">🟡 Importante</option>
-                    <option value="Urgente">🟠 Urgente</option>
-                    <option value="TresUrgente">🔴 Très Urgente</option>
-                  </select>
+                  <label>Objet *</label>
+                  <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
                 </div>
-              </div>
-              <div>
-                <label>Objet *</label>
-                <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
-              </div>
-              <div className="modal-nc-row modal-nc-row-ergonomique">
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Expéditeur *</label>
+                    <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
+                  </div>
+                  <div>
+                    <label>Destinataire *</label>
+                    <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
+                  </div>
+                </div>
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Date du courrier *</label>
+                    <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
+                  </div>
+                  <div>
+                    <label>Référence externe</label>
+                    <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
+                  </div>
+                </div>
+                {workspaces.length > 0 && (
+                  <div>
+                    <label>Workspace</label>
+                    <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
+                      <option value="">-- Sélectionner --</option>
+                      {workspaces.map(ws => (
+                        <option key={ws.id} value={ws.id}>{ws.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
-                  <label>Expéditeur *</label>
-                  <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
+                  <label>Notes</label>
+                  <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
                 </div>
-                <div>
-                  <label>Destinataire *</label>
-                  <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
-                </div>
-              </div>
-              <div className="modal-nc-row modal-nc-row-ergonomique">
-                <div>
-                  <label>Date du courrier *</label>
-                  <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
-                </div>
-                <div>
-                  <label>Référence externe</label>
-                  <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
-                </div>
-              </div>
-              {workspaces.length > 0 && (
-                <div>
-                  <label>Workspace</label>
-                  <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
-                    <option value="">-- Sélectionner --</option>
-                    {workspaces.map(ws => (
-                      <option key={ws.id} value={ws.id}>{ws.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <div>
-                <label>Notes</label>
-                <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
-              </div>
+              </section>
             </div>
-            <div className="modal-footer modal-nc-footer modal-nc-footer-align">
-              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
+            <div className="modal-nc-footer modal-nc-footer-fixed">
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button">
                 Annuler
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleCreateCourrier}
-                disabled={!newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire}
+                disabled={loadingCreateCourrier || !newCourrier.objet || !newCourrier.expediteur || !newCourrier.destinataire}
+                type="button"
               >
-                Créer le courrier
+                {loadingCreateCourrier ? 'Création...' : 'Créer le courrier'}
               </button>
             </div>
           </div>
@@ -594,7 +624,7 @@ export default function CourrierPage() {
       {/* Modal OCR */}
       {showOcrModal && (
         <div className="modal-overlay" onClick={() => setShowOcrModal(false)}>
-          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px'}}>
             <div className="modal-header">
               <h2>📷 Scanner & Analyser (OCR)</h2>
               <button className="close-btn" onClick={() => setShowOcrModal(false)}>✕</button>
@@ -611,7 +641,7 @@ export default function CourrierPage() {
                 {ocrFile ? (
                   <div className="file-preview">
                     <span className="file-icon">📄</span>
-                    <span className="file-name">{ocrFile.name}</span>
+                    <span className="file-name" title={ocrFile.name}>{ocrFile.name}</span>
                     <button className="btn btn-icon" onClick={() => setOcrFile(null)}>✕</button>
                   </div>
                 ) : (
@@ -622,7 +652,7 @@ export default function CourrierPage() {
                   </div>
                 )}
               </div>
-              <div className="form-row">
+              <div className="modal-nc-row modal-nc-row-ergonomique" style={{marginTop: '1rem'}}>
                 <div className="form-group">
                   <label>Type *</label>
                   <select
@@ -693,134 +723,144 @@ export default function CourrierPage() {
       {/* Modal Détail */}
       {showDetailModal && selectedCourrier && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>📬 {selectedCourrier.reference}</h2>
-              <button className="close-btn" onClick={() => setShowDetailModal(false)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div className="detail-grid">
-                <div className="detail-section">
-                  <h3>Informations générales</h3>
-                  <div className="detail-row">
-                    <span className="detail-label">Type:</span>
-                    <span className={`type-badge ${(selectedCourrier.type || 'entrant').toLowerCase()}`}>
-                      {TYPE_COURRIER_LABELS[selectedCourrier.type]}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Objet:</span>
-                    <span className="detail-value">{selectedCourrier.objet}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Expéditeur:</span>
-                    <span className="detail-value">{selectedCourrier.expediteur}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Destinataire:</span>
-                    <span className="detail-value">{selectedCourrier.destinataire}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Date du courrier:</span>
-                    <span className="detail-value">{formatDate(selectedCourrier.dateCourrier)}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Date de réception:</span>
-                    <span className="detail-value">{formatDateTime(selectedCourrier.dateReception)}</span>
-                  </div>
-                </div>
-                <div className="detail-section">
-                  <h3>Statut & Urgence</h3>
-                  <div className="detail-row">
-                    <span className="detail-label">Statut:</span>
-                    <span
-                      className="statut-badge"
-                      style={{ backgroundColor: STATUT_COURRIER_COLORS[selectedCourrier.statut] }}
-                    >
-                      {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Urgence:</span>
-                    <span
-                      className="urgence-badge"
-                      style={{ backgroundColor: URGENCE_COURRIER_COLORS[selectedCourrier.urgence] }}
-                    >
-                      {URGENCE_COURRIER_LABELS[selectedCourrier.urgence]}
-                    </span>
-                  </div>
-                  {selectedCourrier.referenceExterne && (
-                    <div className="detail-row">
-                      <span className="detail-label">Réf. externe:</span>
-                      <span className="detail-value">{selectedCourrier.referenceExterne}</span>
-                    </div>
-                  )}
-                  {selectedCourrier.dossierReference && (
-                    <div className="detail-row">
-                      <span className="detail-label">Dossier lié:</span>
-                      <span className="detail-value link">{selectedCourrier.dossierReference}</span>
-                    </div>
-                  )}
-                  {selectedCourrier.assigneANom && (
-                    <div className="detail-row">
-                      <span className="detail-label">Assigné à:</span>
-                      <span className="detail-value">{selectedCourrier.assigneANom}</span>
-                    </div>
-                  )}
-                </div>
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '900px', padding: 0, overflow: 'hidden'}}>
+            {/* En-tête moderne avec gradient style DossierDetailModal */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '24px 32px',
+              color: 'white',
+              position: 'relative'
+            }}>
+              <button className="close-btn" onClick={() => setShowDetailModal(false)} style={{ color: 'white', top: '20px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+              <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 6, letterSpacing: '0.5px' }}>
+                📬 Courrier Réf.
               </div>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+                {selectedCourrier.reference}
+              </h2>
+              <div style={{ fontSize: 16, marginTop: 8, opacity: 0.95 }}>
+                {selectedCourrier.objet}
+              </div>
+              
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <span className="statut-badge" style={{ backgroundColor: STATUT_COURRIER_COLORS[selectedCourrier.statut], border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
+                  {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
+                </span>
+                <span className="urgence-badge" style={{ backgroundColor: URGENCE_COURRIER_COLORS[selectedCourrier.urgence], border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
+                  {URGENCE_COURRIER_LABELS[selectedCourrier.urgence]}
+                </span>
+              </div>
+            </div>
 
-              {/* Document */}
-              {selectedCourrier.hasDocument && (
-                <div className="detail-section document-section">
-                  <h3>📎 Document joint</h3>
-                  <div className="document-info">
-                    <span className="doc-icon">📄</span>
-                    <span className="doc-name">{selectedCourrier.nomFichier}</span>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleDownloadDocument(selectedCourrier.id, selectedCourrier.nomFichier || 'document')}
-                    >
-                      ⬇️ Télécharger
-                    </button>
+            {/* Navigation par onglets */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '0 32px' }}>
+              <button 
+                onClick={() => setActiveDetailTab('infos')}
+                style={{
+                  padding: '14px 20px', border: 'none', background: 'transparent',
+                  color: activeDetailTab === 'infos' ? '#5b21b6' : '#64748b',
+                  fontWeight: activeDetailTab === 'infos' ? 600 : 400,
+                  borderBottom: activeDetailTab === 'infos' ? '3px solid #5b21b6' : '3px solid transparent',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >ℹ️ Détails</button>
+              <button 
+                onClick={() => setActiveDetailTab('document')}
+                style={{
+                  padding: '14px 20px', border: 'none', background: 'transparent',
+                  color: activeDetailTab === 'document' ? '#5b21b6' : '#64748b',
+                  fontWeight: activeDetailTab === 'document' ? 600 : 400,
+                  borderBottom: activeDetailTab === 'document' ? '3px solid #5b21b6' : '3px solid transparent',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >📎 Document & OCR</button>
+              <button 
+                onClick={() => setActiveDetailTab('historique')}
+                style={{
+                  padding: '14px 20px', border: 'none', background: 'transparent',
+                  color: activeDetailTab === 'historique' ? '#5b21b6' : '#64748b',
+                  fontWeight: activeDetailTab === 'historique' ? 600 : 400,
+                  borderBottom: activeDetailTab === 'historique' ? '3px solid #5b21b6' : '3px solid transparent',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >📜 Historique</button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '24px 32px', maxHeight: '65vh', overflowY: 'auto', background: '#f8fafc' }}>
+              {activeDetailTab === 'infos' && (
+                <div style={{ display: 'grid', gap: 20 }}>
+                  <div className="detail-grid">
+                    <div className="detail-section card-like" style={{ margin: 0 }}>
+                      <h3>Expédition & Réception</h3>
+                      <div className="detail-row"><span className="detail-label">Expéditeur:</span><span className="detail-value">{selectedCourrier.expediteur}</span></div>
+                      <div className="detail-row"><span className="detail-label">Destinataire:</span><span className="detail-value">{selectedCourrier.destinataire}</span></div>
+                      <div className="detail-row"><span className="detail-label">Date Courrier:</span><span className="detail-value">{formatDate(selectedCourrier.dateCourrier)}</span></div>
+                      <div className="detail-row"><span className="detail-label">Date Réception:</span><span className="detail-value">{formatDateTime(selectedCourrier.dateReception)}</span></div>
+                    </div>
+                    <div className="detail-section card-like" style={{ margin: 0 }}>
+                      <h3>Liaisons & Attribution</h3>
+                      <div className="detail-row"><span className="detail-label">Réf. externe:</span><span className="detail-value">{selectedCourrier.referenceExterne || '-'}</span></div>
+                      <div className="detail-row"><span className="detail-label">Dossier lié:</span><span className="detail-value link">{selectedCourrier.dossierReference || 'Aucun'}</span></div>
+                      <div className="detail-row"><span className="detail-label">Assigné à:</span><span className="detail-value">{selectedCourrier.assigneANom || 'Non assigné'}</span></div>
+                    </div>
                   </div>
-                  {selectedCourrier.confianceOCR && (
-                    <div className="ocr-confidence">
-                      <span>Confiance OCR:</span>
-                      <div className="confidence-bar">
-                        <div
-                          className="confidence-fill"
-                          style={{ width: `${selectedCourrier.confianceOCR}%` }}
-                        />
+                  
+                  {selectedCourrier.notes && (
+                    <div className="detail-section card-like" style={{ margin: 0 }}>
+                      <h3>📝 Notes</h3>
+                      <p className="notes-text">{selectedCourrier.notes}</p>
+                    </div>
+                  )}
+
+                  <div className="detail-section card-like" style={{ margin: 0 }}>
+                    <h3>⚡ Actions rapides</h3>
+                    <div className="action-buttons">
+                      {selectedCourrier.statut === 'Recu' && (
+                        <button className="btn btn-warning" onClick={() => handleChangerStatut(selectedCourrier.id, 'EnTraitement')}>⚙️ Traiter</button>
+                      )}
+                      {selectedCourrier.statut === 'EnTraitement' && (
+                        <button className="btn btn-success" onClick={() => handleChangerStatut(selectedCourrier.id, 'Traite')}>✅ Terminer</button>
+                      )}
+                      {selectedCourrier.statut !== 'Archive' && (
+                        <button className="btn btn-secondary" onClick={() => handleChangerStatut(selectedCourrier.id, 'Archive')}>📦 Archiver</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeDetailTab === 'document' && (
+                <div style={{ display: 'grid', gap: 20 }}>
+                  {selectedCourrier.hasDocument ? (
+                    <>
+                      <div className="detail-section document-section card-like" style={{ margin: 0 }}>
+                        <h3>📎 Fichier joint</h3>
+                        <div className="document-info">
+                          <span className="doc-icon">📄</span>
+                          <span className="doc-name">{selectedCourrier.nomFichier}</span>
+                          <button className="btn btn-secondary" onClick={() => handleDownloadDocument(selectedCourrier.id, selectedCourrier.nomFichier || 'document')}>⬇️ Télécharger</button>
+                        </div>
                       </div>
-                      <span>{selectedCourrier.confianceOCR}%</span>
+                      {selectedCourrier.texteOCR && (
+                        <div className="detail-section ocr-section card-like" style={{ margin: 0 }}>
+                          <h3>📝 Texte OCR extrait</h3>
+                          <div className="ocr-text" style={{ whiteSpace: 'pre-wrap', fontSize: '13px', color: '#334155' }}>{selectedCourrier.texteOCR}</div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>
+                      <div style={{ fontSize: 48, marginBottom: 12 }}>📂</div>
+                      <p>Aucun document joint à ce courrier</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* OCR Text */}
-              {selectedCourrier.texteOCR && (
-                <div className="detail-section ocr-section">
-                  <h3>📝 Texte OCR extrait</h3>
-                  <div className="ocr-text">
-                    {selectedCourrier.texteOCR}
-                  </div>
-                </div>
-              )}
-
-              {/* Notes */}
-              {selectedCourrier.notes && (
-                <div className="detail-section">
-                  <h3>📝 Notes</h3>
-                  <p className="notes-text">{selectedCourrier.notes}</p>
-                </div>
-              )}
-
-              {/* Historique */}
-              {selectedCourrier.historiques && selectedCourrier.historiques.length > 0 && (
-                <div className="detail-section history-section">
-                  <h3>📜 Historique</h3>
+              {activeDetailTab === 'historique' && (
+                <div className="detail-section history-section card-like" style={{ margin: 0 }}>
+                  <h3>📜 Historique des actions</h3>
+                  {selectedCourrier.historiques && selectedCourrier.historiques.length > 0 ? (
                   <div className="history-timeline">
                     {selectedCourrier.historiques.map((h, idx) => (
                       <div key={h.id} className="history-item">
@@ -835,49 +875,13 @@ export default function CourrierPage() {
                       </div>
                     ))}
                   </div>
+                  ) : (
+                    <p style={{ textAlign: 'center', color: '#64748b', padding: 20 }}>Aucun historique disponible</p>
+                  )}
                 </div>
               )}
-
-              {/* Actions de changement de statut */}
-              <div className="detail-section actions-section">
-                <h3>⚡ Actions rapides</h3>
-                <div className="action-buttons">
-                  {selectedCourrier.statut === 'Recu' && (
-                    <button
-                      className="btn btn-warning"
-                      onClick={() => handleChangerStatut(selectedCourrier.id, 'EnTraitement')}
-                    >
-                      ⚙️ Mettre en traitement
-                    </button>
-                  )}
-                  {selectedCourrier.statut === 'EnTraitement' && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleChangerStatut(selectedCourrier.id, 'Traite')}
-                    >
-                      ✅ Marquer traité
-                    </button>
-                  )}
-                  {selectedCourrier.statut !== 'Archive' && selectedCourrier.statut !== 'Rejete' && (
-                    <>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleChangerStatut(selectedCourrier.id, 'Archive')}
-                      >
-                        📦 Archiver
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleChangerStatut(selectedCourrier.id, 'Rejete')}
-                      >
-                        ❌ Rejeter
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ padding: '16px 32px', background: 'white', borderTop: '1px solid #e2e8f0' }}>
               <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
                 Fermer
               </button>
