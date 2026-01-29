@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
+import { useToast } from '../components/common/ToastProvider';
 import type {
   CourrierListDto,
   CourrierDetailDto,
@@ -78,6 +79,7 @@ export default function CourrierPage() {
   const [showOcrModal, setShowOcrModal] = useState(false)
   const [selectedCourrier, setSelectedCourrier] = useState<CourrierDetailDto | null>(null)
   const [activeDetailTab, setActiveDetailTab] = useState<'infos' | 'document' | 'historique'>('infos')
+  const { notify } = useToast()
 
   // Formulaire création
   const [newCourrier, setNewCourrier] = useState<CreateCourrierDto>({
@@ -218,6 +220,7 @@ export default function CourrierPage() {
         dateCourrier: new Date().toISOString().split('T')[0],
         urgence: 'Normale'
       });
+      notify({ type: 'success', message: '✅ Courrier créé avec succès' });
       loadCourriers();
       loadStats();
     } catch (e: any) {
@@ -238,6 +241,7 @@ export default function CourrierPage() {
       loadCourriers();
       loadStats();
       // Afficher le résultat
+      notify({ type: 'success', message: '✅ Analyse OCR terminée' });
       setSelectedCourrier(result);
       setShowDetailModal(true);
     } catch (e: any) {
@@ -252,6 +256,7 @@ export default function CourrierPage() {
       const updated = await courrierApi.changerStatut(courrierId, nouveauStatut)
       setSelectedCourrier(updated)
       loadCourriers()
+      notify({ type: 'success', message: `✅ Statut mis à jour : ${STATUT_COURRIER_LABELS[nouveauStatut]}` });
       loadStats()
     } catch (e: any) {
       setError(e.message || 'Erreur lors du changement de statut')
@@ -263,6 +268,7 @@ export default function CourrierPage() {
       const blob = await courrierApi.downloadDocument(courrierId)
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
+      notify({ type: 'info', message: '📥 Téléchargement en cours...' });
       a.href = url
       a.download = filename || 'document'
       document.body.appendChild(a)
@@ -319,26 +325,26 @@ export default function CourrierPage() {
           <span className="subtitle">{totalItems} courrier(s) au total</span>
         </div>
         {stats && (
-          <div className="courrier-stats">
-            <div className="stat-card">
-              <span className="stat-value">{stats.total}</span>
-              <span className="stat-label">Total</span>
+          <div className="courrier-stats" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: '4px solid #6366f1' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.total}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Courriers</div>
             </div>
-            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.Recu} as React.CSSProperties}>
-              <span className="stat-value">{stats.recu}</span>
-              <span className="stat-label">Reçus</span>
+            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.Recu}` }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.recu}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nouveaux / Reçus</div>
             </div>
-            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.EnTraitement} as React.CSSProperties}>
-              <span className="stat-value">{stats.enTraitement}</span>
-              <span className="stat-label">En Traitement</span>
+            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.EnTraitement}` }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.enTraitement}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>En cours</div>
             </div>
-            <div className="stat-card" style={{'--color': STATUT_COURRIER_COLORS.Traite} as React.CSSProperties}>
-              <span className="stat-value">{stats.traite}</span>
-              <span className="stat-label">Traités</span>
+            <div className="stat-card" style={{ flex: 1, background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', borderLeft: `4px solid ${STATUT_COURRIER_COLORS.Traite}` }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{stats.traite}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Traités</div>
             </div>
           </div>
         )}
-        <div className="header-actions">
+        <div className="header-actions" style={{ background: 'white', padding: '12px 20px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div className="search-box">
             <span className="search-icon">🔍</span>
             <input 
@@ -442,7 +448,12 @@ export default function CourrierPage() {
             </thead>
             <tbody>
               {courriers.map(courrier => (
-                <tr key={courrier.id} onClick={() => handleViewCourrier(courrier)} className="courrier-row">
+                <tr 
+                  key={courrier.id} 
+                  onClick={() => handleViewCourrier(courrier)} 
+                  className="courrier-row"
+                  style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                >
                   <td className="ref-cell">
                     <span className="reference">{courrier.reference}</span>
                     {courrier.hasDocument && <span className="has-doc" title="Document joint">📎</span>}
@@ -515,11 +526,15 @@ export default function CourrierPage() {
       {/* Modal Création */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '700px'}}>
-            <div className="modal-nc-header modal-nc-header-sticky">
-              <span className="modal-nc-icone">📬</span>
-              <h2 className="modal-nc-title">Nouveau courrier</h2>
-              <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
+          <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()} style={{maxWidth: '750px', padding: 0, overflow: 'hidden', borderRadius: '16px'}}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              padding: '20px 32px',
+              color: 'white',
+              position: 'relative'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>📬 Nouveau Courrier</h2>
+              <button className="close-btn" onClick={() => setShowCreateModal(false)} style={{ color: 'white', top: '18px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             <div className="modal-nc-scrollable">
               <section className="modal-nc-section">
@@ -624,10 +639,15 @@ export default function CourrierPage() {
       {/* Modal OCR */}
       {showOcrModal && (
         <div className="modal-overlay" onClick={() => setShowOcrModal(false)}>
-          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px'}}>
-            <div className="modal-header">
-              <h2>📷 Scanner & Analyser (OCR)</h2>
-              <button className="close-btn" onClick={() => setShowOcrModal(false)}>✕</button>
+          <div className="modal-content ocr-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '650px', padding: 0, overflow: 'hidden', borderRadius: '16px'}}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)',
+              padding: '20px 32px',
+              color: 'white',
+              position: 'relative'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>📷 Analyse Intelligente (OCR)</h2>
+              <button className="close-btn" onClick={() => setShowOcrModal(false)} style={{ color: 'white', top: '18px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             <div className="modal-body">
               <div className="ocr-dropzone">
