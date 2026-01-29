@@ -280,97 +280,100 @@ export default function CourrierPage() {
           <h1>📬 Gestion du Courrier</h1>
           <span className="subtitle">{totalItems} courrier(s) au total</span>
         </div>
-        <div className="header-actions">
-          <button className="ocr-btn" onClick={() => setShowOcrModal(true)}>
-            {/* Icône scan SVG moderne */}
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-              <rect x="3" y="7" width="18" height="10" rx="2" fill="#1e3a8a"/>
-              <rect x="7" y="11" width="10" height="2" rx="1" fill="#38bdf8"/>
-              <rect x="10" y="14" width="4" height="1" rx="0.5" fill="#38bdf8"/>
-            </svg>
-            Scanner & OCR
-          </button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            {/* Icône plus SVG moderne */}
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            Nouveau Courrier
-          </button>
-        </div>
-      </div>
-
-      {/* Statistiques rapides */}
-      {stats && (
-        <div className="stats-cards">
-          <div className="stat-card">
-            <span className="stat-icon">📥</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.courriersEntrants}</span>
-              <span className="stat-label">Entrants</span>
+            <div className="modal-nc-header modal-nc-header-sticky">
+              <span className="modal-nc-icone">📬</span>
+              <h2 className="modal-nc-title">Nouveau courrier</h2>
+              <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
             </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">📤</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.courriersSortants}</span>
-              <span className="stat-label">Sortants</span>
+            <div className="modal-nc-scrollable">
+              <section className="modal-nc-section">
+                <h3 className="modal-nc-section-title">Document joint <span className="modal-nc-doc-prec">(optionnel)</span></h3>
+                <div className="modal-nc-doc-row modal-nc-doc-row-ergonomique">
+                  <span className="modal-nc-doc-choix">Choisir un fichier</span>
+                  <label className="modal-nc-file-label">
+                    <input type="file" accept=".pdf,image/*" onChange={handleFileChange} className="modal-nc-file-input" />
+                    <span className="modal-nc-file-btn">Parcourir</span>
+                  </label>
+                  <span className="modal-nc-doc-ou">ou</span>
+                  <button className="btn btn-outline-info modal-nc-scan-btn" type="button" onClick={handleScanJsForCourrier}>
+                    <span role="img" aria-label="scanjs">📠</span> Scanner
+                  </button>
+                  {newCourrierFile && (
+                    <div className="modal-nc-doc-file">
+                      <span>📎 {newCourrierFile.name}</span>
+                      <button className="btn btn-sm btn-danger" onClick={() => setNewCourrierFile(null)} type="button">Retirer</button>
+                    </div>
+                  )}
+                </div>
+                <small>PDF ou image, max 50 Mo</small>
+              </section>
+              <section className="modal-nc-section">
+                <h3 className="modal-nc-section-title">Informations principales</h3>
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Type *</label>
+                    <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
+                      <option value="Entrant">📥 Entrant</option>
+                      <option value="Sortant">📤 Sortant</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Urgence *</label>
+                    <select value={newCourrier.urgence} onChange={e => setNewCourrier({ ...newCourrier, urgence: e.target.value as UrgenceCourrier })}>
+                      <option value="Normale">🟢 Normale</option>
+                      <option value="Importante">🟡 Importante</option>
+                      <option value="Urgente">🟠 Urgente</option>
+                      <option value="TresUrgente">🔴 Très Urgente</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label>Objet *</label>
+                  <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
+                </div>
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Expéditeur *</label>
+                    <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
+                  </div>
+                  <div>
+                    <label>Destinataire *</label>
+                    <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
+                  </div>
+                </div>
+                <div className="modal-nc-row modal-nc-row-ergonomique">
+                  <div>
+                    <label>Date du courrier *</label>
+                    <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
+                  </div>
+                  <div>
+                    <label>Référence externe</label>
+                    <input type="text" value={newCourrier.referenceExterne || ''} onChange={e => setNewCourrier({ ...newCourrier, referenceExterne: e.target.value })} placeholder="Réf. externe (optionnel)" />
+                  </div>
+                </div>
+                {workspaces.length > 0 && (
+                  <div>
+                    <label>Workspace</label>
+                    <select value={newCourrier.workspaceId || ''} onChange={e => setNewCourrier({ ...newCourrier, workspaceId: e.target.value || undefined })}>
+                      <option value="">-- Sélectionner --</option>
+                      {workspaces.map(ws => (
+                        <option key={ws.id} value={ws.id}>{ws.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label>Notes</label>
+                  <textarea value={newCourrier.notes || ''} onChange={e => setNewCourrier({ ...newCourrier, notes: e.target.value })} placeholder="Notes supplémentaires..." rows={3} />
+                </div>
+              </section>
             </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">📬</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.enAttente}</span>
-              <span className="stat-label">En attente</span>
+            <div className="modal-nc-footer modal-nc-footer-fixed">
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button">Annuler</button>
+              <button className="btn btn-primary" onClick={handleCreateCourrier} disabled={loadingCreateCourrier} type="button">
+                {loadingCreateCourrier ? 'Création...' : 'Créer le courrier'}
+              </button>
             </div>
-          </div>
-          <div className="stat-card">
-            <span className="stat-icon">⚙️</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.enTraitement}</span>
-              <span className="stat-label">En traitement</span>
-            </div>
-          </div>
-          <div className="stat-card urgent">
-            <span className="stat-icon">🔴</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.urgents}</span>
-              <span className="stat-label">Urgents</span>
-            </div>
-          </div>
-          <div className="stat-card today">
-            <span className="stat-icon">📅</span>
-            <div className="stat-info">
-              <span className="stat-value">{stats.receptionnesAujourdHui}</span>
-              <span className="stat-label">Aujourd'hui</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filtres */}
-      <div className="filters-bar">
-        <input
-          type="text"
-          placeholder="🔍 Rechercher..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          className="filter-input search-input"
-        />
-        <select
-          value={filterType}
-          onChange={(e) => { setFilterType(e.target.value as TypeCourrier | ''); setPage(1) }}
-          className="filter-select"
-        >
-          <option value="">Tous types</option>
-          <option value="Entrant">{TYPE_COURRIER_LABELS.Entrant}</option>
-          <option value="Sortant">{TYPE_COURRIER_LABELS.Sortant}</option>
-        </select>
-        <select
-          value={filterStatut}
-          onChange={(e) => { setFilterStatut(e.target.value as StatutCourrier | ''); setPage(1) }}
-          className="filter-select"
-        >
           <option value="">Tous statuts</option>
           <option value="Recu">{STATUT_COURRIER_LABELS.Recu}</option>
           <option value="EnTraitement">{STATUT_COURRIER_LABELS.EnTraitement}</option>
@@ -513,19 +516,22 @@ export default function CourrierPage() {
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content modal-nouveau-courrier" onClick={e => e.stopPropagation()}>
-            <div className="modal-nc-header">
+            <div className="modal-nc-header modal-nc-header-compact">
               <span className="modal-nc-icone">📬</span>
               <h2 className="modal-nc-title">Nouveau courrier</h2>
               <button className="close-btn" onClick={() => setShowCreateModal(false)}>✕</button>
             </div>
-            <div className="modal-nc-body">
-              <div className="modal-nc-doc">
-                <label>Document joint (optionnel)</label>
-                <div className="modal-nc-doc-row">
+            <div className="modal-nc-body modal-nc-body-ergonomique">
+              <div className="modal-nc-doc modal-nc-doc-ergonomique">
+                <label>Document joint <span className="modal-nc-doc-prec">(optionnel)</span></label>
+                <div className="modal-nc-doc-row modal-nc-doc-row-ergonomique">
                   <span className="modal-nc-doc-choix">Choisir un fichier</span>
-                  <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+                  <label className="modal-nc-file-label">
+                    <input type="file" accept=".pdf,image/*" onChange={handleFileChange} className="modal-nc-file-input" />
+                    <span className="modal-nc-file-btn">Parcourir</span>
+                  </label>
                   <span className="modal-nc-doc-ou">ou</span>
-                  <button className="btn btn-outline-info" type="button" onClick={handleScanJsForCourrier}>
+                  <button className="btn btn-outline-info modal-nc-scan-btn" type="button" onClick={handleScanJsForCourrier}>
                     <span role="img" aria-label="scanjs">📠</span> Scanner
                   </button>
                   {newCourrierFile && (
@@ -537,7 +543,7 @@ export default function CourrierPage() {
                 </div>
                 <small>PDF ou image, max 50 Mo</small>
               </div>
-              <div className="modal-nc-row">
+              <div className="modal-nc-row modal-nc-row-ergonomique">
                 <div>
                   <label>Type *</label>
                   <select value={newCourrier.type} onChange={e => setNewCourrier({ ...newCourrier, type: e.target.value as TypeCourrier })}>
@@ -559,7 +565,7 @@ export default function CourrierPage() {
                 <label>Objet *</label>
                 <input type="text" value={newCourrier.objet} onChange={e => setNewCourrier({ ...newCourrier, objet: e.target.value })} placeholder="Objet du courrier" />
               </div>
-              <div className="modal-nc-row">
+              <div className="modal-nc-row modal-nc-row-ergonomique">
                 <div>
                   <label>Expéditeur *</label>
                   <input type="text" value={newCourrier.expediteur} onChange={e => setNewCourrier({ ...newCourrier, expediteur: e.target.value })} placeholder="Nom de l'expéditeur" />
@@ -569,7 +575,7 @@ export default function CourrierPage() {
                   <input type="text" value={newCourrier.destinataire} onChange={e => setNewCourrier({ ...newCourrier, destinataire: e.target.value })} placeholder="Nom du destinataire" />
                 </div>
               </div>
-              <div className="modal-nc-row">
+              <div className="modal-nc-row modal-nc-row-ergonomique">
                 <div>
                   <label>Date du courrier *</label>
                   <input type="date" value={newCourrier.dateCourrier} onChange={e => setNewCourrier({ ...newCourrier, dateCourrier: e.target.value })} />
