@@ -1005,7 +1005,7 @@ export default function CourrierPage() {
             <div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              alignItems: 'center',
+              alignItems: 'stretch',
               gap: '16px', 
               padding: '24px 32px', 
               background: '#f8fafc', 
@@ -1016,7 +1016,7 @@ export default function CourrierPage() {
               <button className="btn btn-secondary" onClick={() => setShowCreateModal(false)} type="button" style={{ 
                 flex: 1,
                 fontWeight: 700, 
-                padding: '12px 24px',
+                padding: '0 24px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1025,7 +1025,10 @@ export default function CourrierPage() {
                 borderRadius: '8px',
                 border: '1px solid #cbd5e1',
                 background: '#f1f5f9',
-                color: '#334155'
+                color: '#334155',
+                height: '44px',
+                lineHeight: '44px',
+                cursor: 'pointer'
               }}>
                 Annuler
               </button>
@@ -1049,8 +1052,10 @@ export default function CourrierPage() {
                   alignItems: 'center',
                   gap: '8px',
                   justifyContent: 'center',
-                  padding: '12px 24px',
-                  fontSize: '14px'
+                  padding: '0 24px',
+                  fontSize: '14px',
+                  height: '44px',
+                  lineHeight: '44px'
                 }}
               >
                 {loadingCreateCourrier ? (
