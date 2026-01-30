@@ -1027,8 +1027,11 @@ export default function CourrierPage() {
                 background: '#f1f5f9',
                 color: '#334155',
                 height: '44px',
-                lineHeight: '44px',
-                cursor: 'pointer'
+                minHeight: '44px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                margin: 0
               }}>
                 Annuler
               </button>
@@ -1055,7 +1058,10 @@ export default function CourrierPage() {
                   padding: '0 24px',
                   fontSize: '14px',
                   height: '44px',
-                  lineHeight: '44px'
+                  minHeight: '44px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  margin: 0
                 }}
               >
                 {loadingCreateCourrier ? (
