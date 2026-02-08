@@ -9,7 +9,13 @@ public class Workspace
     public Guid Id { get; set; }
     
     /// <summary>
-    /// Nom de l'organisation (ex: "Cour Constitutionnelle RDC")
+    /// Tenant auquel ce Workspace appartient (Multi-tenant SaaS)
+    /// NOUVEAU: Lien au client SaaS parent
+    /// </summary>
+    public Guid TenantId { get; set; }
+    
+    /// <summary>
+    /// Nom du Workspace/Département (ex: "Département Juridique")
     /// </summary>
     public string Name { get; set; } = string.Empty;
     
@@ -58,6 +64,12 @@ public class Workspace
     public bool IsActive { get; set; } = true;
     
     // Relations
+    
+    /// <summary>
+    /// Tenant (Client SaaS) auquel ce Workspace appartient
+    /// NOUVEAU: Relation au Tenant parent (Multi-tenant)
+    /// </summary>
+    public Tenant Tenant { get; set; } = null!;
     
     /// <summary>
     /// Propriétaire/créateur du workspace

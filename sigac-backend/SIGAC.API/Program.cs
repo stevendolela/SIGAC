@@ -162,6 +162,7 @@ builder.Services.AddScoped<IExternalDocumentImportService, ExternalDocumentImpor
 builder.Services.AddScoped<IOcrService, OcrService>();
 builder.Services.AddScoped<ICourrierService, SIGAC.Infrastructure.Services.CourrierService>();
 builder.Services.AddScoped<IRoleModulePermissionService, RoleModulePermissionService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 // Enregistrement des repositories
 builder.Services.AddScoped<IDossierRepository, DossierRepository>();
@@ -178,6 +179,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
 builder.Services.AddScoped<IFormationRepository, FormationRepository>();
 builder.Services.AddScoped<IJugeProfileRepository, JugeProfileRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<ISmtpConfigurationRepository, SmtpConfigurationRepository>();
 builder.Services.AddScoped<ITypeAffaireRepository, TypeAffaireRepository>();
 builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();

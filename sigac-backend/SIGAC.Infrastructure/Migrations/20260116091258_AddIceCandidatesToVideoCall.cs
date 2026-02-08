@@ -10,19 +10,31 @@ namespace SIGAC.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "IceCandidates",
-                table: "VideoCalls",
-                type: "text",
-                nullable: true);
+            // Add IceCandidates column if it doesn't exist
+            migrationBuilder.Sql(@"
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'VideoCalls' AND column_name = 'IceCandidates') THEN
+        ALTER TABLE ""VideoCalls"" ADD COLUMN ""IceCandidates"" text;
+    END IF;
+END $$;
+");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IceCandidates",
-                table: "VideoCalls");
+            // Drop IceCandidates column if it exists
+            migrationBuilder.Sql(@"
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'VideoCalls' AND column_name = 'IceCandidates') THEN
+        ALTER TABLE ""VideoCalls"" DROP COLUMN ""IceCandidates"";
+    END IF;
+END $$;
+");
         }
     }
 }

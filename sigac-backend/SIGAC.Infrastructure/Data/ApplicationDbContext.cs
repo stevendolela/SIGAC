@@ -11,10 +11,17 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    
+    // ===== NOUVEAU: Multi-Tenant Entities =====
+    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<TenantUser> TenantUsers { get; set; }
+    public DbSet<TenantSubscription> TenantSubscriptions { get; set; }
+    public DbSet<TenantUsageEvent> TenantUsageEvents { get; set; }
+    
     public DbSet<Dossier> Dossiers { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<Historique> Historiques { get; set; }
-    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set;}
     public DbSet<DocumentVisualisationLog> DocumentVisualisationLogs { get; set; }
     public DbSet<Salle> Salles { get; set; }
     public DbSet<Audience> Audiences { get; set; }
@@ -25,7 +32,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<JugeProfile> JugeProfiles { get; set; }
     public DbSet<PasswordChangeRequest> PasswordChangeRequests { get; set; }
     public DbSet<SmtpConfiguration> SmtpConfigurations { get; set; }
-    public DbSet<TypeAffaire> TypeAffaires { get; set; }
+    public DbSet<TypeAffaire> TypeAffaires { get; set;}
     public DbSet<ChatConversation> ChatConversations { get; set; }
     public DbSet<Message> Messages { get; set; }
     public DbSet<ChatGroup> ChatGroups { get; set; }
@@ -46,7 +53,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<SystemSetting> SystemSettings { get; set; }
     
     // Gestion des droits d'accès
-    public DbSet<RoleModulePermission> RoleModulePermissions { get; set; }
+    public DbSet<RoleModulePermission> RoleModulePermissions { get; set;}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -395,6 +402,168 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===== NOUVEAU: Configuration Multi-Tenant =====
+        
+        // Configuration Tenant
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Slug).IsUnique();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ContactEmail).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ContactPhone).HasMaxLength(20);
+            entity.Property(e => e.LogoBase64).HasMaxLength(1000000); // ~1MB base64
+
+            entity.HasMany(t => t.Workspaces)
+                .WithOne(w => w.Tenant)
+                .HasForeignKey(w => w.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(t => t.Users)
+                .WithOne(tu => tu.Tenant)
+                .HasForeignKey(tu => tu.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(t => t.Subscriptions)
+                .WithOne(ts => ts.Tenant)
+                .HasForeignKey(ts => ts.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(t => t.UsageEvents)
+                .WithOne(tue => tue.Tenant)
+                .HasForeignKey(tue => tue.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(t => t.AuditLogs)
+                .WithOne(al => al.Tenant)
+                .HasForeignKey(al => al.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration TenantUser
+        modelBuilder.Entity<TenantUser>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.Email }).IsUnique();
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+
+            entity.HasOne(tu => tu.Tenant)
+                .WithMany(t => t.Users)
+                .HasForeignKey(tu => tu.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration TenantSubscription
+        modelBuilder.Entity<TenantSubscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StripeSubscriptionId).HasMaxLength(255);
+
+            entity.HasOne(ts => ts.Tenant)
+                .WithMany(t => t.Subscriptions)
+                .HasForeignKey(ts => ts.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration TenantUsageEvent
+        modelBuilder.Entity<TenantUsageEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.EventDate });
+            entity.Property(e => e.Feature).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+
+            entity.HasOne(tue => tue.Tenant)
+                .WithMany(t => t.UsageEvents)
+                .HasForeignKey(tue => tue.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configuration Workspace (ADAPTÉ)
+        modelBuilder.Entity<Workspace>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.Slug }).IsUnique();
+
+            // NOUVEAU: Relation Tenant
+            entity.HasOne(w => w.Tenant)
+                .WithMany(t => t.Workspaces)
+                .HasForeignKey(w => w.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Existing Owner relation (gardé pour compatibility)
+            entity.HasOne(w => w.Owner)
+                .WithMany()
+                .HasForeignKey(w => w.OwnerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(w => w.Members)
+                .WithOne(wu => wu.Workspace)
+                .HasForeignKey(wu => wu.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(w => w.Projects)
+                .WithOne(d => d.Workspace)
+                .HasForeignKey(d => d.WorkspaceId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuration WorkspaceUser (ADAPTÉ)
+        modelBuilder.Entity<WorkspaceUser>(entity =>
+        {
+            entity.HasKey(e => new { e.WorkspaceId, e.UserId });
+            entity.HasIndex(e => new { e.WorkspaceId, e.UserId }).IsUnique();
+
+            // FK vers User
+            entity.HasOne(wu => wu.User)
+                 .WithMany()
+                 .HasForeignKey(wu => wu.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+            // FK vers Workspace
+            entity.HasOne(wu => wu.Workspace)
+                .WithMany(w => w.Members)
+                .HasForeignKey(wu => wu.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // FK vers Tenant pour isolation
+            entity.HasOne(wu => wu.Tenant)
+                .WithMany()
+                .HasForeignKey(wu => wu.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(wu => wu.Role).HasConversion<string>();
+            entity.Property(wu => wu.IsActive).HasDefaultValue(true);
+        });
+
+        // Configuration AuditLog (ADAPTÉ)
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.Timestamp });
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+
+            // FK Tenant pour isolation
+            entity.HasOne(al => al.Tenant)
+                .WithMany()
+                .HasForeignKey(al => al.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // FK User (nullable)
+            entity.HasOne(al => al.User)
+                .WithMany()
+                .HasForeignKey(al => al.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(al => al.TenantId);
+            entity.HasIndex(al => al.UserId);
         });
     }
 }

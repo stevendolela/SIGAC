@@ -1,0 +1,291 @@
+# Test Tenant Service API Endpoints
+# Use with Postman, curl, or REST Client extension
+
+### Variables
+@baseUrl = https://sigac-api.onrender.com
+@localUrl = http://localhost:5210
+@adminToken = Bearer {{JWT_TOKEN_HERE}}
+@tenantId = {{TENANT_ID_HERE}}
+@tenantSlug = cour-rdc
+
+---
+
+### 1. GET - List all tenants (Public, Paginated)
+GET {{baseUrl}}/api/tenants?page=1&pageSize=10
+Content-Type: application/json
+
+---
+
+### 2. GET - Get tenant by ID
+GET {{baseUrl}}/api/tenants/{{tenantId}}
+Content-Type: application/json
+
+---
+
+### 3. GET - Get tenant by slug
+GET {{baseUrl}}/api/tenants/slug/{{tenantSlug}}
+Content-Type: application/json
+
+---
+
+### 4. GET - Get tenant statistics
+GET {{baseUrl}}/api/tenants/{{tenantId}}/stats
+Content-Type: application/json
+
+---
+
+### 5. GET - Get active subscription
+GET {{baseUrl}}/api/tenants/{{tenantId}}/subscriptions/active
+Content-Type: application/json
+
+---
+
+### 6. POST - Create new tenant (Admin only)
+POST {{baseUrl}}/api/tenants
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Cour Constitutionnelle RDC",
+  "slug": "cour-rdc-2025",
+  "logoBas64": null,
+  "plan": 1,
+  "maxUsers": 50,
+  "maxStorageGB": 100,
+  "maxWorkspaces": 5,
+  "stripeCustomerId": null,
+  "contactEmail": "contact@cour-rdc.cd",
+  "contactPhone": "+243971234567"
+}
+
+---
+
+### 7. PUT - Update tenant (Admin only)
+PUT {{baseUrl}}/api/tenants/{{tenantId}}
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Cour Constitutionnelle - RDC Updated",
+  "plan": 2,
+  "maxUsers": 100,
+  "maxStorageGB": 200,
+  "isActive": true
+}
+
+---
+
+### 8. POST - Add subscription to tenant (Admin only)
+POST {{baseUrl}}/api/tenants/{{tenantId}}/subscriptions
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+  "plan": 2,
+  "startDate": "2025-02-08T00:00:00Z",
+  "endDate": "2025-05-08T00:00:00Z",
+  "monthlyCostEuro": 399.00,
+  "stripeSubscriptionId": "sub_stripe_123456",
+  "autoRenew": true
+}
+
+---
+
+### 9. DELETE - Soft delete tenant (Admin only)
+DELETE {{baseUrl}}/api/tenants/{{tenantId}}
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+---
+
+## Expected Responses
+
+### 200 OK - GET List
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Cour Constitutionnelle RDC",
+      "slug": "cour-rdc",
+      "plan": "Professional",
+      "maxUsers": 50,
+      "maxStorageGB": 100,
+      "maxWorkspaces": 5,
+      "isActive": true,
+      "createdAt": "2025-02-08T22:00:00Z",
+      "userCount": 3,
+      "workspaceCount": 2,
+      "storageUsedGB": 15
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "pageSize": 10,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### 201 Created - POST Tenant
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Cour Constitutionnelle RDC",
+  "slug": "cour-rdc",
+  "plan": "Starter",
+  "maxUsers": 50,
+  "maxStorageGB": 100,
+  "maxWorkspaces": 5,
+  "userCount": 0,
+  "workspaceCount": 0,
+  "storageUsedGB": 0,
+  "isActive": true,
+  "createdAt": "2025-02-08T22:30:00Z"
+}
+```
+
+### 200 OK - GET Stats
+```json
+{
+  "tenantId": "550e8400-e29b-41d4-a716-446655440000",
+  "userCount": 5,
+  "workspaceCount": 3,
+  "storageUsedGB": 45,
+  "storageAvailableGB": 100,
+  "storagePercentUsed": 45.0,
+  "documentCount": 152,
+  "dossierCount": 23,
+  "lastActivityDate": "2025-02-08T22:15:30Z"
+}
+```
+
+### 403 Forbidden - Missing Admin Role
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+  "title": "Forbidden",
+  "status": 403,
+  "traceId": "0HMVD6PBHEVR0:00000001"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "Tenant 'invalid-id' not found"
+}
+```
+
+### 400 Bad Request - Validation Error
+```json
+{
+  "errors": {
+    "slug": ["Tenant slug is required"]
+  }
+}
+```
+
+---
+
+## Testing Checklist
+
+- [ ] Public GET /api/tenants works (no auth required)
+- [ ] GET /api/tenants/{id} returns correct tenant details
+- [ ] GET /api/tenants/slug/{slug} lookup works
+- [ ] GET /api/tenants/{id}/stats shows accurate counts
+- [ ] POST /api/tenants fails without [Admin] token (403)
+- [ ] POST /api/tenants succeeds with valid admin token (201)
+- [ ] POST /api/tenants with duplicate slug fails (400)
+- [ ] PUT /api/tenants/{id} updates plan correctly
+- [ ] PUT /api/tenants/{id} fails without admin token (403)
+- [ ] POST /api/tenants/{id}/subscriptions adds subscription
+- [ ] DELETE /api/tenants/{id} soft deletes (IsActive=false)
+- [ ] Deleted tenant no longer appears in GET /api/tenants (unless includeInactive=true)
+- [ ] Audit logs created for every POST/PUT/DELETE
+- [ ] Storage stats aggregate correctly across workspaces
+
+---
+
+## Environment Setup
+
+### Local Development
+```bash
+# Terminal 1: Start PostgreSQL Docker
+docker-compose up -d
+
+# Terminal 2: Start API
+cd sigac-backend
+dotnet run --project SIGAC.API
+# Listen on http://localhost:5210
+```
+
+### Render Production
+```
+Backend URL: https://sigac-api.onrender.com
+Database: postgresql://user:pass@host:5432/sigac_db
+JWT Token: Obtain via POST /api/auth/login
+```
+
+### Get Admin Token
+```bash
+curl -X POST https://sigac-api.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "Admin@2024!"
+  }'
+```
+
+Response:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "...",
+  "expiresIn": 1800,
+  "user": {
+    "id": "...",
+    "username": "admin",
+    "role": "Admin"
+  }
+}
+```
+
+---
+
+## Troubleshooting
+
+### 401 Unauthorized
+- Token expired (30 min validity)
+- Use refresh token endpoint to get new token
+- Check JWT secret in appsettings.Production.json
+
+### 403 Forbidden  
+- User role is not Admin
+- Check user role assignment in Users table
+- Verify [Authorize(Roles="Admin")] is enforced
+
+### 404 Not Found
+- Tenant ID doesn't exist
+- Check tenantId value matches __actual database record
+- Try GET /api/tenants to list all IDs
+
+### 409 Conflict (Slug duplicate)
+- POST /api/tenants with existing slug fails
+- Generate unique slug: append timestamp or random suffix
+- Example: "cour-rdc-2025-02-08"
+
+### 500 Internal Server Error
+- Check application logs on Render dashboard
+- Verify PostgreSQL connection string
+- Ensure all migrations applied: `dotnet ef migrations list`
+
+---
+
+**API Documentation**: See Swagger at `/swagger`  
+**Last Updated**: 2025-02-08  
+**API Version**: 2.0 (Phase 2 Tenant Service)

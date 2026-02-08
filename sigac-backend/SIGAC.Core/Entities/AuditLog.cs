@@ -3,6 +3,14 @@ namespace SIGAC.Core.Entities;
 public class AuditLog
 {
     public Guid Id { get; set; }
+    
+    /// <summary>
+    /// NOUVEAU: Tenant pour isolation et audit cross-tenant
+    /// Permet de tracer les actions par Tenant (Client)
+    /// </summary>
+    public Guid TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
+    
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
     public Guid? UserId { get; set; }

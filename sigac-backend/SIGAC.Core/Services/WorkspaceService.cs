@@ -44,6 +44,7 @@ public class WorkspaceService : IWorkspaceService
             new WorkspaceUser
             {
                 WorkspaceId = workspace.Id,
+                TenantId = workspace.TenantId,
                 UserId = userId,
                 Role = WorkspaceRole.Owner,
                 JoinedAt = DateTime.UtcNow,
@@ -287,6 +288,7 @@ public class WorkspaceService : IWorkspaceService
             var newMember = new WorkspaceUser
             {
                 WorkspaceId = workspaceId,
+                TenantId = workspace.TenantId,
                 UserId = dto.UserId,
                 Role = dto.Role,
                 JoinedAt = DateTime.UtcNow,
