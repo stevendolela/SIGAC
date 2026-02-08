@@ -32,6 +32,9 @@ import CourrierPage from './pages/CourrierPage'
 import RightsManagementPage from './pages/RightsManagementPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
+import TenantsPage from './pages/TenantsPage'
+import TenantDetailPage from './pages/TenantDetailPage'
+import TenantFormPage from './pages/TenantFormPage'
 import { UnifiedChatPanel } from './components/UnifiedChatPanel'
 import WorkspaceSelector from './components/workspace/WorkspaceSelector'
 import CreateWorkspaceModal from './components/workspace/CreateWorkspaceModal'
@@ -48,7 +51,7 @@ export default function App() {
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'courrier' | 'workspace-settings' | 'document-logs' | 'login-history' | 'import-dossiers' | 'external-import' | 'rights-management'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'dossiers' | 'users' | 'audiences' | 'recherche' | 'create-dossier' | 'salles' | 'profils' | 'calendrier' | 'system-config' | 'types-affaires' | 'mon-profil' | 'logo-management' | 'documents' | 'courrier' | 'workspace-settings' | 'document-logs' | 'login-history' | 'import-dossiers' | 'external-import' | 'rights-management' | 'tenants'>('dashboard')
   const [selectedDossierId, setSelectedDossierId] = useState<string | undefined>(undefined)
   const [apiUrl, setApiUrl] = useState<string>(getApiBaseUrl())
   const [showApiSwitcher, setShowApiSwitcher] = useState(false)
@@ -222,12 +225,18 @@ export default function App() {
           {view === 'import-dossiers' && <ImportDossiersPage />}
           {view === 'external-import' && <ExternalDocumentImportPage />}
           {view === 'rights-management' && <RightsManagementPage />}
+          {view === 'tenants' && <TenantsPage />}
           
-          {/* Routes additionnelles (édition avancée utilisateur) */}
+          {/* Routes additionnelles (édition avancée utilisateur + Phase 3 Tenant Management) */}
           <Routes>
             <Route path="/admin/users/:id" element={<AdminUserEditPage />} />
             <Route path="/compte/mot-de-passe" element={<ChangePasswordPage />} />
             <Route path="/types-affaires" element={<TypesAffairesPage />} />
+            {/* Phase 3: Tenant Management Routes */}
+            <Route path="/tenants" element={<TenantsPage />} />
+            <Route path="/tenants/:id" element={<TenantDetailPage />} />
+            <Route path="/tenants/create" element={<TenantFormPage />} />
+            <Route path="/tenants/:id/edit" element={<TenantFormPage />} />
           </Routes>
           
           {/* Unified Chat Panel - affichés pour tous les utilisateurs authentifiés */}

@@ -17,7 +17,8 @@ import {
   History,
   Download,
   Mail,
-  Shield
+  Shield,
+  Network
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -46,6 +47,7 @@ type ViewType =
   | 'import-dossiers'
   | 'external-import'
   | 'rights-management'
+  | 'tenants'
 
 interface MenuItem {
   view: ViewType
@@ -229,6 +231,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           view: 'document-logs' as ViewType,
           label: 'Historique Dossiers',
           icon: History,
+          color: '#6366f1'
+        },
+        {
+          view: 'tenants' as ViewType,
+          label: 'Tenants (Multi-locataire)',
+          icon: Network,
           color: '#6366f1'
         }
       ]
