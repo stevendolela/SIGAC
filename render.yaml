@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: sigac-api
     runtime: dotnet
@@ -9,5 +9,5 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ASPNETCORE_URLS
-        value: "http://+:10000"
+        value: http://+:10000
     healthCheckPath: /api/health
