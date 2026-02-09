@@ -2,37 +2,12 @@ services:
   - type: web
     name: sigac-api
     runtime: dotnet
-    runtimeVersion: 8.0
     region: frankfurt
-    
-    # Build
-    buildCommand: >
-      cd sigac-backend &&
-      dotnet restore &&
-      dotnet build -c Release
-    
-    # Start command
-    startCommand: "cd sigac-backend && dotnet SIGAC.API/bin/Release/net8.0/SIGAC.API.dll"
-    
-    # Environment variables
+    buildCommand: cd sigac-backend && dotnet restore && dotnet build -c Release
+    startCommand: cd sigac-backend && dotnet run --project SIGAC.API -c Release --no-build
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: sigac-postgres
-          property: connectionString
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ASPNETCORE_URLS
         value: "http://+:10000"
-      - key: DOTNET_TieredCompilation
-        value: "true"
-      - key: DOTNET_ReadyToRun
-        value: "true"
-    
-    # Health check
     healthCheckPath: /api/health
-
-  - type: pserv
-    name: sigac-postgres
-    ipAllowList: []
-    plan: starter
