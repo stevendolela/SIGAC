@@ -386,8 +386,8 @@ app.UseStaticFiles(new StaticFileOptions
 // Middleware de gestion des erreurs en tête pour capturer toutes les exceptions
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Middleware personnalisé pour l'audit (après la gestion d'erreur)
-app.UseMiddleware<AuditMiddleware>();
+// TEMPORAIUREMENT DÉSACTIVÉ : Middleware personnalisé pour l'audit (après la gestion d'erreur)
+// app.UseMiddleware<AuditMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

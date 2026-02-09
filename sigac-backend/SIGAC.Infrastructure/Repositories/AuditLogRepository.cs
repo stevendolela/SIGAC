@@ -45,7 +45,8 @@ public class AuditLogRepository : IAuditLogRepository
         string? oldValues = null,
         string? newValues = null,
         string? ipAddress = null,
-        string? userAgent = null)
+        string? userAgent = null,
+        Guid? tenantId = null)
     {
         // Certains schémas PostgreSQL utilisent jsonb pour NewValues/OldValues.
         // Pour éviter les erreurs de cast (text -> jsonb), on exécute un INSERT
@@ -57,12 +58,13 @@ public class AuditLogRepository : IAuditLogRepository
             if (wasClosed) await conn.OpenAsync();
 
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"INSERT INTO ""AuditLogs"" (""Id"", ""Timestamp"", ""UserId"", ""Action"", ""EntityType"", ""EntityId"", ""OldValues"", ""NewValues"", ""IpAddress"", ""UserAgent"")
-                                VALUES (@id, @ts, @userId, @action, @entityType, @entityId, @oldValues::jsonb, @newValues::jsonb, @ipAddress, @userAgent);";
+            cmd.CommandText = @"INSERT INTO ""AuditLogs"" (""Id"", ""Timestamp"", ""TenantId"", ""UserId"", ""Action"", ""EntityType"", ""EntityId"", ""OldValues"", ""NewValues"", ""IpAddress"", ""UserAgent"")
+                                VALUES (@id, @ts, @tenantId, @userId, @action, @entityType, @entityId, @oldValues::jsonb, @newValues::jsonb, @ipAddress, @userAgent);";
 
             var id = Guid.NewGuid();
             cmd.Parameters.AddWithValue("id", id);
             cmd.Parameters.AddWithValue("ts", DateTime.UtcNow);
+            cmd.Parameters.AddWithValue("tenantId", tenantId.HasValue ? (object)tenantId.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("userId", userId.HasValue ? (object)userId.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("action", action);
             cmd.Parameters.AddWithValue("entityType", entityType);
@@ -92,6 +94,7 @@ public class AuditLogRepository : IAuditLogRepository
             var auditLog = new AuditLog
             {
                 Id = Guid.NewGuid(),
+                TenantId = tenantId ?? Guid.Empty,
                 UserId = userId,
                 Action = action,
                 EntityType = entityType,

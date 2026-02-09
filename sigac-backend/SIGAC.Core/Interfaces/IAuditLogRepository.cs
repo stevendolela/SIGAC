@@ -17,6 +17,7 @@ public interface IAuditLogRepository
         string? oldValues,
         string? newValues,
         string? ipAddress = null,
-        string? userAgent = null
+        string? userAgent = null,
+        Guid? tenantId = null
     );
 }

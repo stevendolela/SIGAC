@@ -14,10 +14,10 @@ public class WorkspaceUser
     public Workspace Workspace { get; set; } = null!;
     
     /// <summary>
-    /// Tenant auquel ce workspace assignment appartient (Multi-tenant SaaS)
+    /// Tenant ID pour isolation multi-tenant (ne pas naviguer avec HasOne(Tenant))
+    /// car WorkspaceUser.PrimaryKey = (WorkspaceId, UserId)
     /// </summary>
     public Guid TenantId { get; set; }
-    public Tenant Tenant { get; set; } = null!;
     
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;

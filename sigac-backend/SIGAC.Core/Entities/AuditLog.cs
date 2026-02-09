@@ -5,11 +5,9 @@ public class AuditLog
     public Guid Id { get; set; }
     
     /// <summary>
-    /// NOUVEAU: Tenant pour isolation et audit cross-tenant
-    /// Permet de tracer les actions par Tenant (Client)
+    /// TenantId pour isolation multi-tenant (propriété scalaire seulement, pas de FK navigation)
     /// </summary>
     public Guid TenantId { get; set; }
-    public Tenant Tenant { get; set; } = null!;
     
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     

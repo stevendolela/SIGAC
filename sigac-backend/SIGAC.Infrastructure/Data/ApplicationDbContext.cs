@@ -136,18 +136,7 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configuration AuditLog
-        modelBuilder.Entity<AuditLog>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Timestamp);
-            entity.HasIndex(e => e.UserId);
-            
-            entity.HasOne(a => a.User)
-                .WithMany(u => u.AuditLogs)
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
+        // Configuration AuditLog (MOVED BELOW - voir ligne 546+ pour la config complète avec Tenant)
 
         // Configuration DocumentVisualisationLog
         modelBuilder.Entity<DocumentVisualisationLog>(entity =>
@@ -202,22 +191,6 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.OwnedWorkspaces)
                 .HasForeignKey(w => w.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // Configuration WorkspaceUser (junction table - modèle GED)
-        modelBuilder.Entity<WorkspaceUser>(entity =>
-        {
-            entity.HasKey(e => new { e.WorkspaceId, e.UserId });
-            
-            entity.HasOne(wu => wu.Workspace)
-                .WithMany(w => w.Members)
-                .HasForeignKey(wu => wu.WorkspaceId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne(wu => wu.User)
-                .WithMany(u => u.WorkspaceMemberships)
-                .HasForeignKey(wu => wu.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configuration Salle (corrige la clé étrangère CreatedBy pour éviter la colonne fantôme CreatedByUserId)
@@ -437,10 +410,9 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(tue => tue.TenantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(t => t.AuditLogs)
-                .WithOne(al => al.Tenant)
-                .HasForeignKey(al => al.TenantId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // Note: AuditLogs.TenantId est une propriété scalaire (pas de FK navigation)
+            // donc pas de HasMany(AuditLogs).WithOne(Tenant) ici
+
         });
 
         // Configuration TenantUser
@@ -520,23 +492,18 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => new { e.WorkspaceId, e.UserId });
             entity.HasIndex(e => new { e.WorkspaceId, e.UserId }).IsUnique();
 
-            // FK vers User
-            entity.HasOne(wu => wu.User)
-                 .WithMany()
-                 .HasForeignKey(wu => wu.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
             // FK vers Workspace
             entity.HasOne(wu => wu.Workspace)
                 .WithMany(w => w.Members)
                 .HasForeignKey(wu => wu.WorkspaceId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // FK vers Tenant pour isolation
-            entity.HasOne(wu => wu.Tenant)
-                .WithMany()
-                .HasForeignKey(wu => wu.TenantId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // User navigation sans FK explicite - EF Core déduira via UserId
+            // (UserId est dans la clé composite, pas besoin de HasForeignKey)
+
+            // TenantId est une propriété scalaire pour isolation
+            entity.Property(wu => wu.TenantId).IsRequired();
+            entity.HasIndex(wu => wu.TenantId);
 
             entity.Property(wu => wu.Role).HasConversion<string>();
             entity.Property(wu => wu.IsActive).HasDefaultValue(true);
@@ -550,19 +517,16 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
             entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
 
-            // FK Tenant pour isolation
-            entity.HasOne(al => al.Tenant)
-                .WithMany()
-                .HasForeignKey(al => al.TenantId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // TenantId est JUSTE une propriété scalaire pour isolation (pas de FK mapped navigation)
+            entity.Property(al => al.TenantId).IsRequired();
+            entity.HasIndex(al => al.TenantId);
 
-            // FK User (nullable)
+            // FK User (nullable) - SPÉCIFIQUE car User.AuditLogs navigation collection
             entity.HasOne(al => al.User)
-                .WithMany()
+                .WithMany(u => u.AuditLogs)
                 .HasForeignKey(al => al.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasIndex(al => al.TenantId);
             entity.HasIndex(al => al.UserId);
         });
     }

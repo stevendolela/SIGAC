@@ -59,15 +59,6 @@ public class AuthService : IAuthService
         var token = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
 
-        // Debug: log token length so tests can show if generation failed
-        try
-        {
-            Console.WriteLine($"[AuthService] Generated JWT length: {(token?.Length ?? 0)}");
-            // Print prefix to avoid exposing full token in logs
-            Console.WriteLine($"[AuthService] JWT preview: {token?.Substring(0, Math.Min(50, token.Length))}");
-        }
-        catch { }
-
         // Sauvegarder le refresh token
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryDate = DateTime.UtcNow.AddDays(
