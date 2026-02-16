@@ -75,7 +75,7 @@ export default function DashboardPage() {
     return () => {
       mounted.current = false
     }
-  }, [refreshKey, periodFilter, selectedWorkspace, isAdmin])
+  }, [refreshKey, periodFilter, selectedWorkspace, isAdmin, workspaceId])
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
