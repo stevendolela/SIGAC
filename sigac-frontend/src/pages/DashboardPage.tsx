@@ -362,13 +362,64 @@ export default function DashboardPage() {
             {stats.parType && Object.keys(stats.parType).length > 0 && (
               <div className="chart-section">
                 <div className="chart-title">📋 Répartition par Type d'Affaire</div>
-                <div className="distribution-grid">
-                  {Object.entries(stats.parType).map(([type, count]) => (
-                    <div key={type} className="distribution-card">
-                      <div className="distribution-type">{type}</div>
-                      <div className="distribution-count">{count}</div>
-                    </div>
-                  ))}
+                <div className="type-affaire-grid">
+                  {Object.entries(stats.parType).map(([type, count], index) => {
+                    const maxCount = Math.max(...Object.values(stats.parType as Record<string, number>), 1)
+                    const percentage = Math.round((count / maxCount) * 100)
+                    
+                    const typeEmojis: Record<string, string> = {
+                      'financement projet': '💰',
+                      'administratif': '📄',
+                      'médical': '🏥',
+                      'test': '🧪',
+                      'projet Agricole': '🌾',
+                      'informatique': '💻',
+                      'commercial': '🛍️',
+                      'juridique': '⚖️',
+                      'contentieux': '🔨',
+                      'contrats': '📋',
+                      'consultation': '👂',
+                      'autre': '📌'
+                    }
+                    
+                    const typeColors: Record<string, string> = {
+                      'financement projet': '#ec4899',
+                      'administratif': '#3b82f6',
+                      'médical': '#ef4444',
+                      'test': '#a855f7',
+                      'projet Agricole': '#10b981',
+                      'informatique': '#0ea5e9',
+                      'commercial': '#f97316',
+                      'juridique': '#8b5cf6',
+                      'contentieux': '#dc2626',
+                      'contrats': '#f59e0b',
+                      'consultation': '#06b6d4',
+                      'autre': '#6b7280'
+                    }
+                    
+                    const emoji = typeEmojis[type.toLowerCase()] || '📌'
+                    const color = typeColors[type.toLowerCase()] || '#94a3b8'
+                    
+                    return (
+                      <div key={type} className="type-affaire-card" style={{ borderTopColor: color }}>
+                        <div className="type-card-header">
+                          <span className="type-emoji">{emoji}</span>
+                          <span className="type-name">{type}</span>
+                        </div>
+                        <div className="type-value">{count}</div>
+                        <div className="type-bar-container">
+                          <div 
+                            className="type-bar" 
+                            style={{ 
+                              width: `${percentage}%`, 
+                              backgroundColor: color
+                            }}
+                          />
+                        </div>
+                        <div className="type-percentage">{percentage}%</div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
