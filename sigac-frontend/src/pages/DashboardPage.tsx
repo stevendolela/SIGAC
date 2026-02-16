@@ -4,6 +4,7 @@ import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivit
 import { PERIOD_LABELS } from '../types/dashboard'
 import type { WorkspaceDto } from '../types/workspace'
 import workspaceApi from '../api/workspaceApi'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import './Dashboard.css'
 
 export default function DashboardPage() {
@@ -336,26 +337,49 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Timeline */}
+            {/* Timeline - Line Chart */}
             {stats.dossiersCreesParMois && stats.dossiersCreesParMois.length > 0 && (
               <div className="chart-section">
                 <div className="chart-title">📈 Évolution des Créations (6 derniers mois)</div>
-                <div className="timeline-chart">
-                  {stats.dossiersCreesParMois.map((data) => (
-                    <div key={data.mois} className="timeline-bar-wrapper">
-                      <div className="timeline-label">{data.mois}</div>
-                      <div className="timeline-bar-container">
-                        <div
-                          className="timeline-bar"
-                          style={{
-                            height: `${Math.max(data.valeur * 5, 20)}px`,
-                            background: '#3b82f6'
-                          }}
-                        />
-                        <div className="timeline-value">{data.valeur}</div>
-                      </div>
-                    </div>
-                  ))}
+                <div style={{ width: '100%', height: 400 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={stats.dossiersCreesParMois}
+                      margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="mois" 
+                        stroke="#6b7280"
+                        style={{ fontSize: '14px' }}
+                      />
+                      <YAxis 
+                        stroke="#6b7280"
+                        style={{ fontSize: '14px' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '8px'
+                        }}
+                        cursor={{ stroke: '#3b82f6', strokeWidth: 2 }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="valeur"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', r: 6 }}
+                        activeDot={{ r: 8 }}
+                        name="Dossiers créés"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             )}
