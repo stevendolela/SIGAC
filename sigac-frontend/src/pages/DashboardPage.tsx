@@ -4,7 +4,7 @@ import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivit
 import { PERIOD_LABELS } from '../types/dashboard'
 import type { WorkspaceDto } from '../types/workspace'
 import workspaceApi from '../api/workspaceApi'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import './Dashboard.css'
 
 export default function DashboardPage() {
@@ -265,48 +265,31 @@ export default function DashboardPage() {
               <div className="chart-wrapper">
                 <div className="chart-title">📊 Répartition par Statut des Dossiers</div>
                 {stats && (
-                  <div style={{ width: '100%', height: 400 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={[
-                          { status: 'Nouveau', value: stats.nouveauxDossiers, percentage: Math.round((stats.nouveauxDossiers / (stats.totalDossiers || 1)) * 100) },
-                          { status: 'En Cours', value: stats.enCours, percentage: Math.round((stats.enCours / (stats.totalDossiers || 1)) * 100) },
-                          { status: 'En Validation', value: stats.enValidation, percentage: Math.round((stats.enValidation / (stats.totalDossiers || 1)) * 100) },
-                          { status: 'Validé', value: stats.valides, percentage: Math.round((stats.valides / (stats.totalDossiers || 1)) * 100) },
-                          { status: 'Terminé', value: stats.termines, percentage: Math.round((stats.termines / (stats.totalDossiers || 1)) * 100) }
-                        ]}
-                        layout="vertical"
-                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                        <XAxis type="number" stroke="#6b7280" style={{ fontSize: '13px' }} />
-                        <YAxis 
-                          dataKey="status" 
-                          type="category" 
-                          stroke="#6b7280"
-                          style={{ fontSize: '14px', fontWeight: '500' }}
-                          width={95}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#ffffff',
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '10px',
-                            padding: '12px',
-                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                          }}
-                          cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
-                          formatter={(value) => [`${value} dossiers`, 'Count']}
-                        />
-                        <Bar dataKey="value" radius={[0, 8, 8, 0]} animationDuration={800}>
-                          <Cell fill="#3b82f6" />
-                          <Cell fill="#f59e0b" />
-                          <Cell fill="#a78bfa" />
-                          <Cell fill="#10b981" />
-                          <Cell fill="#6b7280" />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="status-indicators-grid">
+                    {[
+                      { key: 'Nouveau', value: stats.nouveauxDossiers, color: '#3b82f6', emoji: '🆕' },
+                      { key: 'En Cours', value: stats.enCours, color: '#f59e0b', emoji: '⚙️' },
+                      { key: 'En Validation', value: stats.enValidation, color: '#a78bfa', emoji: '👀' },
+                      { key: 'Validé', value: stats.valides, color: '#10b981', emoji: '✅' },
+                      { key: 'Terminé', value: stats.termines, color: '#6b7280', emoji: '✨' }
+                    ].map(({ key, value, color, emoji }) => {
+                      const percentage = Math.round((value / (stats.totalDossiers || 1)) * 100)
+                      return (
+                        <div key={key} className="status-indicator-card" style={{ borderLeftColor: color }}>
+                          <div className="indicator-header">
+                            <span className="indicator-title">{emoji} {key.toUpperCase()}</span>
+                            <span className="indicator-percentage">{percentage}%</span>
+                          </div>
+                          <div className="indicator-value">{value}</div>
+                          <div className="indicator-bar-container">
+                            <div
+                              className="indicator-bar"
+                              style={{ width: `${percentage}%`, backgroundColor: color }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
