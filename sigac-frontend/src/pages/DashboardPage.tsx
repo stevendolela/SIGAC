@@ -299,21 +299,61 @@ export default function DashboardPage() {
             {isAdmin && stats.topUtilisateurs && stats.topUtilisateurs.length > 0 && (
               <div className="chart-section">
                 <div className="chart-title">👥 Utilisateurs les Plus Actifs</div>
-                <div className="users-table">
-                  <div className="table-header">
-                    <div className="col-name">Utilisateur</div>
-                    <div className="col-dossiers">Dossiers</div>
-                    <div className="col-docs">Documents</div>
-                    <div className="col-date">Dernière Activité</div>
-                  </div>
-                  {stats.topUtilisateurs.map((user) => (
-                    <div key={user.userId} className="table-row">
-                      <div className="col-name">{user.nomUtilisateur}</div>
-                      <div className="col-dossiers">{user.nombreDossiersTraites}</div>
-                      <div className="col-docs">{user.nombreDocumentsUpload}</div>
-                      <div className="col-date">{formatDate(user.derniereActivite)}</div>
-                    </div>
-                  ))}
+                <div className="users-cards-grid">
+                  {stats.topUtilisateurs.map((user) => {
+                    const maxDossiers = Math.max(...stats.topUtilisateurs.map(u => u.nombreDossiersTraites), 1)
+                    const maxDocs = Math.max(...stats.topUtilisateurs.map(u => u.nombreDocumentsUpload), 1)
+                    const dossiersPercent = Math.round((user.nombreDossiersTraites / maxDossiers) * 100)
+                    const docsPercent = Math.round((user.nombreDocumentsUpload / maxDocs) * 100)
+                    
+                    return (
+                      <div key={user.userId} className="user-card">
+                        <div className="user-card-header">
+                          <div className="user-name">{user.nomUtilisateur}</div>
+                          <div className="user-activity">
+                            <span className="activity-dot"></span>
+                            <span className="activity-text">{formatDate(user.derniereActivite)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="user-metrics">
+                          <div className="metric-item">
+                            <div className="metric-label">
+                              <span className="metric-icon">📁</span>
+                              <span className="metric-name">Dossiers</span>
+                            </div>
+                            <div className="metric-value">{user.nombreDossiersTraites}</div>
+                            <div className="metric-bar-container">
+                              <div 
+                                className="metric-bar" 
+                                style={{ 
+                                  width: `${dossiersPercent}%`, 
+                                  backgroundColor: '#3b82f6'
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="metric-item">
+                            <div className="metric-label">
+                              <span className="metric-icon">📄</span>
+                              <span className="metric-name">Documents</span>
+                            </div>
+                            <div className="metric-value">{user.nombreDocumentsUpload}</div>
+                            <div className="metric-bar-container">
+                              <div 
+                                className="metric-bar" 
+                                style={{ 
+                                  width: `${docsPercent}%`, 
+                                  backgroundColor: '#f59e0b'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
