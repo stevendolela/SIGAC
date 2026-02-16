@@ -69,16 +69,78 @@ public class CourrierController : ControllerBase
     }
 
     /// <summary>
-    /// Crée un courrier manuellement (sans OCR)
+    /// Crée un courrier manuellement (sans OCR) - accepte JSON ou FormData
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<CourrierDetailDto>> CreateCourrier([FromBody] CreateCourrierDto dto)
+    public async Task<ActionResult<CourrierDetailDto>> CreateCourrier()
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        // Accepter à la fois [FromBody] JSON et [FromForm] FormData
+        CreateCourrierDto? dto = null;
 
-        var courrier = await _courrierService.CreateCourrierAsync(dto, GetUserId());
-        return CreatedAtAction(nameof(GetCourrier), new { id = courrier.Id }, courrier);
+        try
+        {
+            // Essayer de lire du FormData d'abord
+            if (Request.ContentType?.Contains("multipart/form-data") == true)
+            {
+                if (!Request.Form.ContainsKey("type") || !Request.Form.ContainsKey("objet"))
+                {
+                    return BadRequest(new { message = "Champs requis manquants: type, objet" });
+                }
+
+                string typeStr = Request.Form["type"].ToString();
+                string urgenceStr = Request.Form["urgence"].ToString() ?? "Normale";
+
+                // Convertir strings en enums
+                if (!Enum.TryParse<TypeCourrier>(typeStr, ignoreCase: true, out var typeEnum))
+                {
+                    return BadRequest(new { message = $"Type '{typeStr}' n'est pas valide. Valeurs acceptées: Entrant, Sortant" });
+                }
+
+                if (!Enum.TryParse<UrgenceCourrier>(urgenceStr, ignoreCase: true, out var urgenceEnum))
+                {
+                    urgenceEnum = UrgenceCourrier.Normale;
+                }
+
+                dto = new CreateCourrierDto
+                {
+                    Type = typeEnum,
+                    Objet = Request.Form["objet"].ToString(),
+                    Expediteur = Request.Form["expediteur"].ToString() ?? string.Empty,
+                    Destinataire = Request.Form["destinataire"].ToString() ?? string.Empty,
+                    DateCourrier = DateTime.TryParse(Request.Form["dateCourrier"].ToString(), out var date) ? date : DateTime.UtcNow,
+                    Urgence = urgenceEnum,
+                    Notes = Request.Form["notes"].ToString(),
+                    WorkspaceId = Guid.TryParse(Request.Form["workspaceId"].ToString(), out var wsId) ? wsId : null,
+                    AssigneAId = Guid.TryParse(Request.Form["assigneAId"].ToString(), out var userId) ? userId : null
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la lecture du FormData");
+            return BadRequest(new { message = "Erreur lors de la lecture des données du formulaire" });
+        }
+
+        if (dto == null)
+        {
+            return BadRequest(new { message = "Impossible de parser les données du courrier" });
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Objet))
+        {
+            return BadRequest(new { message = "Objet est obligatoire" });
+        }
+
+        try
+        {
+            var courrier = await _courrierService.CreateCourrierAsync(dto, GetUserId());
+            return CreatedAtAction(nameof(GetCourrier), new { id = courrier.Id }, courrier);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la création du courrier");
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
