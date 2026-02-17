@@ -186,8 +186,10 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}\n{ex.StackTrace}");
-            System.Diagnostics.Debug.WriteLine($"[Dashboard Error] userId={userId}, role={userRole}, periodeDays={periodeDays}, workspaceId={workspaceId}");
+            Debug.WriteLine($"[DASHBOARD CRITICAL] GetStatisticsAsync FAILED - Type={ex.GetType().Name}");
+            Debug.WriteLine($"Context: userId={userId}, role={userRole}, periodeDays={periodeDays}, workspaceId={workspaceId}");
+            Debug.WriteLine($"Message={ex.Message}");
+            Debug.WriteLine($"StackTrace={ex.StackTrace}");
             throw;
         }
     }

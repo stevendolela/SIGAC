@@ -38,13 +38,16 @@ public class ExceptionHandlingMiddleware
         var requestId = Guid.NewGuid().ToString();
         
         _logger.LogError(exception, 
-            "Exception non gérée pour la requête {RequestId} - {Method} {Path}", 
+            "Exception non gérée pour la requête {RequestId} - {Method} {Path} | Type={ExceptionType} | Message={Message}", 
             requestId, 
             context.Request.Method, 
-            context.Request.Path);
+            context.Request.Path,
+            exception.GetType().Name,
+            exception.Message);
 
         context.Response.ContentType = "application/json";
 
+        // Build response with detailed error info for debugging
         var response = exception switch
         {
             UnauthorizedAccessException => new ErrorResponse
@@ -52,28 +55,37 @@ public class ExceptionHandlingMiddleware
                 Error = "Forbidden",
                 Message = exception.Message,
                 RequestId = requestId,
-                StatusCode = (int)HttpStatusCode.Forbidden
+                StatusCode = (int)HttpStatusCode.Forbidden,
+                ExceptionType = exception.GetType().Name,
+                StackTrace = exception.StackTrace
             },
             ArgumentException => new ErrorResponse
             {
                 Error = "ValidationError",
                 Message = exception.Message,
                 RequestId = requestId,
-                StatusCode = (int)HttpStatusCode.BadRequest
+                StatusCode = (int)HttpStatusCode.BadRequest,
+                ExceptionType = exception.GetType().Name,
+                StackTrace = exception.StackTrace
             },
             KeyNotFoundException => new ErrorResponse
             {
                 Error = "NotFound",
                 Message = exception.Message,
                 RequestId = requestId,
-                StatusCode = (int)HttpStatusCode.NotFound
+                StatusCode = (int)HttpStatusCode.NotFound,
+                ExceptionType = exception.GetType().Name,
+                StackTrace = exception.StackTrace
             },
             _ => new ErrorResponse
             {
                 Error = "InternalServerError",
                 Message = "Une erreur interne est survenue. Veuillez contacter l'administrateur.",
                 RequestId = requestId,
-                StatusCode = (int)HttpStatusCode.InternalServerError
+                StatusCode = (int)HttpStatusCode.InternalServerError,
+                ExceptionType = exception.GetType().Name,
+                Details = exception.Message,
+                StackTrace = exception.StackTrace
             }
         };
 
@@ -93,6 +105,9 @@ public class ExceptionHandlingMiddleware
         public string Message { get; set; } = string.Empty;
         public string RequestId { get; set; } = string.Empty;
         public int StatusCode { get; set; }
+        public string? ExceptionType { get; set; }
+        public string? Details { get; set; }
+        public string? StackTrace { get; set; }
     }
 }
 
