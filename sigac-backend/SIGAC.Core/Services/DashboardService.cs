@@ -83,8 +83,8 @@ public class DashboardService : IDashboardService
             }
 
             // === Timeline (derniers 6 mois) ===
-            var timelineCreated = BuildTimelineData(allDossiers.Where(d => d.CreatedAt >= startDate).ToList());
-            var timelineCompleted = BuildTimelineData(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList());
+            var timelineCreated = BuildTimelineData(allDossiers.Where(d => d.CreatedAt >= startDate).ToList(), periodeDays);
+            var timelineCompleted = BuildTimelineData(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList(), periodeDays);
 
             // === Indicateurs de performance ===
             var tauxTraitement = totalDossiers > 0 
@@ -252,7 +252,7 @@ public class DashboardService : IDashboardService
     /// <summary>
     /// Construit les données de timeline par mois
     /// </summary>
-    private List<TimelineDataDto> BuildTimelineData(List<Dossier> dossiers)
+    private List<TimelineDataDto> BuildTimelineData(List<Dossier> dossiers, int periodeDays = 0)
     {
         var timeline = new List<TimelineDataDto>();
 
@@ -274,8 +274,17 @@ public class DashboardService : IDashboardService
             });
         }
 
-        // Complète les mois manquants (derniers 6 mois)
-        return FillMissingMonths(timeline, 6);
+        // Complète les mois manquants
+        // Si periodeDays = 0 (tous les temps), n'ajoute pas les zéros, retourne juste la timeline
+        // Sinon, complète les 6 derniers mois
+        if (periodeDays > 0)
+        {
+            return FillMissingMonths(timeline, 6);
+        }
+        else
+        {
+            return timeline.OrderBy(x => x.Date).ToList();
+        }
     }
 
     /// <summary>
