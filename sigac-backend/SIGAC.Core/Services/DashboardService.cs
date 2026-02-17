@@ -41,9 +41,10 @@ public class DashboardService : IDashboardService
     {
         try
         {
-            var startDate = periodeDays > 0 
-                ? DateTime.UtcNow.AddDays(-periodeDays) 
-                : new DateTime(2000, 1, 1);
+            // Pour "tous les temps" (periodeDays=0), utiliser une grande période comme 9999 jours
+            // Pour éviter les problèmes de date arbitraire (2000-01-01)
+            int effectivePeriodeDays = periodeDays > 0 ? periodeDays : 9999;
+            var startDate = DateTime.UtcNow.AddDays(-effectivePeriodeDays);
 
             // Filtre par responsable pour les collaborateurs
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
