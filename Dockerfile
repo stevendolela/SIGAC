@@ -10,10 +10,24 @@ COPY sigac-backend/ ./
 RUN cd SIGAC.API && dotnet build -c Release --no-restore
 RUN cd SIGAC.API && dotnet publish -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# Runtime image with SDK included for EF Core migrations
+FROM mcr.microsoft.com/dotnet/sdk:8.0
 WORKDIR /app
+
+# Copy published application
 COPY --from=build /app/publish .
+
+# Copy source code for EF migrations
+COPY sigac-backend/SIGAC.Infrastructure/ ./SIGAC.Infrastructure/
+COPY sigac-backend/SIGAC.Core/ ./SIGAC.Core/
+COPY sigac-backend/SIGAC.API/ ./SIGAC.API/
+
+# Copy and make startup script executable
+COPY sigac-backend/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:10000
 EXPOSE 10000
-ENTRYPOINT ["dotnet", "SIGAC.API.dll"]
+
+ENTRYPOINT ["./entrypoint.sh"]
