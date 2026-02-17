@@ -46,15 +46,11 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Database connection string - use appsettings.json as source of truth
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    Log.Warning("DefaultConnection not found in appsettings.json, this may cause issues");
-    connectionString = "Host=localhost;Port=5432;Database=sigac_db;Username=sigac_user;Password=password";
-}
+// Database connection string configuration
+// Priority: 1. DATABASE_URL env var (Render injects this), 2. appsettings.json
+var connectionString = GetDatabaseConnectionString(builder.Configuration);
 
-Log.Information("Database configuration loaded from appsettings.json");
+Log.Information("Database connection configured (Host/Database masked for security)");
 
 // Configuration de la base de données
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -67,6 +63,52 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         )
     )
 );
+
+// Helper method to get database connection string
+static string GetDatabaseConnectionString(IConfiguration configuration)
+{
+    // Check for Render-injected DATABASE_URL first
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        try
+        {
+            // Convert postgresql://user:password@host:port/dbname to NPgsql format
+            var uri = new Uri(databaseUrl);
+            var userInfo = uri.UserInfo.Split(':');
+            
+            var connStr = new StringBuilder();
+            connStr.Append($"Host={uri.Host};");
+            connStr.Append($"Port={uri.Port};");
+            connStr.Append($"Database={uri.LocalPath.TrimStart('/')};");
+            connStr.Append($"Username={userInfo[0]};");
+            if (userInfo.Length > 1)
+                connStr.Append($"Password={userInfo[1]};");
+            connStr.Append("SSL Mode=Require;Trust Server Certificate=true;");
+            
+            Log.Information("Using DATABASE_URL from environment (Render database)");
+            return connStr.ToString();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to parse DATABASE_URL, falling back to appsettings.json");
+        }
+    }
+    
+    // Fallback to appsettings.json
+    var appsettingsString = configuration.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrEmpty(appsettingsString))
+    {
+        Log.Information("Using DefaultConnection from appsettings.json");
+        return appsettingsString;
+    }
+    
+    // Last resort - throw error if no connection string found
+    throw new InvalidOperationException(
+        "No database connection string found. " +
+        "Either set DATABASE_URL environment variable (Render) or " +
+        "configure 'DefaultConnection' in appsettings.json");
+}
 
 // Configuration JWT - Sécurisée avec variables d'environnement
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
