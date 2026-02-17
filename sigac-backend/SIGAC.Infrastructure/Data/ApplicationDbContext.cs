@@ -502,8 +502,8 @@ public class ApplicationDbContext : DbContext
             // User navigation sans FK explicite - EF Core déduira via UserId
             // (UserId est dans la clé composite, pas besoin de HasForeignKey)
 
-            // TenantId est une propriété scalaire pour isolation
-            entity.Property(wu => wu.TenantId).IsRequired(false);
+            // TenantId est une propriété scalaire pour isolation (required en prod)
+            entity.Property(wu => wu.TenantId).IsRequired();
             entity.HasIndex(wu => wu.TenantId);
 
             // Role reste en integer (EF Core default mapping)
