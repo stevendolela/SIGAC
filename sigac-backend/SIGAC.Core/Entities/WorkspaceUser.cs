@@ -17,7 +17,7 @@ public class WorkspaceUser
     /// Tenant ID pour isolation multi-tenant (ne pas naviguer avec HasOne(Tenant))
     /// car WorkspaceUser.PrimaryKey = (WorkspaceId, UserId)
     /// </summary>
-    public Guid TenantId { get; set; }
+    public Guid? TenantId { get; set; }
     
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;

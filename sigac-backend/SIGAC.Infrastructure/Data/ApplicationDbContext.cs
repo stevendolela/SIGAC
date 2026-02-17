@@ -68,6 +68,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.Property(e => e.NomComplet).HasMaxLength(200);
+            // Role et Status restent en integer (mappés par défaut par EF Core)
         });
 
         // Configuration Dossier
@@ -502,10 +503,10 @@ public class ApplicationDbContext : DbContext
             // (UserId est dans la clé composite, pas besoin de HasForeignKey)
 
             // TenantId est une propriété scalaire pour isolation
-            entity.Property(wu => wu.TenantId).IsRequired();
+            entity.Property(wu => wu.TenantId).IsRequired(false);
             entity.HasIndex(wu => wu.TenantId);
 
-            // Role stored as integer (matching DB schema)
+            // Role reste en integer (EF Core default mapping)
             entity.Property(wu => wu.IsActive).HasDefaultValue(true);
         });
 
