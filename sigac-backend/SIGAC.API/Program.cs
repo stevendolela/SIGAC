@@ -46,39 +46,20 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Get database connection string from appsettings.json
-// This is the authoritative source - configured with full Render PostgreSQL hostname
-var dbConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(dbConnectionString))
+// Database connection string - use appsettings.json as source of truth
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found in configuration.");
+    Log.Warning("DefaultConnection not found in appsettings.json, this may cause issues");
+    connectionString = "Host=localhost;Port=5432;Database=sigac_db;Username=sigac_user;Password=password";
 }
 
-// NOTE: We no longer parse DATABASE_URL environment variable
-// Reason: appsettings.json is the single source of truth with complete hostname
-// If DATABASE_URL parsing causes issues (incomplete hostname, etc), the solution is 
-// to keep the correct connection string in appsettings.json and use it directly
-Log.Information("Using database connection string from configuration (Host={Host}, Database={Database})", 
-    ExtractHostFromConnectionString(dbConnectionString), 
-    ExtractDatabaseFromConnectionString(dbConnectionString));
-
-// Helper methods to extract parts for logging (non-critical)
-static string ExtractHostFromConnectionString(string connStr)
-{
-    var match = System.Text.RegularExpressions.Regex.Match(connStr, @"Host=([^;]+)");
-    return match.Success ? match.Groups[1].Value : "unknown";
-}
-
-static string ExtractDatabaseFromConnectionString(string connStr)
-{
-    var match = System.Text.RegularExpressions.Regex.Match(connStr, @"Database=([^;]+)");
-    return match.Success ? match.Groups[1].Value : "unknown";
-}
+Log.Information("Database configuration loaded from appsettings.json");
 
 // Configuration de la base de données
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
-        dbConnectionString,
+        connectionString,
         npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
