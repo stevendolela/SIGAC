@@ -46,36 +46,33 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Parse DB connection string - handle Render PostgreSQL URL format
+// Get database connection string from appsettings.json
+// This is the authoritative source - configured with full Render PostgreSQL hostname
 var dbConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(dbConnectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found in configuration.");
 }
 
-// If connection string starts with "postgresql://", convert to EF Core format
-if (dbConnectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+// NOTE: We no longer parse DATABASE_URL environment variable
+// Reason: appsettings.json is the single source of truth with complete hostname
+// If DATABASE_URL parsing causes issues (incomplete hostname, etc), the solution is 
+// to keep the correct connection string in appsettings.json and use it directly
+Log.Information("Using database connection string from configuration (Host={Host}, Database={Database})", 
+    ExtractHostFromConnectionString(dbConnectionString), 
+    ExtractDatabaseFromConnectionString(dbConnectionString));
+
+// Helper methods to extract parts for logging (non-critical)
+static string ExtractHostFromConnectionString(string connStr)
 {
-    Log.Information("Detected Render PostgreSQL URL format, parsing...");
-    try
-    {
-        var uri = new Uri(dbConnectionString);
-        var userInfo = uri.UserInfo.Split(':');
-        var username = Uri.UnescapeDataString(userInfo[0]);
-        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-        var host = uri.Host;
-        var dbPort = uri.Port > 0 ? uri.Port : 5432;
-        var database = uri.AbsolutePath.TrimStart('/');
-        
-        // Build EF Core connection string
-        dbConnectionString = $"Host={host};Port={dbPort};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
-        Log.Information("Successfully converted PostgreSQL URL: Host={Host};Port={Port};Database={Database};Username={Username}", host, dbPort, database, username);
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Failed to parse PostgreSQL URL: {Url}", dbConnectionString);
-        throw;
-    }
+    var match = System.Text.RegularExpressions.Regex.Match(connStr, @"Host=([^;]+)");
+    return match.Success ? match.Groups[1].Value : "unknown";
+}
+
+static string ExtractDatabaseFromConnectionString(string connStr)
+{
+    var match = System.Text.RegularExpressions.Regex.Match(connStr, @"Database=([^;]+)");
+    return match.Success ? match.Groups[1].Value : "unknown";
 }
 
 // Configuration de la base de données
