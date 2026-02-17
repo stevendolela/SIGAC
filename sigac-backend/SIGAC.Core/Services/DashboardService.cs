@@ -209,8 +209,7 @@ public class DashboardService : IDashboardService
         Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : (Guid?)null;
         var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
-        var dossiers = await _dossierRepository.GetDossiersCreatedSinceAsync(
-            sixMonthsAgo, rapporteurFilter);
+        var dossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(sixMonthsAgo, rapporteurFilter);
 
         return BuildTimelineData(dossiers, 180); // Pass 180 days (6 months) to maintain behavior
     }
@@ -225,10 +224,13 @@ public class DashboardService : IDashboardService
         Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : (Guid?)null;
         var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
-        var dossiers = await _dossierRepository.GetDossiersCompletedSinceAsync(
-            sixMonthsAgo, rapporteurFilter);
+        var dossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(sixMonthsAgo, rapporteurFilter)
+            .ConfigureAwait(false);
+        
+        // Filtrer les dossiers complétés
+        var completed = dossiers.Where(d => d.Status == StatusDossier.Valide).ToList();
 
-        return BuildTimelineData(dossiers, 180); // Pass 180 days (6 months) to maintain behavior
+        return BuildTimelineData(completed, 180); // Pass 180 days (6 months) to maintain behavior
     }
 
     /// <summary>
