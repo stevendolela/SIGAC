@@ -212,7 +212,7 @@ public class DashboardService : IDashboardService
         var dossiers = await _dossierRepository.GetDossiersCreatedSinceAsync(
             sixMonthsAgo, rapporteurFilter);
 
-        return BuildTimelineData(dossiers);
+        return BuildTimelineData(dossiers, 180); // Pass 180 days (6 months) to maintain behavior
     }
 
     /// <summary>
@@ -228,7 +228,7 @@ public class DashboardService : IDashboardService
         var dossiers = await _dossierRepository.GetDossiersCompletedSinceAsync(
             sixMonthsAgo, rapporteurFilter);
 
-        return BuildTimelineData(dossiers);
+        return BuildTimelineData(dossiers, 180); // Pass 180 days (6 months) to maintain behavior
     }
 
     /// <summary>
@@ -274,17 +274,8 @@ public class DashboardService : IDashboardService
             });
         }
 
-        // Complète les mois manquants
-        // Si periodeDays = 0 (tous les temps), n'ajoute pas les zéros, retourne juste la timeline
-        // Sinon, complète les 6 derniers mois
-        if (periodeDays > 0)
-        {
-            return FillMissingMonths(timeline, 6);
-        }
-        else
-        {
-            return timeline.OrderBy(x => x.Date).ToList();
-        }
+        // Toujours remplir les 6 derniers mois (compatible avec tous les cas d'usage)
+        return FillMissingMonths(timeline, 6);
     }
 
     /// <summary>
