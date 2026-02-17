@@ -30,12 +30,10 @@ if (!string.IsNullOrEmpty(portEnv) && int.TryParse(portEnv, out var parsed))
 }
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // Enable SO_REUSEADDR to allow fast port rebind after crash
-    var listenOptions = new Microsoft.AspNetCore.Server.Kestrel.Core.ListenOptions(
-        System.Net.IPAddress.Any, port
-    );
-    listenOptions.SocketOptions.ReusePort = true;  // Allow multiple processes to bind same port
-    options.Listen(listenOptions);
+    options.ListenAnyIP(port, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+    });
 });
 
 // Configuration Serilog

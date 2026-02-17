@@ -1,76 +1,55 @@
-# Multi-stage Docker build for SIGAC API
-# Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS builder
+# Multi-stage Docker build for SIGAC API - Simplified for Render
+# Build stage: Compile and publish the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS build
 
 WORKDIR /src
 
 # Copy project files
-COPY ["SIGAC.API/SIGAC.API.csproj", "SIGAC.API/"]
-COPY ["SIGAC.Core/SIGAC.Core.csproj", "SIGAC.Core/"]
-COPY ["SIGAC.Infrastructure/SIGAC.Infrastructure.csproj", "SIGAC.Infrastructure/"]
+COPY ["sigac-backend/SIGAC.API/SIGAC.API.csproj", "SIGAC.API/"]
+COPY ["sigac-backend/SIGAC.Core/SIGAC.Core.csproj", "SIGAC.Core/"]
+COPY ["sigac-backend/SIGAC.Infrastructure/SIGAC.Infrastructure.csproj", "SIGAC.Infrastructure/"]
 
-# Restore NuGet packages
+# Restore dependencies
 RUN dotnet restore "SIGAC.API/SIGAC.API.csproj"
 
-# Copy source code
-COPY . .
+# Copy all source code from sigac-backend
+COPY sigac-backend/ ./
 
-# Build
-RUN dotnet build "SIGAC.API/SIGAC.API.csproj" -c Release -o /app/build
+# Publish the application (not just build)
+RUN dotnet publish "SIGAC.API/SIGAC.API.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore
 
-# Stage 2: Publish
-FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS publish
+# Runtime stage: Execute the published binary
+FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS runtime
 
-WORKDIR /src
-
-# Copy project files
-COPY ["SIGAC.API/SIGAC.API.csproj", "SIGAC.API/"]
-COPY ["SIGAC.Core/SIGAC.Core.csproj", "SIGAC.Core/"]
-COPY ["SIGAC.Infrastructure/SIGAC.Infrastructure.csproj", "SIGAC.Infrastructure/"]
-
-# Restore
-RUN dotnet restore "SIGAC.API/SIGAC.API.csproj"
-
-# Copy all source
-COPY . .
-
-# Publish
-RUN dotnet publish "SIGAC.API/SIGAC.API.csproj" -c Release -o /app/publish
-
-# Stage 3: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0.2
-
-# Install EF Core CLI tools in runtime image
-RUN apt-get update && apt-get install -y --no-install-recommends dotnet-ef=8.* \
-    && rm -rf /var/lib/apt/lists/*
-
+# Keep SDK for EF Core CLI tools (for migration support)
 WORKDIR /app
 
-# Copy published application from publish stage
-COPY --from=publish /app/publish .
+# Copy published binaries from build stage
+COPY --from=build /app/publish .
 
-# Copy migration projects for EF Core operations
-COPY --from=publish /src/SIGAC.Infrastructure /app/SIGAC.Infrastructure
-COPY --from=publish /src/SIGAC.Core /app/SIGAC.Core
-COPY --from=publish /src/SIGAC.API /app/SIGAC.API
+# Copy source code for EF Core migrations
+COPY sigac-backend/ ./src/
 
 # Copy entrypoint script
 COPY sigac-backend/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Create data directories
-RUN mkdir -p /app/data/uploads && mkdir -p /app/logs
+# Create persistent data directories
+RUN mkdir -p /app/data/uploads /app/logs
 
-# Default environment
+# Environment configuration for production
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:10000/health || exit 1
-
-# Expose port
+# Expose API port
 EXPOSE 10000
 
-# Run entrypoint
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:10000/health || exit 1
+
+# Start application with entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
