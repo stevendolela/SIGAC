@@ -286,7 +286,7 @@ export default function DossierList({ onSelect }: Props) {
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: '#6b7280' }}>
                     <span>📋 {formatTypeAffaire(d.type || d.typeAffaire)}</span>
                     <span>📅 {(d.dateDepot || d.dateDebut) 
-                      ? new Date(d.dateDepot || d.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+                      ? new Date(d.dateDepot ?? d.dateDebut ?? '').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
                       : '-'
                     }</span>
                   </div>

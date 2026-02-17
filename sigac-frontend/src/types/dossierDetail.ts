@@ -11,7 +11,7 @@ export interface HistoriqueDto {
 }
 
 export interface DossierDetailDto extends DossierListDto {
-  type?: string // Type d'affaire
+  // type is inherited from DossierListDto
   demandeur: string
   defendeur?: string | null
   dateDepot?: string // Date de dépôt (ISO)

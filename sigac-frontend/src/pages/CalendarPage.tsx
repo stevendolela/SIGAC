@@ -59,7 +59,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       
       const [eventsData, dossiersData, usersData] = await Promise.all([
         CalendarApi.get(startDate.toISOString(), endDate.toISOString()),
-        dossierApi.list(1, 1000),
+        dossierApi.list({ page: 1, pageSize: 1000 }),
         userApi.list(1, 1000)
       ])
       
@@ -587,7 +587,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                     if (!searchParticipant) return true;
                     const searchLower = searchParticipant.toLowerCase();
                     return (
-                      user.nomComplet.toLowerCase().includes(searchLower) ||
+                      (user.nomComplet || '').toLowerCase().includes(searchLower) ||
                       user.role.toLowerCase().includes(searchLower) ||
                       (user.username && user.username.toLowerCase().includes(searchLower))
                     );
@@ -632,7 +632,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                 if (!searchParticipant) return true;
                 const searchLower = searchParticipant.toLowerCase();
                 return (
-                  user.nomComplet.toLowerCase().includes(searchLower) ||
+                  (user.nomComplet || '').toLowerCase().includes(searchLower) ||
                   user.role.toLowerCase().includes(searchLower) ||
                   (user.username && user.username.toLowerCase().includes(searchLower))
                 );

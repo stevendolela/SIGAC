@@ -124,14 +124,14 @@ export default function CourrierPage() {
     // Chargement workspaces et users
     const loadWorkspaces = async () => {
       try {
-        const ws = await workspaceApi.list();
+        const ws = await workspaceApi.getUserWorkspaces();
         setWorkspaces(ws);
       } catch (e) { /* ignore */ }
     };
     const loadUsers = async () => {
       try {
-        const us = await userApi.list();
-        setUsers(us);
+        const us = await userApi.list(1, 1000);
+        setUsers(us.data);
       } catch (e) { /* ignore */ }
     };
     loadWorkspaces();
@@ -383,7 +383,7 @@ export default function CourrierPage() {
                 <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>À traiter</span>
                 <Zap size={20} style={{ color: '#f59e0b' }} />
               </div>
-              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{(stats.recu || 0) + (stats.enTraitement || 0)}</div>
+              <div style={{ fontSize: '36px', fontWeight: 800, color: '#1e293b' }}>{(stats.enAttente || 0) + (stats.enTraitement || 0)}</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>nouveaux + en cours</div>
             </div>
 
@@ -747,7 +747,7 @@ export default function CourrierPage() {
                     </td>
                     <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', borderRadius: '12px 0 0 12px', fontWeight: 700, color: '#4f46e5', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {courrier.reference}
-                      {courrier.hasDocument && <Paperclip size={14} style={{ color: '#f59e0b' }} title="Document joint" />}
+                      {courrier.hasDocument && <span title="Document joint"><Paperclip size={14} style={{ color: '#f59e0b' }} /></span>}
                     </td>
                     <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 8px', textAlign: 'center' }}>
                       {courrier.type === 'Entrant' ? <Inbox size={18} style={{ color: '#3b82f6' }} /> : <Send size={18} style={{ color: '#8b5cf6' }} />}

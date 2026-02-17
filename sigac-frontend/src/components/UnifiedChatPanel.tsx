@@ -532,6 +532,7 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [recordingStartTime, setRecordingStartTime] = useState(0);
   const [previewTime, setPreviewTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -991,15 +992,15 @@ const UnreadBadge: React.FC = React.memo(() => {
   const getOtherUserName = useCallback((conv: ChatConversationDto): string => {
     // Utilise le nom complet si disponible, sinon le username
     const userStr = localStorage.getItem('user');
-    if (!userStr) return conv.user1NomComplet || conv.user1Username;
+    if (!userStr) return conv.user1NomComplet || conv.user1Username || 'Utilisateur';
     
     const user = JSON.parse(userStr);
     const currentUserId = user.id;
     
     if (conv.user1Id === currentUserId) {
-      return conv.user2NomComplet || conv.user2Username;
+      return conv.user2NomComplet || conv.user2Username || 'Utilisateur';
     }
-    return conv.user1NomComplet || conv.user1Username;
+    return conv.user1NomComplet || conv.user1Username || 'Utilisateur';
   }, []);
 
   const getOtherUserStatus = useCallback((conv: ChatConversationDto): UserStatus | undefined => {

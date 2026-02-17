@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { audienceApi } from '../../api/audienceApi'
-import type { AudienceListDto, TypeAudience, StatutAudience } from '../../types/audience'
-import { typeAudienceLabels, statutAudienceLabels, statutAudienceColors, typeAudienceColors } from '../../types/audience'
+import type { AudienceListDto } from '../../types/audience'
+import { TypeAudience, StatutAudience, typeAudienceLabels, statutAudienceLabels, statutAudienceColors, typeAudienceColors } from '../../types/audience'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -264,21 +264,23 @@ export default function AudienceList({ dossierId, onSelectAudience, onRefresh }:
 // Fonctions helper pour les styles
 function getTypeStyle(type: TypeAudience) {
   const styles: Record<TypeAudience, any> = {
-    'Preliminaire': { background: '#dbeafe', color: '#1e40af' },
-    'Fond': { background: '#fef3c7', color: '#92400e' },
-    'Reexamen': { background: '#e0e7ff', color: '#3730a3' },
-    'Urgente': { background: '#fee2e2', color: '#991b1b' }
+    [TypeAudience.Preliminaire]: { background: '#dbeafe', color: '#1e40af' },
+    [TypeAudience.Plaidoirie]: { background: '#fef3c7', color: '#92400e' },
+    [TypeAudience.Delibere]: { background: '#e0e7ff', color: '#3730a3' },
+    [TypeAudience.Prononce]: { background: '#fee2e2', color: '#991b1b' },
+    [TypeAudience.Instruction]: { background: '#d1fae5', color: '#065f46' },
+    [TypeAudience.MiseEnEtat]: { background: '#fce7f3', color: '#9d174d' }
   }
   return styles[type] || { background: '#f3f4f6', color: '#6b7280' }
 }
 
 function getStatutStyle(statut: StatutAudience) {
   const styles: Record<StatutAudience, any> = {
-    'Planifiee': { background: '#dbeafe', color: '#1e40af' },
-    'EnCours': { background: '#fef3c7', color: '#92400e' },
-    'Terminee': { background: '#d1fae5', color: '#065f46' },
-    'Reportee': { background: '#fed7aa', color: '#9a3412' },
-    'Annulee': { background: '#f3f4f6', color: '#374151' }
+    [StatutAudience.Planifiee]: { background: '#dbeafe', color: '#1e40af' },
+    [StatutAudience.Confirmee]: { background: '#fef3c7', color: '#92400e' },
+    [StatutAudience.Tenue]: { background: '#d1fae5', color: '#065f46' },
+    [StatutAudience.Reportee]: { background: '#fed7aa', color: '#9a3412' },
+    [StatutAudience.Annulee]: { background: '#f3f4f6', color: '#374151' }
   }
   return styles[statut] || { background: '#f3f4f6', color: '#6b7280' }
 }

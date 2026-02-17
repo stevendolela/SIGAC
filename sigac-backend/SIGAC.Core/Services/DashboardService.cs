@@ -81,7 +81,7 @@ public class DashboardService : IDashboardService
             {
                 parType = allDossiers
                     .Where(d => d?.TypeAffaire != null)
-                    .GroupBy(d => d.TypeAffaire.Nom ?? "Non spécifié")
+                    .GroupBy(d => d.TypeAffaire!.Nom ?? "Non spécifié")
                     .Where(g => !string.IsNullOrEmpty(g.Key))
                     .ToDictionary(g => g.Key, g => g.Count());
 
@@ -273,7 +273,6 @@ public class DashboardService : IDashboardService
 
         // Agrège par mois CRÉÉ
         var grouped = dossiers
-            .Where(d => d.CreatedAt != null)
             .GroupBy(d => new { d.CreatedAt.Year, d.CreatedAt.Month })
             .OrderBy(g => g.Key.Year)
             .ThenBy(g => g.Key.Month)

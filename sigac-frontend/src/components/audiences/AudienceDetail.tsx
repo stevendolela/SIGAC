@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { audienceApi } from '../../api/audienceApi'
 import { dossierApi } from '../../api/dossierApi'
 import type { AudienceDetailDto } from '../../types/audience'
-import type { DossierListDto } from '../../types/dossier'
+import type { DossierDetailDto } from '../../types/dossierDetail'
 import { typeAudienceLabels, statutAudienceLabels, statutAudienceColors, typeAudienceColors } from '../../types/audience'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -17,7 +17,7 @@ interface AudienceDetailProps {
 
 export default function AudienceDetail({ audienceId, onEdit, onClose, canEdit = false, onViewDossier }: AudienceDetailProps) {
   const [audience, setAudience] = useState<AudienceDetailDto | null>(null)
-  const [dossier, setDossier] = useState<DossierListDto | null>(null)
+  const [dossier, setDossier] = useState<DossierDetailDto | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

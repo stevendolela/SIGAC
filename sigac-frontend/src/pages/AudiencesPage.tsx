@@ -6,7 +6,7 @@ import { audienceApi } from '../api/audienceApi'
 import { dossierApi } from '../api/dossierApi'
 import type { AudienceListDto } from '../types/audience'
 import { TypeAudience, StatutAudience, typeAudienceLabels, statutAudienceLabels } from '../types/audience'
-import type { DossierListDto } from '../types/dossier'
+import type { DossierDetailDto } from '../types/dossierDetail'
 import { parseDateString, formatDateToISO, isSameDate, getDaysInMonthEU, getDayOfWeekEU } from '../utils/dateUtils'
 
 interface AudiencesPageProps {
@@ -16,7 +16,7 @@ interface AudiencesPageProps {
 
 export default function AudiencesPage({ onViewDossier, onManageSalles }: AudiencesPageProps = {}) {
   const [audiences, setAudiences] = useState<AudienceListDto[]>([])
-  const [dossiers, setDossiers] = useState<Map<string, DossierListDto>>(new Map())
+  const [dossiers, setDossiers] = useState<Map<string, DossierDetailDto>>(new Map())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -58,7 +58,7 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
       const dossierIds = [...new Set(audiencesData.map(a => a.dossierId))]
       
       // Charger les informations des dossiers
-      const dossiersMap = new Map<string, DossierListDto>()
+      const dossiersMap = new Map<string, DossierDetailDto>()
       await Promise.all(
         dossierIds.map(async (dossierId) => {
           try {

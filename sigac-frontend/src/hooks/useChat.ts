@@ -27,7 +27,7 @@ export function useChatConversations() {
         const hasChanged = dataArray.some(conv => {
           const prevConv = prevMap.get(conv.id);
           return !prevConv || 
-                 prevConv.lastMessageTime !== conv.lastMessageTime ||
+                 prevConv.lastMessageAt !== conv.lastMessageAt ||
                  prevConv.unreadCount !== conv.unreadCount;
         });
         
@@ -188,8 +188,8 @@ export function useChatGroups() {
         const hasChanged = dataArray.some(grp => {
           const prevGrp = prevMap.get(grp.id);
           return !prevGrp || 
-                 prevGrp.lastMessageTime !== grp.lastMessageTime ||
-                 prevGrp.unreadCount !== grp.unreadCount;
+                 prevGrp.lastMessageAt !== grp.lastMessageAt ||
+                 prevGrp.messageCount !== grp.messageCount;
         });
         
         return hasChanged ? dataArray : prev;

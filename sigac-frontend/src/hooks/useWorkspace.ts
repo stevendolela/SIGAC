@@ -68,11 +68,11 @@ export function useWorkspace() {
  * Hook pour charger et sélectionner un workspace spécifique
  */
 export function useWorkspaceById(workspaceId: string | undefined) {
-  const { setWorkspaceById, currentWorkspace, loading, error } = useWorkspaceStore();
+  const { setCurrentWorkspaceById, currentWorkspace, loading, error } = useWorkspaceStore();
 
   useEffect(() => {
     if (workspaceId && currentWorkspace?.id !== workspaceId) {
-      setWorkspaceById(workspaceId).catch(console.error);
+      setCurrentWorkspaceById(workspaceId).catch(console.error);
     }
   }, [workspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
 

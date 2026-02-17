@@ -17,6 +17,11 @@ export const documentApi = {
     const resp = await api.get<DocumentDto[]>(`/Documents/dossier/${dossierId}`)
     return resp.data
   },
+  async listAll(): Promise<DocumentDto[]> {
+    // TODO: Implémenter l'endpoint backend GET /Documents/all
+    // Pour l'instant, on lance une erreur pour que le frontend utilise le fallback
+    throw new Error('listAll endpoint not implemented')
+  },
   async upload(dossierId: string, file: File, typeDocument: string = 'Document') {
     const formData = new FormData()
     formData.append('file', file)
