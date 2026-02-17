@@ -79,7 +79,7 @@ static string GetDatabaseConnectionString(IConfiguration configuration)
             
             var connStr = new StringBuilder();
             connStr.Append($"Host={uri.Host};");
-            connStr.Append($"Port={uri.Port > 0 ? uri.Port : 5432};");
+            connStr.Append($"Port={(uri.Port > 0 ? uri.Port : 5432)};");
             connStr.Append($"Database={uri.LocalPath.TrimStart('/')};");
             connStr.Append($"Username={userInfo[0]};");
             if (userInfo.Length > 1)
