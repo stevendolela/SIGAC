@@ -8,14 +8,14 @@ echo "=========================================="
 cd /app
 
 echo "Executing: dotnet ef database update"
-echo "  Project: sigac-backend/SIGAC.Infrastructure"
-echo "  Startup: sigac-backend/SIGAC.API"
+echo "  Project: /src/SIGAC.Infrastructure"
+echo "  Startup: /src/SIGAC.API"
 echo ""
 
-# Apply migrations with error handling
+# Apply migrations with correct paths
 dotnet ef database update \
-    --project sigac-backend/SIGAC.Infrastructure \
-    --startup-project sigac-backend/SIGAC.API \
+    --project /src/SIGAC.Infrastructure \
+    --startup-project /src/SIGAC.API \
     --no-build \
     2>&1 || {
         EXIT_CODE=$?
