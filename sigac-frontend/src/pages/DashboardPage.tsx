@@ -29,21 +29,21 @@ export default function DashboardPage() {
       setIsManager(user?.role === 'Manager')
       // Utiliser defaultWorkspaceId pour les connexions des utilisateurs
       setWorkspaceId(user?.defaultWorkspaceId || null)
-      setSelectedWorkspace(user?.defaultWorkspaceId || null)
+      setSelectedWorkspace(null) // Par défaut: "Tous les départements"
     } catch {
       setIsAdmin(false)
       setIsManager(false)
     }
   }, [])
 
-  // Charger les workspaces pour les Admin
+  // Charger les workspaces (départements) pour les Admin
   useEffect(() => {
     if (isAdmin) {
       workspaceApi.getUserWorkspaces()
         .then((workspaces) => {
           setWorkspaces(workspaces || [])
         })
-        .catch(err => console.error('Erreur chargement workspaces:', err))
+        .catch(err => console.error('Erreur chargement départements:', err))
     }
   }, [isAdmin])
 
@@ -126,17 +126,17 @@ export default function DashboardPage() {
             📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
           </div>
           <div className="dashboard-actions">
-            {/* Sélecteur de Workspace pour Admin */}
+            {/* Sélecteur de Département pour Admin */}
             {isAdmin && workspaces.length > 0 && (
               <div className="workspace-selector">
-                <label htmlFor="workspace-select">Workspace:</label>
+                <label htmlFor="workspace-select">Département:</label>
                 <select
                   id="workspace-select"
                   value={selectedWorkspace || ''}
                   onChange={(e) => setSelectedWorkspace(e.target.value || null)}
                   className="filter-select"
                 >
-                  <option value="">📍 Tous les workspaces</option>
+                  <option value="">📍 Tous les départements</option>
                   {workspaces.map(ws => (
                     <option key={ws.id} value={ws.id}>
                       {ws.name}
