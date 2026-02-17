@@ -93,8 +93,8 @@ public class DashboardService : IDashboardService
             }
 
             // === Timeline (derniers 6 mois) ===
-            var timelineCreated = BuildTimelineData(allDossiers.Where(d => d.CreatedAt >= startDate).ToList(), periodeDays);
-            var timelineCompleted = BuildTimelineData(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList(), periodeDays);
+            var timelineCreated = BuildTimelineData(allDossiers.Where(d => d.CreatedAt >= startDate).ToList());
+            var timelineCompleted = BuildTimelineDataByModifiedDate(allDossiers.Where(d => d.Status == StatusDossier.Valide && d.ModifiedAt.HasValue && d.ModifiedAt.Value >= startDate).ToList());
 
             // === Indicateurs de performance ===
             var tauxTraitement = totalDossiers > 0 
@@ -224,7 +224,7 @@ public class DashboardService : IDashboardService
 
         var dossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(sixMonthsAgo, rapporteurFilter);
 
-        return BuildTimelineData(dossiers, 180); // Pass 180 days (6 months) to maintain behavior
+        return BuildTimelineData(dossiers);
     }
 
     /// <summary>
@@ -243,7 +243,7 @@ public class DashboardService : IDashboardService
         // Filtrer les dossiers complétés
         var completed = dossiers.Where(d => d.Status == StatusDossier.Valide).ToList();
 
-        return BuildTimelineData(completed, 180); // Pass 180 days (6 months) to maintain behavior
+        return BuildTimelineDataByModifiedDate(completed);
     }
 
     /// <summary>
@@ -267,12 +267,13 @@ public class DashboardService : IDashboardService
     /// <summary>
     /// Construit les données de timeline par mois
     /// </summary>
-    private List<TimelineDataDto> BuildTimelineData(List<Dossier> dossiers, int periodeDays = 0)
+    private List<TimelineDataDto> BuildTimelineData(List<Dossier> dossiers)
     {
         var timeline = new List<TimelineDataDto>();
 
-        // Agrège par mois
+        // Agrège par mois CRÉÉ
         var grouped = dossiers
+            .Where(d => d.CreatedAt != null)
             .GroupBy(d => new { d.CreatedAt.Year, d.CreatedAt.Month })
             .OrderBy(g => g.Key.Year)
             .ThenBy(g => g.Key.Month)
@@ -289,7 +290,37 @@ public class DashboardService : IDashboardService
             });
         }
 
-        // Toujours remplir les 6 derniers mois (compatible avec tous les cas d'usage)
+        // Toujours remplir les 6 derniers mois
+        return FillMissingMonths(timeline, 6);
+    }
+
+    /// <summary>
+    /// Construit les données de timeline par date de modification (pour dossiers complétés)
+    /// </summary>
+    private List<TimelineDataDto> BuildTimelineDataByModifiedDate(List<Dossier> dossiers)
+    {
+        var timeline = new List<TimelineDataDto>();
+
+        // Agrège par mois MODIFIÉ
+        var grouped = dossiers
+            .Where(d => d.ModifiedAt.HasValue)
+            .GroupBy(d => new { d.ModifiedAt!.Value.Year, d.ModifiedAt!.Value.Month })
+            .OrderBy(g => g.Key.Year)
+            .ThenBy(g => g.Key.Month)
+            .ToList();
+
+        foreach (var group in grouped)
+        {
+            var moisStr = $"{group.Key.Year}-{group.Key.Month:D2}";
+            timeline.Add(new TimelineDataDto
+            {
+                Mois = moisStr,
+                Valeur = group.Count(),
+                Date = new DateTime(group.Key.Year, group.Key.Month, 1)
+            });
+        }
+
+        // Toujours remplir les 6 derniers mois
         return FillMissingMonths(timeline, 6);
     }
 
