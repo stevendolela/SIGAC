@@ -17,10 +17,8 @@ WORKDIR /app
 # Copy published application
 COPY --from=build /app/publish .
 
-# Copy source code for EF migrations
-COPY sigac-backend/SIGAC.Infrastructure/ ./SIGAC.Infrastructure/
-COPY sigac-backend/SIGAC.Core/ ./SIGAC.Core/
-COPY sigac-backend/SIGAC.API/ ./SIGAC.API/
+# Copy entire sigac-backend directory with all source + .csproj files for EF migrations
+COPY sigac-backend/ ./sigac-backend/
 
 # Copy and make startup script executable
 COPY sigac-backend/entrypoint.sh ./entrypoint.sh

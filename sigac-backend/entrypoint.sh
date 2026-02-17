@@ -1,27 +1,39 @@
 #!/bin/bash
-
-# Script d'entrée pour conteneur Render
-# Applique les migrations EF Core puis démarre l'API
-
 set -e
 
 echo "=========================================="
-echo "Applying EF Core migrations..."
+echo "SIGAC API - Applying EF Core Migrations"
 echo "=========================================="
 
 cd /app
 
-# Apply migrations
+echo "Executing: dotnet ef database update"
+echo "  Project: sigac-backend/SIGAC.Infrastructure"
+echo "  Startup: sigac-backend/SIGAC.API"
+echo ""
+
+# Apply migrations with error handling
 dotnet ef database update \
-    --project SIGAC.Infrastructure \
-    --startup-project SIGAC.API \
+    --project sigac-backend/SIGAC.Infrastructure \
+    --startup-project sigac-backend/SIGAC.API \
     --no-build \
-    || echo "Migration failed or already applied - continuing anyway"
+    2>&1 || {
+        EXIT_CODE=$?
+        echo ""
+        echo "[WARNING] Migration returned exit code: $EXIT_CODE"
+        echo "[INFO] Proceeding with API startup..."
+        echo ""
+    }
+
+echo ""
+echo "Step 2: Starting SIGAC API Server..."
 
 echo ""
 echo "=========================================="
-echo "Starting SIGAC API..."  
+echo "SIGAC API - Starting Server"
 echo "=========================================="
+echo "Port: http://0.0.0.0:10000"
+echo ""
 
-# Start the application
+# Start the ASP.NET Core application
 exec dotnet SIGAC.API.dll
