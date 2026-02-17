@@ -36,13 +36,9 @@ namespace SIGAC.Core.Entities
         // Relations
         public Tenant Tenant { get; set; } = null!;
         
-        /// <summary>
-        /// Assignations de l'utilisateur aux différents Workspaces (Départements)
-        /// Un TenantUser peut être assigné à plusieurs Workspaces avec des rôles différents
-        /// </summary>
-        public ICollection<WorkspaceUser> WorkspaceAssignments { get; set; } = new List<WorkspaceUser>();
-        
-        public ICollection<AuditLog> Actions { get; set; } = new List<AuditLog>();
+        // Note: WorkspaceAssignments et Actions supprimés car ils créent
+        // des FK TenantUserId non-désirées dans WorkspaceUsers et AuditLogs.
+        // La relation se fait via TenantId dans ces tables.
     }
     
     /// <summary>

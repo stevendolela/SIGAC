@@ -505,7 +505,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(wu => wu.TenantId).IsRequired();
             entity.HasIndex(wu => wu.TenantId);
 
-            entity.Property(wu => wu.Role).HasConversion<string>();
+            // Role stored as integer (matching DB schema)
             entity.Property(wu => wu.IsActive).HasDefaultValue(true);
         });
 
