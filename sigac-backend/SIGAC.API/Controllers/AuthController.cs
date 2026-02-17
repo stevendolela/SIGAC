@@ -78,7 +78,14 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Erreur lors de la connexion de l'utilisateur {Username}", loginDto.Username);
             // Écrire la pile d'exception sur la sortie standard pour faciliter le debugging dans les tests
             try { Console.Error.WriteLine(ex.ToString()); } catch { }
-            return StatusCode(500, new { error = "InternalServerError", message = "Une erreur est survenue" });
+            // TEMPORAIRE: Retourner les détails de l'erreur pour diagnostic
+            return StatusCode(500, new { 
+                error = "InternalServerError", 
+                message = ex.Message,
+                type = ex.GetType().Name,
+                stackTrace = ex.StackTrace?.Split('\n').Take(10).ToArray(),
+                innerException = ex.InnerException?.Message
+            });
         }
     }
 
