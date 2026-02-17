@@ -79,27 +79,32 @@ static string GetDatabaseConnectionString(IConfiguration configuration)
             
             var connStr = new StringBuilder();
             connStr.Append($"Host={uri.Host};");
-            connStr.Append($"Port={uri.Port};");
+            connStr.Append($"Port={uri.Port > 0 ? uri.Port : 5432};");
             connStr.Append($"Database={uri.LocalPath.TrimStart('/')};");
             connStr.Append($"Username={userInfo[0]};");
             if (userInfo.Length > 1)
                 connStr.Append($"Password={userInfo[1]};");
-            connStr.Append("SSL Mode=Require;Trust Server Certificate=true;");
+            connStr.Append("SslMode=Require;TrustServerCertificate=true;");
             
-            Log.Information("Using DATABASE_URL from environment (Render database)");
+            Log.Information("✓ Using DATABASE_URL from environment (Render PostgreSQL)");
             return connStr.ToString();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to parse DATABASE_URL, falling back to appsettings.json");
+            Log.Error(ex, "✗ Failed to parse DATABASE_URL");
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+            {
+                throw new InvalidOperationException(
+                    "Production: DATABASE_URL parsing failed. Cannot proceed.", ex);
+            }
         }
     }
     
-    // Fallback to appsettings.json
+    // Fallback to appsettings.json (development only)
     var appsettingsString = configuration.GetConnectionString("DefaultConnection");
     if (!string.IsNullOrEmpty(appsettingsString))
     {
-        Log.Information("Using DefaultConnection from appsettings.json");
+        Log.Information("✓ Using DefaultConnection from appsettings.json");
         return appsettingsString;
     }
     
