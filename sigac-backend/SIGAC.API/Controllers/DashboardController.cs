@@ -50,32 +50,42 @@ public class DashboardController : ControllerBase
     /// <returns>Statistiques enrichies du dashboard</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(DashboardStatisticsDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<DashboardStatisticsDto>> GetStatistics([FromQuery] int periodeDays = 0, [FromQuery] Guid? workspaceId = null)
+    public async Task<ActionResult<object>> GetStatistics([FromQuery] int periodeDays = 0, [FromQuery] Guid? workspaceId = null)
     {
         try
         {
+            _logger.LogInformation("=== DASHBOARD REQUEST START === periodeDays={PeriodeDays}, workspaceId={WorkspaceId}", 
+                periodeDays, workspaceId);
+
             if (periodeDays < 0)
-                return BadRequest("La période doit être positive");
+                return BadRequest(new { message = "La période doit être positive" });
 
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
-            _logger.LogInformation("Dashboard request: periodeDays={PeriodeDays}, workspaceId={WorkspaceId}, userId={UserId}, role={UserRole}", 
-                periodeDays, workspaceId, userId, userRole);
+            _logger.LogInformation("User context: userId={UserId}, role={UserRole}", userId, userRole);
 
-            var stats = await _dashboardService.GetStatisticsAsync(userId, userRole, periodeDays, workspaceId);
-            
-            _logger.LogInformation(
-                "Utilisateur {UserId} a consulté les statistiques du dashboard (période: {PeriodeDays}j)",
-                userId, periodeDays);
-
-            return Ok(stats);
+            try
+            {
+                var stats = await _dashboardService.GetStatisticsAsync(userId, userRole, periodeDays, workspaceId);
+                _logger.LogInformation("=== DASHBOARD REQUEST SUCCESS ===");
+                return Ok(stats);
+            }
+            catch (Exception serviceEx)
+            {
+                _logger.LogError(serviceEx, "=== SERVICE ERROR === Message: {Message}", serviceEx.Message);
+                throw;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur DASHBOARD: {ErrorMessage}\n{StackTrace}", ex.Message, ex.StackTrace);
+            _logger.LogError(ex, "=== CONTROLLER ERROR === {FullError}", ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError, 
-                new { message = $"Erreur lors de la récupération des statistiques: {ex.Message}" });
+                new { 
+                    message = "Erreur lors de la récupération des statistiques",
+                    error = ex.Message,
+                    type = ex.GetType().Name
+                });
         }
     }
 
