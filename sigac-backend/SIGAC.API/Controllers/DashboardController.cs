@@ -60,6 +60,9 @@ public class DashboardController : ControllerBase
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
+            _logger.LogInformation("Dashboard request: periodeDays={PeriodeDays}, workspaceId={WorkspaceId}, userId={UserId}, role={UserRole}", 
+                periodeDays, workspaceId, userId, userRole);
+
             var stats = await _dashboardService.GetStatisticsAsync(userId, userRole, periodeDays, workspaceId);
             
             _logger.LogInformation(
@@ -70,9 +73,9 @@ public class DashboardController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des statistiques");
+            _logger.LogError(ex, "Erreur DASHBOARD: {ErrorMessage}\n{StackTrace}", ex.Message, ex.StackTrace);
             return StatusCode(StatusCodes.Status500InternalServerError, 
-                new { message = "Erreur lors de la récupération des statistiques" });
+                new { message = $"Erreur lors de la récupération des statistiques: {ex.Message}" });
         }
     }
 

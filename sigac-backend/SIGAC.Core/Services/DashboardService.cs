@@ -49,8 +49,17 @@ public class DashboardService : IDashboardService
             Guid? rapporteurFilter = userRole == UserRole.Collaborateur ? userId : null;
 
             // === Récupère TOUS les dossiers filtrés par période ET workspace ===
-            var allDossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(
-                startDate, rapporteurFilter, workspaceId);
+            List<Dossier> allDossiers;
+            try
+            {
+                allDossiers = await _dossierRepository.GetDossiersModifiedSinceAsync(
+                    startDate, rapporteurFilter, workspaceId);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Dashboard] Error fetching dossiers: {ex.Message}");
+                allDossiers = new List<Dossier>();
+            }
 
             if (allDossiers == null)
                 allDossiers = new List<Dossier>();
@@ -177,7 +186,8 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}");
+            Debug.WriteLine($"DashboardService.GetStatisticsAsync Error: {ex.Message}\n{ex.StackTrace}");
+            System.Diagnostics.Debug.WriteLine($"[Dashboard Error] userId={userId}, role={userRole}, periodeDays={periodeDays}, workspaceId={workspaceId}");
             throw;
         }
     }
