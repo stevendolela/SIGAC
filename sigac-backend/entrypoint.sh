@@ -1,10 +1,20 @@
 #!/bin/bash
+set -e
 
 echo "=========================================="
 echo "SIGAC API - Container Initialization"  
-echo "=========================================="
+echo "==========================================" 
 
 cd /app
+
+# CRITICAL: Kill any existing dotnet processes holding the port
+echo ""
+echo "Step 0: Killing any zombie processes on port 10000..."
+echo "=========================================="
+killall -9 dotnet 2>/dev/null || true
+fuser -k 10000/tcp 2>/dev/null || true
+sleep 2
+echo "[OK] Cleanup complete"
 
 # Step 1: Apply migrations (non-fatal if they fail)
 echo ""
@@ -23,56 +33,24 @@ timeout 60 dotnet ef database update \
         echo "[INFO] Proceeding with API startup..."
     }
 
-# Step 2: CRITICAL - Wait for TCP TIME_WAIT socket state to clear
-# Linux keeps sockets in TIME_WAIT for 30-60 seconds after close
-# We need to wait LONGER than that to ensure the port is free
+# Step 2: Quick port check (no long wait - we already killed processes)
 echo ""
-echo "Step 2: Waiting for socket cleanup (TCP TIME_WAIT)..."
+echo "Step 2: Verifying port is free..."
 echo "=========================================="
-echo "Waiting 45 seconds to ensure port 10000 is fully released..."
-echo "(TCP TIME_WAIT on Linux typically lasts 30-60 seconds)"
-sleep 45
-
-# Step 3: Verify port is free before trying to bind
-echo ""
-echo "Step 3: Checking port availability..."
-echo "=========================================="
-API_PORT=10000
-
-# Use netstat if available, otherwise just proceed
-if command -v netstat &> /dev/null; then
-    if netstat -tuln 2>/dev/null | grep -q ":$API_PORT "; then
-        echo "[WARNING] Port $API_PORT appears to still be in use!"
-        echo "[INFO] Will attempt to start anyway (may retry)..."
-    else
-        echo "[INFO] Port $API_PORT is free - proceeding..."
-    fi
+if lsof -i :10000 2>/dev/null; then
+    echo "[WARNING] Port 10000 still in use - force killing..."
+    fuser -k 10000/tcp 2>/dev/null || true
+    sleep 5
 fi
+echo "[OK] Port 10000 is ready"
 
-# Step 4: Start API with final retry (only if first attempt fails)
+# Step 3: Start API (exec replaces shell process - proper signal handling)
 echo ""
-echo "Step 4: Starting SIGAC API Server..."
+echo "Step 3: Starting SIGAC API Server..."
 echo "=========================================="
-
-# First attempt - should succeed if TCP TIME_WAIT cleared
-if dotnet SIGAC.API.dll; then
-    echo "[SUCCESS] API started successfully!"
-    exit 0
-fi
-
-# If first attempt fails, wait longer and retry once
+echo "[INFO] Listening on http://0.0.0.0:10000"
 echo ""
-echo "[FAIL] First attempt failed. Waiting 30 more seconds..."
-sleep 30
 
-if dotnet SIGAC.API.dll; then
-    echo "[SUCCESS] API started on retry!"
-    exit 0
-fi
-
-# Both attempts failed
-echo ""
-echo "[FATAL] Failed to start API after all attempts"
-echo "=========================================="
-exit 1
+# Use exec to replace shell - ensures clean shutdown on SIGTERM
+exec dotnet SIGAC.API.dll
 

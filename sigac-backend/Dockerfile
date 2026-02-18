@@ -25,7 +25,15 @@ RUN dotnet publish "SIGAC.API/SIGAC.API.csproj" \
 # Runtime stage: Execute the published binary
 FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS runtime
 
-# Keep SDK for EF Core CLI tools (for migration support)
+# Install EF Core CLI tool and process management utilities
+RUN dotnet tool install --global dotnet-ef --version 8.0.* \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       procps lsof psmisc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add dotnet tools to PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
 WORKDIR /app
 
 # Copy published binaries from build stage
