@@ -93,9 +93,9 @@ export default function HistoriqueDossiersPage() {
         return
       }
 
-      // Charger TOUS les audit logs pour Documents ET Dossiers (Admin)
+      // Charger les audit logs UNIQUEMENT pour Documents ET Dossiers (filtrage côté serveur)
       const apiUrl = getApiBaseUrl()
-      const response = await fetch(`${apiUrl}/auditlogs?limit=5000`, {
+      const response = await fetch(`${apiUrl}/auditlogs?entityType=Document,Dossier&limit=10000`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

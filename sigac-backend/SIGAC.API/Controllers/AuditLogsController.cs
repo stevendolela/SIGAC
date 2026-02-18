@@ -32,12 +32,12 @@ public class AuditLogsController : ControllerBase
     /// Récupère les logs d'audit avec filtres optionnels.
     /// Réservé aux administrateurs uniquement.
     /// </summary>
-    /// <param name="entityType">Type d'entité (ex: Document, Dossier, User)</param>
+    /// <param name="entityType">Type d'entité (ex: Document, Dossier, User). Peut être une liste séparée par virgules.</param>
     /// <param name="action">Action effectuée (ex: VIEW_DOCUMENT, DOWNLOAD_DOCUMENT)</param>
     /// <param name="userId">ID de l'utilisateur</param>
     /// <param name="startDate">Date de début</param>
     /// <param name="endDate">Date de fin</param>
-    /// <param name="limit">Nombre maximum de résultats (défaut: 100, max: 1000)</param>
+    /// <param name="limit">Nombre maximum de résultats (défaut: 1000, max: 10000)</param>
     /// <returns>Liste des logs d'audit</returns>
     [HttpGet]
     public async Task<ActionResult<List<AuditLogDto>>> GetAuditLogs(
@@ -46,7 +46,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] Guid? userId = null,
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
-        [FromQuery] int limit = 100)
+        [FromQuery] int limit = 1000)
     {
         try
         {
@@ -58,18 +58,27 @@ public class AuditLogsController : ControllerBase
                 return Forbid();
             }
 
-            // Limiter le nombre de résultats
-            if (limit > 1000) limit = 1000;
-            if (limit < 1) limit = 100;
+            // Limiter le nombre de résultats (max 10000 pour admin)
+            if (limit > 10000) limit = 10000;
+            if (limit < 1) limit = 1000;
 
             var query = _context.AuditLogs
                 .Include(a => a.User)
                 .AsQueryable();
 
             // Appliquer les filtres
+            // Support pour plusieurs entityTypes séparés par virgule (ex: "Document,Dossier")
             if (!string.IsNullOrEmpty(entityType))
             {
-                query = query.Where(a => a.EntityType == entityType);
+                var entityTypes = entityType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (entityTypes.Length == 1)
+                {
+                    query = query.Where(a => a.EntityType == entityTypes[0]);
+                }
+                else if (entityTypes.Length > 1)
+                {
+                    query = query.Where(a => entityTypes.Contains(a.EntityType));
+                }
             }
 
             if (!string.IsNullOrEmpty(action))
