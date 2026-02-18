@@ -1,4 +1,5 @@
 # Multi-stage Docker build for SIGAC API - Simplified for Render
+# FORCE REBUILD: 2026-02-18-v2 - Fixed Role column type mismatch
 # Build stage: Compile and publish the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0.404 AS build
 
