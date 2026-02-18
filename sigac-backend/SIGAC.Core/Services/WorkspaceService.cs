@@ -87,7 +87,7 @@ public class WorkspaceService : IWorkspaceService
             var dto = _mapper.Map<WorkspaceDto>(workspace);
             
             // Déterminer le rôle de l'utilisateur
-            var membership = workspace.Members.FirstOrDefault(m => m.UserId == userId && m.IsActive);
+            var membership = workspace.Members?.FirstOrDefault(m => m.UserId == userId && m.IsActive);
             dto.UserRole = membership?.Role ?? WorkspaceRole.Guest;
             
             dtos.Add(dto);

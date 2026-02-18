@@ -14,11 +14,11 @@ public class WorkspaceMappingProfile : Profile
         // Workspace → WorkspaceDto
         CreateMap<Workspace, WorkspaceDto>()
             .ForMember(d => d.OwnerName, 
-                opt => opt.MapFrom(s => s.Owner.NomComplet ?? s.Owner.Username))
+                opt => opt.MapFrom(s => s.Owner != null ? (s.Owner.NomComplet ?? s.Owner.Username) : "Unknown"))
             .ForMember(d => d.CurrentMemberCount, 
-                opt => opt.MapFrom(s => s.Members.Count(m => m.IsActive)))
+                opt => opt.MapFrom(s => s.Members != null ? s.Members.Count(m => m.IsActive) : 0))
             .ForMember(d => d.CurrentProjectCount, 
-                opt => opt.MapFrom(s => s.Projects.Count))
+                opt => opt.MapFrom(s => s.Projects != null ? s.Projects.Count : 0))
             .ForMember(d => d.UserRole, 
                 opt => opt.Ignore()); // Set manually in service based on current user
         
