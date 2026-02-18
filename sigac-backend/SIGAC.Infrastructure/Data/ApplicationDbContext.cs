@@ -178,22 +178,6 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configuration Workspace (nouveau - modèle GED)
-        modelBuilder.Entity<Workspace>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Slug).IsUnique();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.LogoUrl).HasMaxLength(500);
-            
-            entity.HasOne(w => w.Owner)
-                .WithMany(u => u.OwnedWorkspaces)
-                .HasForeignKey(w => w.OwnerId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
         // Configuration Salle (corrige la clé étrangère CreatedBy pour éviter la colonne fantôme CreatedByUserId)
         modelBuilder.Entity<Salle>(entity =>
         {
@@ -472,7 +456,7 @@ public class ApplicationDbContext : DbContext
 
             // Existing Owner relation (gardé pour compatibility)
             entity.HasOne(w => w.Owner)
-                .WithMany()
+                .WithMany(u => u.OwnedWorkspaces)
                 .HasForeignKey(w => w.OwnerId)
                 .OnDelete(DeleteBehavior.SetNull);
 
