@@ -7,6 +7,7 @@ interface WorkspaceState {
   // État
   workspaces: WorkspaceDto[];
   currentWorkspace: WorkspaceDto | null;
+  showAllWorkspaces: boolean; // Flag pour indiquer si l'utilisateur a choisi "Tous les espaces"
   loading: boolean;
   error: string | null;
 
@@ -39,12 +40,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       // État initial
       workspaces: [],
       currentWorkspace: null,
+      showAllWorkspaces: false,
       loading: false,
       error: null,
 
       // Actions
       setCurrentWorkspace: (workspace) => {
-        set({ currentWorkspace: workspace, error: null });
+        set({ 
+          currentWorkspace: workspace, 
+          showAllWorkspaces: workspace === null, // Si null, l'utilisateur a choisi "Tous les espaces"
+          error: null 
+        });
       },
 
       setCurrentWorkspaceById: async (workspaceId: string) => {
@@ -80,11 +86,25 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           set({ loading: true, error: null });
           const workspaces = await workspaceApi.getUserWorkspaces();
           
+          // Conserver le choix de l'utilisateur
+          const { currentWorkspace, showAllWorkspaces } = get();
+          
+          // Si l'utilisateur a choisi "Tous les espaces", garder null
+          // Sinon, garder le workspace courant ou sélectionner le premier
+          let newCurrentWorkspace: WorkspaceDto | null = null;
+          if (showAllWorkspaces) {
+            newCurrentWorkspace = null;
+          } else if (currentWorkspace) {
+            // Vérifier que le workspace existe encore
+            newCurrentWorkspace = workspaces.find(w => w.id === currentWorkspace.id) || workspaces[0] || null;
+          } else {
+            newCurrentWorkspace = workspaces[0] || null;
+          }
+          
           set({
             workspaces,
             loading: false,
-            // Si pas de workspace courant, sélectionner le premier
-            currentWorkspace: get().currentWorkspace || workspaces[0] || null,
+            currentWorkspace: newCurrentWorkspace,
           });
         } catch (error: any) {
           set({
@@ -99,12 +119,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         try {
           set({ loading: true, error: null });
           const workspaces = await workspaceApi.getUserWorkspaces();
-          const { currentWorkspace } = get();
+          const { currentWorkspace, showAllWorkspaces } = get();
           
-          // Mettre à jour le workspace courant s'il existe
-          const updatedCurrent = currentWorkspace 
-            ? workspaces.find((w: WorkspaceDto) => w.id === currentWorkspace.id) || workspaces[0] || null
-            : workspaces[0] || null;
+          // Si l'utilisateur a choisi "Tous les espaces", garder null
+          let updatedCurrent: WorkspaceDto | null = null;
+          if (!showAllWorkspaces && currentWorkspace) {
+            updatedCurrent = workspaces.find((w: WorkspaceDto) => w.id === currentWorkspace.id) || workspaces[0] || null;
+          } else if (!showAllWorkspaces) {
+            updatedCurrent = workspaces[0] || null;
+          }
+          // Si showAllWorkspaces est true, garder null
           
           set({
             workspaces,
@@ -239,8 +263,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     {
       name: 'workspace-storage', // Clé localStorage
       partialize: (state) => ({
-        // Ne persister que currentWorkspace (pas les workspaces list pour éviter stale data)
+        // Persister currentWorkspace et showAllWorkspaces
         currentWorkspace: state.currentWorkspace,
+        showAllWorkspaces: state.showAllWorkspaces,
       }),
     }
   )
