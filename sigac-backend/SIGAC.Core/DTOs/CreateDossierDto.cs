@@ -23,4 +23,9 @@ public class CreateDossierDto
 
     [StringLength(2000)]
     public string? Resume { get; set; }
+    
+    /// <summary>
+    /// ID du workspace auquel assigner le dossier (optionnel)
+    /// </summary>
+    public Guid? WorkspaceId { get; set; }
 }

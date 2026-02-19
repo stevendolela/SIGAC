@@ -133,6 +133,7 @@ public class DossierService : IDossierService
             Status = StatusDossier.Nouveau,
             Priorite = createDto.Priorite,
             Resume = createDto.Resume?.Trim(),
+            WorkspaceId = createDto.WorkspaceId, // Assigner au workspace si fourni
             CreatedBy = userId,
             CreatedAt = DateTime.UtcNow,
             Documents = new List<Document>(),

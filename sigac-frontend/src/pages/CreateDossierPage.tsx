@@ -2,11 +2,13 @@ import { useState } from 'react'
 import api from '../api/api-client'
 import { useToast } from '../components/common/ToastProvider'
 import { TypeAffaireSelect } from '../components/dossiers/TypeAffaireSelect'
+import { useWorkspaceStore } from '../store/workspaceStore'
 import type { AxiosProgressEvent } from 'axios'
 import type { DocumentDto } from '../types/document'
 
 export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => void }) {
   const { notify } = useToast()
+  const { currentWorkspace } = useWorkspaceStore()
   const [loading, setLoading] = useState(false)
 
   // States pour l'upload
@@ -54,7 +56,8 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
         priorite: Number(priorite), // 1-4
         demandeur: demandeur.trim(),
         defendeur: defendeur.trim() || null,
-        resume: resume.trim() || null
+        resume: resume.trim() || null,
+        workspaceId: currentWorkspace?.id || null // Assigner au workspace actif
       }
 
       console.log('📤 Envoi payload:', payload)
@@ -203,6 +206,25 @@ export default function CreateDossierPage({ onSuccess }: { onSuccess?: () => voi
   return (
     <div className="panel">
       <div className="panel-title">📝 Créer un Nouveau Dossier</div>
+
+      {/* Indicateur du workspace actif */}
+      <div style={{ 
+        marginBottom: 16, 
+        padding: '10px 16px', 
+        background: currentWorkspace ? '#eff6ff' : '#f1f5f9', 
+        borderRadius: 8,
+        border: `1px solid ${currentWorkspace ? '#3b82f6' : '#cbd5e1'}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8
+      }}>
+        <span style={{ fontSize: 18 }}>{currentWorkspace ? '📁' : '🌐'}</span>
+        <span style={{ fontSize: 14, color: '#475569' }}>
+          Ce dossier sera créé dans : <strong style={{ color: currentWorkspace ? '#3b82f6' : '#64748b' }}>
+            {currentWorkspace ? currentWorkspace.name : 'Aucun workspace (global)'}
+          </strong>
+        </span>
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div className="card" style={{ background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)' }}>
