@@ -228,15 +228,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           color: '#a855f7'
         },
         {
-          view: 'document-logs' as ViewType,
-          label: 'Historique Dossiers',
-          icon: History,
-          color: '#6366f1'
-        },
-        {
           view: 'tenants' as ViewType,
           label: 'Tenants (Multi-locataire)',
           icon: Network,
+          color: '#6366f1'
+        }
+      ]
+    }] : []),
+    ...(['Admin', 'Manager'].includes(userRole || '') ? [{
+      section: 'Audit',
+      items: [
+        {
+          view: 'document-logs' as ViewType,
+          label: 'Historique Dossiers',
+          icon: History,
           color: '#6366f1'
         }
       ]
