@@ -408,9 +408,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
     )
   }
 
-  // Filter participants for search
+  // Filter participants for search (requires at least 2 characters)
   const filteredUsers = users.filter(user => {
-    if (!searchParticipant) return true
+    if (searchParticipant.length < 2) return false
     const searchLower = searchParticipant.toLowerCase()
     return (
       (user.nomComplet || '').toLowerCase().includes(searchLower) ||
@@ -634,7 +634,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                   
                   <input
                     type="text"
-                    placeholder="🔍 Rechercher un participant..."
+                    placeholder="🔍 Tapez au moins 2 caractères pour rechercher..."
                     value={searchParticipant}
                     onChange={e => setSearchParticipant(e.target.value)}
                     style={{ marginBottom: 12 }}
@@ -667,24 +667,49 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
                     </div>
                   )}
 
-                  <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
-                    <div className="participants-grid">
-                      {filteredUsers.filter(u => !formData.participants?.includes(u.id)).map(user => (
-                        <div
-                          key={user.id}
-                          className="participant-chip"
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => setFormData({ ...formData, participants: [...(formData.participants || []), user.id] })}
-                        >
-                          <div className="participant-avatar">{user.nomComplet?.charAt(0) || '?'}</div>
-                          <div className="participant-info">
-                            <div className="name">{user.nomComplet}</div>
-                            <div className="role">{user.role}</div>
-                          </div>
-                        </div>
-                      ))}
+                  {searchParticipant.length < 2 ? (
+                    <div style={{ 
+                      padding: 24, 
+                      textAlign: 'center', 
+                      color: '#6b7280', 
+                      background: '#f9fafb',
+                      borderRadius: 12,
+                      border: '1px dashed #d1d5db'
+                    }}>
+                      <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>🔍</span>
+                      Tapez au moins 2 caractères pour rechercher des participants
                     </div>
-                  </div>
+                  ) : filteredUsers.filter(u => !formData.participants?.includes(u.id)).length === 0 ? (
+                    <div style={{ 
+                      padding: 24, 
+                      textAlign: 'center', 
+                      color: '#6b7280', 
+                      background: '#f9fafb',
+                      borderRadius: 12,
+                      border: '1px dashed #d1d5db'
+                    }}>
+                      Aucun participant trouvé pour "{searchParticipant}"
+                    </div>
+                  ) : (
+                    <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
+                      <div className="participants-grid">
+                        {filteredUsers.filter(u => !formData.participants?.includes(u.id)).map(user => (
+                          <div
+                            key={user.id}
+                            className="participant-chip"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setFormData({ ...formData, participants: [...(formData.participants || []), user.id] })}
+                          >
+                            <div className="participant-avatar">{user.nomComplet?.charAt(0) || '?'}</div>
+                            <div className="participant-info">
+                              <div className="name">{user.nomComplet}</div>
+                              <div className="role">{user.role}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
