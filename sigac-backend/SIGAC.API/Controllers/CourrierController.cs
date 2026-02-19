@@ -69,17 +69,14 @@ public class CourrierController : ControllerBase
     }
 
     /// <summary>
-    /// Crée un courrier manuellement (sans OCR) - accepte JSON ou FormData
+    /// Crée un courrier manuellement (sans OCR) - accepte JSON uniquement
     /// </summary>
     [HttpPost]
-    [Consumes("multipart/form-data", "application/json")]
-    public async Task<ActionResult<CourrierDetailDto>> CreateCourrier([FromForm] CreateCourrierDto? formDto = null, [FromBody] CreateCourrierDto? bodyDto = null)
+    public async Task<ActionResult<CourrierDetailDto>> CreateCourrier([FromBody] CreateCourrierDto dto)
     {
-        CreateCourrierDto? dto = formDto ?? bodyDto;
-
         if (dto == null)
         {
-            return BadRequest(new { message = "Impossible de parser les données du courrier. Assurez-vous que le Content-Type est correct." });
+            return BadRequest(new { message = "Données du courrier invalides." });
         }
 
         if (string.IsNullOrWhiteSpace(dto.Objet))
