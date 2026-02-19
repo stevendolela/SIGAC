@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, ChevronDown, Plus, Settings, Users } from 'lucide-react';
+import { Building2, ChevronDown, Plus, Settings, Users, Globe } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { getWorkspaceRoleLabel, getWorkspaceRoleColor } from '../../types/workspace';
 import './WorkspaceSelector.css';
@@ -32,6 +32,11 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     }
   };
 
+  const handleShowAll = () => {
+    setWorkspace(null);
+    setIsOpen(false);
+  };
+
   const handleCreateClick = () => {
     setIsOpen(false);
     onCreateClick?.();
@@ -50,7 +55,8 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     );
   }
 
-  if (!currentWorkspace) {
+  // Si pas de workspaces du tout, permettre la création
+  if (workspaces.length === 0) {
     return (
       <div className="workspace-selector-empty">
         <Building2 size={20} />
@@ -73,26 +79,42 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         aria-expanded={isOpen}
       >
         <div className="workspace-selector-current">
-          {(currentWorkspace.logoBase64 || currentWorkspace.logoUrl) ? (
-            <img
-              src={currentWorkspace.logoBase64 || currentWorkspace.logoUrl}
-              alt={currentWorkspace.name}
-              className="workspace-logo"
-            />
+          {currentWorkspace ? (
+            <>
+              {(currentWorkspace.logoBase64 || currentWorkspace.logoUrl) ? (
+                <img
+                  src={currentWorkspace.logoBase64 || currentWorkspace.logoUrl}
+                  alt={currentWorkspace.name}
+                  className="workspace-logo"
+                />
+              ) : (
+                <div className="workspace-logo-placeholder">
+                  <Building2 size={20} />
+                </div>
+              )}
+              <div className="workspace-info">
+                <span className="workspace-name">{currentWorkspace.name}</span>
+                <span
+                  className="workspace-role"
+                  style={{ color: getWorkspaceRoleColor(currentWorkspace.userRole) }}
+                >
+                  {getWorkspaceRoleLabel(currentWorkspace.userRole)}
+                </span>
+              </div>
+            </>
           ) : (
-            <div className="workspace-logo-placeholder">
-              <Building2 size={20} />
-            </div>
+            <>
+              <div className="workspace-logo-placeholder" style={{ background: '#3b82f6' }}>
+                <Globe size={20} color="white" />
+              </div>
+              <div className="workspace-info">
+                <span className="workspace-name">Tous les espaces</span>
+                <span className="workspace-role" style={{ color: '#3b82f6' }}>
+                  Vue globale
+                </span>
+              </div>
+            </>
           )}
-          <div className="workspace-info">
-            <span className="workspace-name">{currentWorkspace.name}</span>
-            <span
-              className="workspace-role"
-              style={{ color: getWorkspaceRoleColor(currentWorkspace.userRole) }}
-            >
-              {getWorkspaceRoleLabel(currentWorkspace.userRole)}
-            </span>
-          </div>
         </div>
         <ChevronDown
           size={18}
@@ -110,11 +132,32 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
             </div>
 
             <div className="workspace-selector-list">
+              {/* Option "Tous les espaces" */}
+              <button
+                className={`workspace-selector-item ${!currentWorkspace ? 'active' : ''}`}
+                onClick={handleShowAll}
+              >
+                <div className="workspace-item-main">
+                  <div className="workspace-item-logo-placeholder" style={{ background: '#3b82f6' }}>
+                    <Globe size={18} color="white" />
+                  </div>
+                  <div className="workspace-item-info">
+                    <span className="workspace-item-name">Tous les espaces</span>
+                    <div className="workspace-item-meta">
+                      <span className="workspace-item-role" style={{ color: '#3b82f6' }}>
+                        Vue globale
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {!currentWorkspace && <div className="workspace-item-check">✓</div>}
+              </button>
+              
               {workspaces.map((workspace) => (
                 <button
                   key={workspace.id}
                   className={`workspace-selector-item ${
-                    workspace.id === currentWorkspace.id ? 'active' : ''
+                    workspace.id === currentWorkspace?.id ? 'active' : ''
                   }`}
                   onClick={() => handleWorkspaceChange(workspace.id)}
                 >
@@ -147,7 +190,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                       </div>
                     </div>
                   </div>
-                  {workspace.id === currentWorkspace.id && (
+                  {workspace.id === currentWorkspace?.id && (
                     <div className="workspace-item-check">✓</div>
                   )}
                 </button>

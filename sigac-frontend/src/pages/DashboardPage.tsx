@@ -110,11 +110,9 @@ export default function DashboardPage() {
           </div>
           <div className="dashboard-actions">
             {/* Workspace sélectionné via la sidebar globale */}
-            {currentWorkspace && (
-              <span className="current-workspace-badge" style={{ marginRight: '12px', padding: '4px 12px', background: '#e0e7ff', borderRadius: '6px', fontSize: '14px' }}>
-                📍 {currentWorkspace.name}
-              </span>
-            )}
+            <span className="current-workspace-badge" style={{ marginRight: '12px', padding: '4px 12px', background: currentWorkspace ? '#e0e7ff' : '#dbeafe', borderRadius: '6px', fontSize: '14px' }}>
+              {currentWorkspace ? `📍 ${currentWorkspace.name}` : '🌐 Vue globale'}
+            </span>
             <div className="period-filters">
               <select
                 value={periodFilter}
