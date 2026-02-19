@@ -7,11 +7,19 @@ import type { CalendarEventDto, CreateCalendarEventDto } from '../types/calendar
 import { EventTypeLabels, EventTypeColors } from '../types/calendar'
 import type { DossierListDto } from '../types/dossier'
 import type { UserDto } from '../types/user'
-import { getDaysInMonthEU, isSameDate, formatDateToISO } from '../utils/dateUtils'
+import { getDaysInMonthEU, isSameDate } from '../utils/dateUtils'
 
 interface CalendarPageProps {
   onViewDossier?: (dossierId: string) => void
   onManageSalles?: () => void
+}
+
+const EVENT_TYPE_CLASSES: Record<string, string> = {
+  Reunion: 'event-type-reunion',
+  Audience: 'event-type-audience',
+  Formation: 'event-type-formation',
+  Deadline: 'event-type-deadline',
+  Personnel: 'event-type-personnel'
 }
 
 export default function CalendarPage({ onViewDossier, onManageSalles }: CalendarPageProps = {}) {
@@ -21,12 +29,10 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
   const [salles, setSalles] = useState<any[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
-  const [showForm, setShowForm] = useState<'create' | 'edit' | 'detail' | null>(null)
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'detail' | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventDto | null>(null)
   const [loading, setLoading] = useState(false)
   const [searchParticipant, setSearchParticipant] = useState('')
-  const [filterType, setFilterType] = useState<string>('')
-  const [filterStatut, setFilterStatut] = useState<string>('')
   const { notify } = useToast()
 
   const [formData, setFormData] = useState<CreateCalendarEventDto>({
@@ -76,7 +82,7 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
   const getStartDate = () => {
     if (viewMode === 'month') {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      date.setDate(date.getDate() - date.getDay() + 1) // Lundi de la première semaine
+      date.setDate(date.getDate() - date.getDay() + 1)
       return date
     }
     if (viewMode === 'week') {
@@ -115,9 +121,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
 
     try {
       const created = await CalendarApi.create(formData)
-      notify({ type: 'success', message: '✅ Événement créé' })
+      notify({ type: 'success', message: 'Événement créé avec succès' })
       setEvents([...events, created])
-      setShowForm(null)
+      setModalMode(null)
       resetForm()
     } catch (e: any) {
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur création événement' })
@@ -130,9 +136,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
 
     try {
       const updated = await CalendarApi.update(selectedEvent.id, formData)
-      notify({ type: 'success', message: '✅ Événement modifié' })
+      notify({ type: 'success', message: 'Événement modifié avec succès' })
       setEvents(events.map(ev => ev.id === updated.id ? updated : ev))
-      setShowForm(null)
+      setModalMode(null)
       setSelectedEvent(null)
       resetForm()
     } catch (e: any) {
@@ -145,9 +151,9 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
 
     try {
       await CalendarApi.remove(id)
-      notify({ type: 'success', message: '✅ Événement supprimé' })
+      notify({ type: 'success', message: 'Événement supprimé' })
       setEvents(events.filter(ev => ev.id !== id))
-      setShowForm(null)
+      setModalMode(null)
       setSelectedEvent(null)
     } catch (e: any) {
       notify({ type: 'error', message: e?.response?.data?.message || 'Erreur suppression' })
@@ -164,18 +170,20 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       dossierId: undefined,
       salleId: undefined,
       touteLaJournee: false,
-      participants: []
+      participants: [],
+      statut: 'Planifie',
+      rappelAvant: 30
     })
+    setSearchParticipant('')
   }
 
-  const openCreateForm = () => {
+  const openCreateModal = () => {
     resetForm()
     setSelectedEvent(null)
-    setShowForm('create')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setModalMode('create')
   }
 
-  const openEditForm = (event: CalendarEventDto) => {
+  const openEditModal = (event: CalendarEventDto) => {
     setSelectedEvent(event)
     setFormData({
       type: event.type,
@@ -186,18 +194,19 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
       dossierId: event.dossierId,
       salleId: event.salleId,
       touteLaJournee: event.touteLaJournee,
-      participants: event.participants || []
+      participants: event.participants || [],
+      statut: event.statut || 'Planifie',
+      rappelAvant: event.rappelAvant || 30
     })
-    setShowForm('edit')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setModalMode('edit')
   }
 
-  const openDetailView = (event: CalendarEventDto) => {
+  const openDetailModal = (event: CalendarEventDto) => {
     setSelectedEvent(event)
-    setShowForm('detail')
+    setModalMode('detail')
   }
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigate = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
       const newDate = new Date(prev)
       if (viewMode === 'month') {
@@ -211,525 +220,575 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
     })
   }
 
+  const formatPeriod = () => {
+    if (viewMode === 'month') {
+      return currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    }
+    if (viewMode === 'week') {
+      const start = new Date(currentDate)
+      start.setDate(start.getDate() - start.getDay() + 1)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      return `${start.getDate()} - ${end.getDate()} ${end.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`
+    }
+    return currentDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const today = new Date()
+
   const renderMonthView = () => {
     const daysInMonth = getDaysInMonthEU(currentDate)
-    const today = new Date()
 
     return (
-      <div className="calendar-grid">
-        <div className="calendar-header-row">
-          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-            <div key={day} className="calendar-header-cell">{day}</div>
-          ))}
-        </div>
-        <div className="calendar-body">
-          {daysInMonth.map((day, idx) => {
-            if (!day) {
-              // Jour vide (avant le début du mois)
-              return <div key={idx} className="calendar-day-cell calendar-day-empty" />
-            }
-            
-            const dayEvents = events.filter(ev => isSameDate(new Date(ev.debut), day))
-            const isToday = isSameDate(day, today)
-            const isCurrentMonth = day.getMonth() === currentDate.getMonth()
+      <div className="calendar-container">
+        <div className="calendar-grid-enhanced">
+          <div className="calendar-header-row-enhanced">
+            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
+              <div key={day} className="calendar-header-cell-enhanced">{day}</div>
+            ))}
+          </div>
+          <div className="calendar-body-enhanced">
+            {daysInMonth.map((day, idx) => {
+              if (!day) {
+                return <div key={idx} className="calendar-day-enhanced other-month" />
+              }
+              
+              const dayEvents = events.filter(ev => isSameDate(new Date(ev.debut), day))
+              const isToday = isSameDate(day, today)
+              const isCurrentMonth = day.getMonth() === currentDate.getMonth()
 
-            return (
-              <div
-                key={idx}
-                className={`calendar-day-cell ${isToday ? 'is-today' : ''} ${!isCurrentMonth ? 'other-month' : ''}`}
-                onClick={() => {
-                  setCurrentDate(day)
-                  setViewMode('day')
-                }}
-              >
-                <div className="day-number">{day.getDate()}</div>
-                <div className="day-events">
-                  {dayEvents.slice(0, 3).map(event => (
-                    <div
-                      key={event.id}
-                      className="event-badge"
-                      style={{ borderLeft: `3px solid ${EventTypeColors[event.type] || '#999'}` }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openDetailView(event)
-                      }}
-                    >
-                      <span className="event-time">{new Date(event.debut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                      <span className="event-title">{event.titre}</span>
-                    </div>
-                  ))}
-                  {dayEvents.length > 3 && (
-                    <div className="more-events">+{dayEvents.length - 3} autres</div>
-                  )}
+              return (
+                <div
+                  key={idx}
+                  className={`calendar-day-enhanced ${isToday ? 'is-today' : ''} ${!isCurrentMonth ? 'other-month' : ''}`}
+                  onClick={() => {
+                    setCurrentDate(day)
+                    setViewMode('day')
+                  }}
+                >
+                  <div className="day-num">{day.getDate()}</div>
+                  <div className="day-events-list">
+                    {dayEvents.slice(0, 3).map(event => (
+                      <div
+                        key={event.id}
+                        className="event-chip"
+                        style={{ borderColor: EventTypeColors[event.type] || '#999' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openDetailModal(event)
+                        }}
+                      >
+                        <span className="event-time">
+                          {new Date(event.debut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="event-label">{event.titre}</span>
+                      </div>
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <div className="more-events-chip">+{dayEvents.length - 3} autres</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
     )
   }
 
+  const renderWeekView = () => {
+    const startOfWeek = new Date(currentDate)
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1)
+    
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek)
+      d.setDate(d.getDate() + i)
+      return d
+    })
+
+    return (
+      <div className="calendar-container">
+        <div className="calendar-grid-enhanced">
+          <div className="calendar-header-row-enhanced">
+            {days.map((day, i) => (
+              <div key={i} className="calendar-header-cell-enhanced">
+                <div>{['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][i]}</div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{day.getDate()}</div>
+              </div>
+            ))}
+          </div>
+          <div className="calendar-body-enhanced">
+            {days.map((day, idx) => {
+              const dayEvents = events.filter(ev => isSameDate(new Date(ev.debut), day))
+              const isToday = isSameDate(day, today)
+
+              return (
+                <div key={idx} className={`calendar-day-enhanced ${isToday ? 'is-today' : ''}`} style={{ minHeight: 200 }}>
+                  <div className="day-events-list">
+                    {dayEvents.map(event => (
+                      <div
+                        key={event.id}
+                        className="event-chip"
+                        style={{ borderColor: EventTypeColors[event.type] || '#999' }}
+                        onClick={() => openDetailModal(event)}
+                      >
+                        <span className="event-time">
+                          {new Date(event.debut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="event-label">{event.titre}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const renderDayView = () => {
+    const dayEvents = events.filter(ev => isSameDate(new Date(ev.debut), currentDate))
+
+    return (
+      <div className="calendar-container" style={{ padding: 24 }}>
+        <h3 style={{ marginBottom: 20, fontWeight: 600 }}>
+          {currentDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </h3>
+        
+        {dayEvents.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
+            Aucun événement ce jour
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {dayEvents.map(event => (
+              <div
+                key={event.id}
+                style={{
+                  display: 'flex',
+                  gap: 16,
+                  padding: 16,
+                  background: '#f9fafb',
+                  borderRadius: 12,
+                  borderLeft: `4px solid ${EventTypeColors[event.type] || '#999'}`,
+                  cursor: 'pointer'
+                }}
+                onClick={() => openDetailModal(event)}
+              >
+                <div style={{ minWidth: 80 }}>
+                  <div style={{ fontWeight: 700, color: '#1f2937' }}>
+                    {new Date(event.debut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    {new Date(event.fin).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{event.titre}</div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '2px 10px',
+                    background: EventTypeColors[event.type] || '#999',
+                    color: 'white',
+                    borderRadius: 12,
+                    fontSize: 12,
+                    fontWeight: 500
+                  }}>
+                    {EventTypeLabels[event.type]}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Filter participants for search
+  const filteredUsers = users.filter(user => {
+    if (!searchParticipant) return true
+    const searchLower = searchParticipant.toLowerCase()
+    return (
+      (user.nomComplet || '').toLowerCase().includes(searchLower) ||
+      user.role.toLowerCase().includes(searchLower) ||
+      (user.username && user.username.toLowerCase().includes(searchLower))
+    )
+  })
+
   return (
-    <div className="panel">
-      <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>📅 Calendrier de Travail</span>
+    <div className="calendar-page">
+      {/* Header */}
+      <div className="calendar-page-header">
+        <div className="calendar-page-title">
+          <h1>📅 Calendrier</h1>
+          <span className="today-badge">
+            {today.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+          </span>
+        </div>
         {canEdit && (
-          <button className="btn btn-primary" onClick={openCreateForm}>
-            ➕ Nouvel événement
+          <button className="btn btn-primary" onClick={openCreateModal} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>+</span>
+            Nouvel événement
           </button>
         )}
       </div>
 
-      {/* Navigation */}
-      <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button className="btn" onClick={() => navigateMonth('prev')}>◀ Précédent</button>
-        <button className="btn" onClick={() => setCurrentDate(new Date())}>Aujourd'hui</button>
-        <button className="btn" onClick={() => navigateMonth('next')}>Suivant ▶</button>
-        
-        <div style={{ flex: 1 }} />
-        
-        <select value={viewMode} onChange={e => setViewMode(e.target.value as any)} className="form-select">
-          <option value="month">Mois</option>
-          <option value="week">Semaine</option>
-          <option value="day">Jour</option>
-        </select>
+      {/* Navigation Bar */}
+      <div className="calendar-nav-bar">
+        <div className="calendar-nav-buttons">
+          <button className="nav-btn" onClick={() => navigate('prev')}>
+            ◀ Précédent
+          </button>
+          <button className="nav-btn today-btn" onClick={() => setCurrentDate(new Date())}>
+            Aujourd'hui
+          </button>
+          <button className="nav-btn" onClick={() => navigate('next')}>
+            Suivant ▶
+          </button>
+        </div>
 
-        <h3 style={{ margin: 0, minWidth: 180 }}>
-          {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-        </h3>
+        <div className="calendar-current-period">{formatPeriod()}</div>
+
+        <div className="calendar-view-toggle">
+          <button className={viewMode === 'month' ? 'active' : ''} onClick={() => setViewMode('month')}>
+            Mois
+          </button>
+          <button className={viewMode === 'week' ? 'active' : ''} onClick={() => setViewMode('week')}>
+            Semaine
+          </button>
+          <button className={viewMode === 'day' ? 'active' : ''} onClick={() => setViewMode('day')}>
+            Jour
+          </button>
+        </div>
       </div>
 
-      {/* Formulaire de création/édition */}
-      {showForm === 'create' && (
-        <form onSubmit={handleCreateEvent} className="card" style={{ marginBottom: 16 }}>
-          <h3 style={{ marginBottom: 24 }}>➕ Nouvel événement</h3>
-          
-          {/* Section: Informations générales */}
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📋 Informations générales</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 150px', gap: 16, alignItems: 'start' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Type d'événement *</label>
-                <select 
-                  value={formData.type} 
-                  onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  required
-                  style={{ width: '100%' }}
-                >
-                  <option value="Reunion">🤝 Réunions</option>
-                  <option value="Audience">⚖️ Audiences</option>
-                  <option value="Formation">🎓 Formations</option>
-                  <option value="Deadline">⏰ Deadlines</option>
-                  <option value="Personnel">📅 Personnel</option>
-                </select>
-              </div>
+      {/* Calendar View */}
+      {loading ? (
+        <div className="calendar-container" style={{ textAlign: 'center', padding: 60 }}>
+          <div style={{ fontSize: 24, marginBottom: 12 }}>⏳</div>
+          <div style={{ color: '#6b7280' }}>Chargement du calendrier...</div>
+        </div>
+      ) : viewMode === 'month' ? (
+        renderMonthView()
+      ) : viewMode === 'week' ? (
+        renderWeekView()
+      ) : (
+        renderDayView()
+      )}
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Titre *</label>
-                <input
-                  type="text"
-                  value={formData.titre}
-                  onChange={e => setFormData({ ...formData, titre: e.target.value })}
-                  placeholder="Ex: Réunion d'équipe, Consultation, Audience publique..."
-                  required
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Statut *</label>
-                <select 
-                  value={formData.statut} 
-                  onChange={e => setFormData({ ...formData, statut: e.target.value })}
-                  required
-                  style={{ width: '100%' }}
-                >
-                  <option value="Planifie">📅 Planifié</option>
-                  <option value="EnCours">▶️ En cours</option>
-                  <option value="Termine">✅ Terminé</option>
-                  <option value="Reporte">⏸️ Reporté</option>
-                </select>
-              </div>
-
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', marginBottom: 6 }}>Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Détails de l'événement..."
-                  rows={3}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Date et heure */}
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>🕒 Date et heure</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Date et heure de début *</label>
-                <input
-                  type="datetime-local"
-                  value={formData.debut.substring(0, 16)}
-                  onChange={e => setFormData({ ...formData, debut: new Date(e.target.value).toISOString() })}
-                  required
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Date et heure de fin *</label>
-                <input
-                  type="datetime-local"
-                  value={formData.fin.substring(0, 16)}
-                  onChange={e => setFormData({ ...formData, fin: new Date(e.target.value).toISOString() })}
-                  required
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div style={{ paddingBottom: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={formData.touteLaJournee}
-                    onChange={e => setFormData({ ...formData, touteLaJournee: e.target.checked })}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span>Toute la journée</span>
-                </label>
-              </div>
+      {/* Create/Edit Modal */}
+      {(modalMode === 'create' || modalMode === 'edit') && (
+        <div className="calendar-modal-overlay" onClick={() => setModalMode(null)}>
+          <div className="calendar-modal" onClick={e => e.stopPropagation()}>
+            <div className="calendar-modal-header">
+              <h2>
+                {modalMode === 'create' ? '✨ Nouvel événement' : '✏️ Modifier l\'événement'}
+              </h2>
+              <button className="calendar-modal-close" onClick={() => setModalMode(null)}>×</button>
             </div>
 
-            {/* Rappel automatique */}
-            <div style={{ marginTop: 12 }}>
-              <label style={{ display: 'block', marginBottom: 6 }}>🔔 Rappel automatique</label>
-              <select 
-                value={formData.rappelAvant} 
-                onChange={e => setFormData({ ...formData, rappelAvant: parseInt(e.target.value) })}
-                style={{ width: '200px' }}
-              >
-                <option value="0">Aucun rappel</option>
-                <option value="15">15 minutes avant</option>
-                <option value="30">30 minutes avant</option>
-                <option value="60">1 heure avant</option>
-                <option value="120">2 heures avant</option>
-                <option value="1440">1 jour avant</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Section: Association */}
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>📁 Association</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {/* Dossier */}
-              {formData.type === 'Audience' ? (
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6 }}>Dossier * (requis pour audience)</label>
-                  <select
-                    value={formData.dossierId || ''}
-                    onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
-                    required
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">-- Sélectionner un dossier --</option>
-                    {dossiers.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.numeroDossier} - {d.titre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6 }}>Dossier associé (optionnel)</label>
-                  <select
-                    value={formData.dossierId || ''}
-                    onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">Aucun</option>
-                    {dossiers.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.numeroDossier} - {d.titre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Salle de réunion */}
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Salle de réunion (optionnel)</label>
-                <select
-                  value={formData.salleId || ''}
-                  onChange={e => setFormData({ ...formData, salleId: e.target.value || undefined })}
-                  style={{ width: '100%' }}
-                >
-                  <option value="">Aucune salle</option>
-                  {salles.map(s => (
-                    <option key={s.id} value={s.id}>
-                      🏢 {s.nom} - {s.capacite} pers.
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Participants */}
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: '#1f2937' }}>
-              👥 Participants (internes)
-              {formData.participants && formData.participants.length > 0 && (
-                <span style={{ marginLeft: 8, fontSize: 13, color: '#6b7280', fontWeight: 400 }}>
-                  ({formData.participants.length} sélectionné{formData.participants.length > 1 ? 's' : ''})
-                </span>
-              )}
-            </h4>
-
-            {/* Zone de recherche */}
-            <div style={{ marginBottom: 12 }}>
-              <input
-                type="text"
-                placeholder="🔍 Rechercher un participant par nom, prénom ou rôle..."
-                value={searchParticipant}
-                onChange={e => setSearchParticipant(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 14,
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-                onFocus={e => e.target.style.borderColor = '#3b82f6'}
-                onBlur={e => e.target.style.borderColor = '#d1d5db'}
-              />
-            </div>
-
-            {/* Participants sélectionnés (badges) */}
-            {formData.participants && formData.participants.length > 0 && (
-              <div style={{ 
-                marginBottom: 12,
-                padding: 12,
-                backgroundColor: '#f0f9ff',
-                border: '1px solid #bfdbfe',
-                borderRadius: 8
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: '#1e40af', marginBottom: 8 }}>
-                  ✓ Participants sélectionnés :
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {formData.participants.map(userId => {
-                    const user = users.find(u => u.id === userId);
-                    if (!user) return null;
-                    return (
-                      <span
-                        key={userId}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '4px 10px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          borderRadius: 16,
-                          fontSize: 13,
-                          fontWeight: 500
-                        }}
+            <form onSubmit={modalMode === 'create' ? handleCreateEvent : handleUpdateEvent}>
+              <div className="calendar-modal-body">
+                {/* General Info */}
+                <div className="form-section">
+                  <div className="form-section-title"><span>📋</span> Informations générales</div>
+                  <div className="form-grid cols-2">
+                    <div>
+                      <label>Type d'événement *</label>
+                      <select
+                        value={formData.type}
+                        onChange={e => setFormData({ ...formData, type: e.target.value })}
+                        required
                       >
-                        {user.nomComplet}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newParticipants = formData.participants?.filter(p => p !== userId) || [];
-                            setFormData({ ...formData, participants: newParticipants });
-                          }}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: 16,
-                            lineHeight: 1,
-                            padding: 0,
-                            marginLeft: 2
-                          }}
-                          title="Retirer"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Liste filtrée des participants */}
-            <div style={{ 
-              border: '1px solid #e5e7eb', 
-              borderRadius: 8, 
-              padding: 16, 
-              maxHeight: 240, 
-              overflowY: 'auto',
-              backgroundColor: '#fafafa'
-            }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-                {users
-                  .filter(user => {
-                    if (!searchParticipant) return true;
-                    const searchLower = searchParticipant.toLowerCase();
-                    return (
-                      (user.nomComplet || '').toLowerCase().includes(searchLower) ||
-                      user.role.toLowerCase().includes(searchLower) ||
-                      (user.username && user.username.toLowerCase().includes(searchLower))
-                    );
-                  })
-                  .map(user => (
-                    <label 
-                      key={user.id} 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: 10,
-                        backgroundColor: 'white',
-                        borderRadius: 6,
-                        border: '1px solid #e5e7eb',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      className="participant-label"
-                    >
+                        <option value="Reunion">🤝 Réunion</option>
+                        <option value="Audience">⚖️ Audience</option>
+                        <option value="Formation">🎓 Formation</option>
+                        <option value="Deadline">⏰ Deadline</option>
+                        <option value="Personnel">📅 Personnel</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Statut *</label>
+                      <select
+                        value={formData.statut}
+                        onChange={e => setFormData({ ...formData, statut: e.target.value })}
+                        required
+                      >
+                        <option value="Planifie">📅 Planifié</option>
+                        <option value="EnCours">▶️ En cours</option>
+                        <option value="Termine">✅ Terminé</option>
+                        <option value="Reporte">⏸️ Reporté</option>
+                      </select>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label>Titre *</label>
                       <input
-                        type="checkbox"
-                        checked={formData.participants?.includes(user.id) || false}
-                        onChange={e => {
-                          const newParticipants = e.target.checked
-                            ? [...(formData.participants || []), user.id]
-                            : (formData.participants || []).filter(p => p !== user.id)
-                          setFormData({ ...formData, participants: newParticipants })
-                        }}
-                        style={{ cursor: 'pointer', flexShrink: 0 }}
+                        type="text"
+                        value={formData.titre}
+                        onChange={e => setFormData({ ...formData, titre: e.target.value })}
+                        placeholder="Titre de l'événement"
+                        required
                       />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 500, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {user.nomComplet}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>{user.role}</div>
-                      </div>
-                    </label>
-                  ))}
-              </div>
-              {users.filter(user => {
-                if (!searchParticipant) return true;
-                const searchLower = searchParticipant.toLowerCase();
-                return (
-                  (user.nomComplet || '').toLowerCase().includes(searchLower) ||
-                  user.role.toLowerCase().includes(searchLower) ||
-                  (user.username && user.username.toLowerCase().includes(searchLower))
-                );
-              }).length === 0 && (
-                <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>
-                  Aucun participant trouvé pour "{searchParticipant}"
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label>Description</label>
+                      <textarea
+                        value={formData.description}
+                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Détails de l'événement..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: 12, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
-            <button type="submit" className="btn btn-primary" style={{ minWidth: 120 }}>
-              💾 Créer
-            </button>
-            <button type="button" className="btn" onClick={() => setShowForm(null)} style={{ minWidth: 120 }}>
-              Annuler
-            </button>
-          </div>
-        </form>
-      )}
+                {/* Date & Time */}
+                <div className="form-section">
+                  <div className="form-section-title"><span>🕒</span> Date et heure</div>
+                  <div className="form-grid cols-2">
+                    <div>
+                      <label>Début *</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.debut.substring(0, 16)}
+                        onChange={e => setFormData({ ...formData, debut: new Date(e.target.value).toISOString() })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label>Fin *</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.fin.substring(0, 16)}
+                        onChange={e => setFormData({ ...formData, fin: new Date(e.target.value).toISOString() })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label>Rappel</label>
+                      <select
+                        value={formData.rappelAvant}
+                        onChange={e => setFormData({ ...formData, rappelAvant: parseInt(e.target.value) })}
+                      >
+                        <option value="0">Aucun</option>
+                        <option value="15">15 min avant</option>
+                        <option value="30">30 min avant</option>
+                        <option value="60">1h avant</option>
+                        <option value="1440">1 jour avant</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', paddingTop: 24 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.touteLaJournee}
+                          onChange={e => setFormData({ ...formData, touteLaJournee: e.target.checked })}
+                        />
+                        Toute la journée
+                      </label>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Formulaire d'édition */}
-      {showForm === 'edit' && selectedEvent && (
-        <form onSubmit={handleUpdateEvent} className="card" style={{ marginBottom: 16 }}>
-          <h3>✏️ Modifier événement</h3>
-          {/* Same form fields as create */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12 }}>
-            {/* Copy same fields from create form */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>Titre *</label>
-              <input
-                type="text"
-                value={formData.titre}
-                onChange={e => setFormData({ ...formData, titre: e.target.value })}
-                required
-              />
-            </div>
-            {/* Add other fields... */}
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            <button type="submit" className="btn btn-primary">💾 Enregistrer</button>
-            <button type="button" className="btn btn-danger" onClick={() => handleDeleteEvent(selectedEvent.id)}>🗑️ Supprimer</button>
-            <button type="button" className="btn" onClick={() => setShowForm(null)}>Annuler</button>
-          </div>
-        </form>
-      )}
+                {/* Association */}
+                <div className="form-section">
+                  <div className="form-section-title"><span>📁</span> Association</div>
+                  <div className="form-grid cols-2">
+                    <div>
+                      <label>Dossier {formData.type === 'Audience' ? '*' : '(optionnel)'}</label>
+                      <select
+                        value={formData.dossierId || ''}
+                        onChange={e => setFormData({ ...formData, dossierId: e.target.value || undefined })}
+                        required={formData.type === 'Audience'}
+                      >
+                        <option value="">-- Choisir --</option>
+                        {dossiers.map(d => (
+                          <option key={d.id} value={d.id}>{d.numeroDossier} - {d.titre}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label>Salle (optionnel)</label>
+                      <select
+                        value={formData.salleId || ''}
+                        onChange={e => setFormData({ ...formData, salleId: e.target.value || undefined })}
+                      >
+                        <option value="">-- Choisir --</option>
+                        {salles.map(s => (
+                          <option key={s.id} value={s.id}>🏢 {s.nom}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Vue détaillée */}
-      {showForm === 'detail' && selectedEvent && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <h3 style={{ marginBottom: 8 }}>{selectedEvent.titre}</h3>
-              <span className="badge" style={{ background: EventTypeColors[selectedEvent.type] }}>
-                {EventTypeLabels[selectedEvent.type]}
-              </span>
-            </div>
-            {canEdit && (
-              <button className="btn" onClick={() => openEditForm(selectedEvent)}>✏️ Modifier</button>
-            )}
-          </div>
-          
-          <div style={{ marginTop: 16 }}>
-            <p><strong>🕒 Début :</strong> {new Date(selectedEvent.debut).toLocaleString('fr-FR')}</p>
-            <p><strong>🕒 Fin :</strong> {new Date(selectedEvent.fin).toLocaleString('fr-FR')}</p>
-            {selectedEvent.description && <p><strong>📝 Description :</strong> {selectedEvent.description}</p>}
-            {selectedEvent.dossierId && (
-              <p>
-                <strong>📁 Dossier :</strong>{' '}
-                {dossiers.find(d => d.id === selectedEvent.dossierId)?.numeroDossier || selectedEvent.dossierId}
-              </p>
-            )}
-            {selectedEvent.participants && selectedEvent.participants.length > 0 && (
-              <div>
-                <strong>👥 Participants ({selectedEvent.participants.length}) :</strong>
-                <ul>
-                  {selectedEvent.participants.map(participantId => {
-                    const user = users.find(u => u.id === participantId)
-                    return user ? <li key={user.id}>{user.nomComplet} ({user.role})</li> : null
-                  })}
-                </ul>
+                {/* Participants */}
+                <div className="form-section">
+                  <div className="form-section-title">
+                    <span>👥</span> Participants ({formData.participants?.length || 0} sélectionné{(formData.participants?.length || 0) > 1 ? 's' : ''})
+                  </div>
+                  
+                  <input
+                    type="text"
+                    placeholder="🔍 Rechercher un participant..."
+                    value={searchParticipant}
+                    onChange={e => setSearchParticipant(e.target.value)}
+                    style={{ marginBottom: 12 }}
+                  />
+
+                  {formData.participants && formData.participants.length > 0 && (
+                    <div className="participants-grid" style={{ marginBottom: 12 }}>
+                      {formData.participants.map(userId => {
+                        const user = users.find(u => u.id === userId)
+                        if (!user) return null
+                        return (
+                          <div key={userId} className="participant-chip" style={{ background: '#eff6ff', borderColor: '#3b82f6' }}>
+                            <div className="participant-avatar">
+                              {user.nomComplet?.charAt(0) || '?'}
+                            </div>
+                            <div className="participant-info">
+                              <div className="name">{user.nomComplet}</div>
+                              <div className="role">{user.role}</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, participants: formData.participants?.filter(p => p !== userId) })}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 18 }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
+                    <div className="participants-grid">
+                      {filteredUsers.filter(u => !formData.participants?.includes(u.id)).map(user => (
+                        <div
+                          key={user.id}
+                          className="participant-chip"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setFormData({ ...formData, participants: [...(formData.participants || []), user.id] })}
+                        >
+                          <div className="participant-avatar">{user.nomComplet?.charAt(0) || '?'}</div>
+                          <div className="participant-info">
+                            <div className="name">{user.nomComplet}</div>
+                            <div className="role">{user.role}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          <button className="btn" onClick={() => setShowForm(null)} style={{ marginTop: 16 }}>Fermer</button>
+              <div className="calendar-modal-footer">
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  {modalMode === 'create' ? '✨ Créer' : '💾 Enregistrer'}
+                </button>
+                {modalMode === 'edit' && selectedEvent && (
+                  <button type="button" className="btn btn-danger" onClick={() => handleDeleteEvent(selectedEvent.id)}>
+                    🗑️ Supprimer
+                  </button>
+                )}
+                <button type="button" className="btn" onClick={() => setModalMode(null)}>Annuler</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Calendrier */}
-      {loading ? (
-        <div className="card" style={{ textAlign: 'center', padding: 40 }}>Chargement...</div>
-      ) : viewMode === 'month' ? (
-        renderMonthView()
-      ) : (
-        <div className="card">Vue {viewMode} (à implémenter)</div>
+      {/* Detail Modal */}
+      {modalMode === 'detail' && selectedEvent && (
+        <div className="calendar-modal-overlay" onClick={() => setModalMode(null)}>
+          <div className="calendar-modal event-detail-card" onClick={e => e.stopPropagation()}>
+            <div className={`event-detail-header ${EVENT_TYPE_CLASSES[selectedEvent.type] || 'event-type-reunion'}`}>
+              <h2>{selectedEvent.titre}</h2>
+              <span className="event-type-badge">
+                {EventTypeLabels[selectedEvent.type]}
+              </span>
+            </div>
+
+            <div className="event-detail-body">
+              <div className="event-detail-row">
+                <div className="event-detail-icon">🕒</div>
+                <div className="event-detail-content">
+                  <label>Date et heure</label>
+                  <p>
+                    {new Date(selectedEvent.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    <br />
+                    {new Date(selectedEvent.debut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    {' → '}
+                    {new Date(selectedEvent.fin).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+
+              {selectedEvent.description && (
+                <div className="event-detail-row">
+                  <div className="event-detail-icon">📝</div>
+                  <div className="event-detail-content">
+                    <label>Description</label>
+                    <p>{selectedEvent.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedEvent.dossierId && (
+                <div className="event-detail-row">
+                  <div className="event-detail-icon">📁</div>
+                  <div className="event-detail-content">
+                    <label>Dossier associé</label>
+                    <p>
+                      {dossiers.find(d => d.id === selectedEvent.dossierId)?.numeroDossier || 'N/A'}
+                      {' - '}
+                      {dossiers.find(d => d.id === selectedEvent.dossierId)?.titre || ''}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {selectedEvent.participants && selectedEvent.participants.length > 0 && (
+                <div className="event-detail-row">
+                  <div className="event-detail-icon">👥</div>
+                  <div className="event-detail-content">
+                    <label>Participants ({selectedEvent.participants.length})</label>
+                    <div className="participants-grid">
+                      {selectedEvent.participants.map(participantId => {
+                        const user = users.find(u => u.id === participantId)
+                        if (!user) return null
+                        return (
+                          <div key={user.id} className="participant-chip">
+                            <div className="participant-avatar">{user.nomComplet?.charAt(0) || '?'}</div>
+                            <div className="participant-info">
+                              <div className="name">{user.nomComplet}</div>
+                              <div className="role">{user.role}</div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="calendar-modal-footer">
+              {canEdit && (
+                <button className="btn btn-primary" onClick={() => openEditModal(selectedEvent)} style={{ flex: 1 }}>
+                  ✏️ Modifier
+                </button>
+              )}
+              <button className="btn" onClick={() => setModalMode(null)}>Fermer</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
