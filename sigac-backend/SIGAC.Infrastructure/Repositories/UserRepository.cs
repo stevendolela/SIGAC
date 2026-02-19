@@ -104,6 +104,14 @@ public class UserRepository : IUserRepository
             .ToListAsync();
     }
 
+    public async Task<List<User>> GetAllActiveUsersAsync()
+    {
+        return await _context.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.NomComplet)
+            .ToListAsync();
+    }
+
     public async Task<(List<User> Items, PaginationMetadata Pagination)> GetDeletedUsersAsync(
         int page = 1, int pageSize = 10, string? search = null)
     {

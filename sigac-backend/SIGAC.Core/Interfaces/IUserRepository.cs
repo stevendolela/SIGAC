@@ -14,6 +14,7 @@ public interface IUserRepository
     Task<(List<User> Items, PaginationMetadata Pagination)> GetUsersAsync(int page = 1, int pageSize = 10, string? search = null);
     Task<(List<User> Items, PaginationMetadata Pagination)> GetDeletedUsersAsync(int page = 1, int pageSize = 10, string? search = null);
     Task<List<User>> GetByRoleAsync(UserRole role);
+    Task<List<User>> GetAllActiveUsersAsync();
     Task AddAsync(User user);
     void Update(User user);
     void Delete(User user);

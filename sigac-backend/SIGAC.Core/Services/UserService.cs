@@ -428,8 +428,15 @@ public class UserService : IUserService
 
     public async Task<List<UserDto>> GetJugesAsync()
     {
-        var allJuges = await _userRepository.GetByRoleAsync(UserRole.Collaborateur);
-        return _mapper.Map<List<UserDto>>(allJuges);
+        // Retourner tous les utilisateurs actifs pouvant être responsables d'un dossier
+        // Inclut: Admin, Manager, Collaborateur (pas Assistant ni Consultant qui ont des rôles limités)
+        var allUsers = await _userRepository.GetAllActiveUsersAsync();
+        var responsables = allUsers.Where(u => 
+            u.Role == UserRole.Admin || 
+            u.Role == UserRole.Manager || 
+            u.Role == UserRole.Collaborateur
+        ).ToList();
+        return _mapper.Map<List<UserDto>>(responsables);
     }
 
     public async Task UpdateAvatarAsync(Guid userId, string avatarUrl)
