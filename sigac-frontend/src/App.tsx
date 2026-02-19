@@ -203,7 +203,7 @@ export default function App() {
           )}
           
           {view === 'create-dossier' && <CreateDossierPage onSuccess={() => setView('dossiers')} />}
-          {view === 'recherche' && <RechercheAvanceePage />}
+          {view === 'recherche' && <RechercheAvanceePage onViewDossier={handleViewDossierFromAudience} />}
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'calendrier' && <CalendarPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'documents' && <DocumentsPage />}

@@ -3,7 +3,11 @@ import api from '../api/api-client'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
 
-export default function RechercheAvanceePage() {
+interface RechercheAvanceePageProps {
+  onViewDossier?: (dossierId: string) => void
+}
+
+export default function RechercheAvanceePage({ onViewDossier }: RechercheAvanceePageProps = {}) {
   const [results, setResults] = useState<DossierListDto[]>([])
   const [loading, setLoading] = useState(false)
   const { notify } = useToast()
@@ -231,7 +235,11 @@ export default function RechercheAvanceePage() {
                     </td>
                     <td>{dossier.dateDebut ? new Date(dossier.dateDebut).toLocaleDateString('fr-FR') : '-'}</td>
                     <td>
-                      <button className="btn" style={{ fontSize: 13, padding: '6px 12px' }}>
+                      <button 
+                        className="btn" 
+                        style={{ fontSize: 13, padding: '6px 12px' }}
+                        onClick={() => onViewDossier && onViewDossier(dossier.id)}
+                      >
                         👁️ Voir
                       </button>
                     </td>
