@@ -112,15 +112,19 @@ public class WorkspaceService : IWorkspaceService
             throw new KeyNotFoundException($"Workspace avec l'ID {workspaceId} introuvable");
         }
 
+        // Vérifier d'abord si l'utilisateur est un Admin système
+        var user = await _userRepository.GetByIdAsync(userId);
+        bool isSystemAdmin = user != null && user.Role == UserRole.Admin;
+        
         // Vérifier que l'utilisateur a accès
         var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
-        if (membership == null || !membership.IsActive)
+        if (!isSystemAdmin && (membership == null || !membership.IsActive))
         {
             throw new UnauthorizedAccessException("Vous n'avez pas accès à ce workspace");
         }
 
         var dto = _mapper.Map<WorkspaceDto>(workspace);
-        dto.UserRole = membership.Role;
+        dto.UserRole = membership?.Role ?? (isSystemAdmin ? WorkspaceRole.Admin : WorkspaceRole.Guest);
         
         return dto;
     }
@@ -137,15 +141,19 @@ public class WorkspaceService : IWorkspaceService
             throw new KeyNotFoundException($"Workspace avec le slug '{slug}' introuvable");
         }
 
+        // Vérifier si l'utilisateur est un Admin système
+        var user = await _userRepository.GetByIdAsync(userId);
+        bool isSystemAdmin = user != null && user.Role == UserRole.Admin;
+
         // Vérifier que l'utilisateur a accès
         var membership = await _workspaceRepository.GetMembershipAsync(workspace.Id, userId);
-        if (membership == null || !membership.IsActive)
+        if (!isSystemAdmin && (membership == null || !membership.IsActive))
         {
             throw new UnauthorizedAccessException("Vous n'avez pas accès à ce workspace");
         }
 
         var dto = _mapper.Map<WorkspaceDto>(workspace);
-        dto.UserRole = membership.Role;
+        dto.UserRole = isSystemAdmin ? WorkspaceRole.Owner : membership!.Role;
         
         return dto;
     }
@@ -203,11 +211,18 @@ public class WorkspaceService : IWorkspaceService
 
     public async Task DeleteWorkspaceAsync(Guid workspaceId, Guid userId)
     {
-        // Vérifier permissions (Owner uniquement)
-        var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
-        if (membership?.Role != WorkspaceRole.Owner)
+        // Vérifier d'abord si l'utilisateur est un Admin système
+        var user = await _userRepository.GetByIdAsync(userId);
+        bool isSystemAdmin = user != null && user.Role == UserRole.Admin;
+        
+        // Vérifier permissions (Owner ou Admin système uniquement)
+        if (!isSystemAdmin)
         {
-            throw new UnauthorizedAccessException("Seul le propriétaire peut supprimer le workspace");
+            var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
+            if (membership?.Role != WorkspaceRole.Owner)
+            {
+                throw new UnauthorizedAccessException("Seul le propriétaire peut supprimer le workspace");
+            }
         }
 
         var workspace = await _workspaceRepository.GetByIdAsync(workspaceId);
@@ -235,11 +250,18 @@ public class WorkspaceService : IWorkspaceService
 
     public async Task<List<WorkspaceMemberDto>> GetWorkspaceMembersAsync(Guid workspaceId, Guid userId)
     {
+        // Vérifier d'abord si l'utilisateur est un Admin système
+        var user = await _userRepository.GetByIdAsync(userId);
+        bool isSystemAdmin = user != null && user.Role == UserRole.Admin;
+        
         // Vérifier que l'utilisateur a accès au workspace
-        var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
-        if (membership == null || !membership.IsActive)
+        if (!isSystemAdmin)
         {
-            throw new UnauthorizedAccessException("Vous n'avez pas accès à ce workspace");
+            var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
+            if (membership == null || !membership.IsActive)
+            {
+                throw new UnauthorizedAccessException("Vous n'avez pas accès à ce workspace");
+            }
         }
 
         var members = await _workspaceRepository.GetWorkspaceMembersAsync(workspaceId, includeInactive: false);
