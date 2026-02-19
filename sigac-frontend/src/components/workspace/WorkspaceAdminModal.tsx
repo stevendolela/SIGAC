@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Building2, Plus, Users, Trash2, Check, Edit2, UserPlus, Search } from 'lucide-react'
+import { X, Building2, Plus, Users, Trash2, Check, Edit2, UserPlus, Search, Globe } from 'lucide-react'
 import { workspaceApi } from '../../api/workspaceApi'
 import { userApi } from '../../api/userApi'
 import { useWorkspaceStore } from '../../store/workspaceStore'
@@ -17,6 +17,11 @@ type TabType = 'list' | 'create' | 'members'
 export default function WorkspaceAdminModal({ onClose }: WorkspaceAdminModalProps) {
   const { currentWorkspace, setCurrentWorkspace, refreshWorkspaces } = useWorkspaceStore()
   const [activeTab, setActiveTab] = useState<TabType>('list')
+  
+  // Vérifier si l'utilisateur est Admin
+  const userStr = localStorage.getItem('user')
+  const currentUser = userStr ? JSON.parse(userStr) : null
+  const isAdmin = currentUser?.role === 'Admin'
   const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -210,6 +215,13 @@ export default function WorkspaceAdminModal({ onClose }: WorkspaceAdminModalProp
     window.location.reload() // Recharger pour appliquer le filtre
   }
 
+  const handleShowAll = () => {
+    setCurrentWorkspace(null)
+    localStorage.removeItem('currentWorkspaceId')
+    onClose()
+    window.location.reload() // Recharger pour afficher tous les espaces
+  }
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedWorkspaceForMembers || !selectedUserId) return
@@ -351,6 +363,48 @@ export default function WorkspaceAdminModal({ onClose }: WorkspaceAdminModalProp
                 </div>
               ) : (
                 <div className="workspace-grid">
+                  {/* Option "Tous les espaces" - Admin uniquement */}
+                  {isAdmin && (
+                    <div 
+                      className={`workspace-card ${!currentWorkspace ? 'active' : ''}`}
+                      style={{ borderColor: '#3b82f6', background: !currentWorkspace ? '#eff6ff' : undefined }}
+                    >
+                      <div className="workspace-card-header">
+                        <div className="workspace-card-icon" style={{ background: '#3b82f6', color: 'white' }}>
+                          <Globe size={24} />
+                        </div>
+                        <div className="workspace-card-info">
+                          <h3>Tous les espaces</h3>
+                          <p>Vue globale de tous les workspaces</p>
+                        </div>
+                      </div>
+
+                      <div className="workspace-card-stats">
+                        <div className="workspace-stat">
+                          <Building2 size={14} />
+                          <span>{workspaces.length} workspaces</span>
+                        </div>
+                      </div>
+
+                      <div className="workspace-card-actions">
+                        {!currentWorkspace ? (
+                          <div className="workspace-current-badge" style={{ background: '#3b82f6' }}>
+                            <Check size={14} />
+                            Actif
+                          </div>
+                        ) : (
+                          <button 
+                            className="btn-workspace-switch"
+                            onClick={handleShowAll}
+                            style={{ background: '#3b82f6' }}
+                          >
+                            Basculer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   {workspaces.map((workspace) => (
                     <div 
                       key={workspace.id} 
