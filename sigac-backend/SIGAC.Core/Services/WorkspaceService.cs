@@ -13,15 +13,18 @@ namespace SIGAC.Core.Services;
 public class WorkspaceService : IWorkspaceService
 {
     private readonly IWorkspaceRepository _workspaceRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IAuditLogRepository _auditLogRepository;
     private readonly IMapper _mapper;
 
     public WorkspaceService(
         IWorkspaceRepository workspaceRepository,
+        IUserRepository userRepository,
         IAuditLogRepository auditLogRepository,
         IMapper mapper)
     {
         _workspaceRepository = workspaceRepository;
+        _userRepository = userRepository;
         _auditLogRepository = auditLogRepository;
         _mapper = mapper;
     }
@@ -383,6 +386,14 @@ public class WorkspaceService : IWorkspaceService
 
     public async Task<bool> HasPermissionAsync(Guid workspaceId, Guid userId, WorkspaceRole minimumRole)
     {
+        // Vérifier d'abord si l'utilisateur est un Admin système (UserRole.Admin)
+        // Les admins système ont accès à tous les workspaces
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user != null && user.Role == UserRole.Admin)
+        {
+            return true; // Admin système a tous les droits sur tous les workspaces
+        }
+        
         var membership = await _workspaceRepository.GetMembershipAsync(workspaceId, userId);
         
         if (membership == null || !membership.IsActive)
