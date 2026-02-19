@@ -175,13 +175,13 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
   async function attribuerRapporteur() {
     try {
       await dossierApi.attribuerRapporteur(dossierId, rapporteurId)
-      notify({ type: 'success', message: 'Juge affecté' })
+      notify({ type: 'success', message: 'Responsable affecté avec succès' })
       const updated = await dossierApi.getById(dossierId)
       setDetail(updated)
       setRapporteurId('')
     } catch (e) {
-      setError('Erreur attribution juge')
-      notify({ type: 'error', message: 'Erreur attribution juge' })
+      setError('Erreur lors de l\'attribution du responsable')
+      notify({ type: 'error', message: 'Erreur lors de l\'attribution du responsable' })
     }
   }
 
@@ -819,7 +819,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
               {/* Tab Actions */}
               {activeTab === 'actions' && (
                 <div style={{ display: 'grid', gap: 20 }}>
-                  {/* Affecter un juge */}
+                  {/* Affecter un responsable */}
                   <div style={{
                     background: 'white',
                     border: '1px solid #e2e8f0',
