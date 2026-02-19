@@ -109,24 +109,11 @@ export default function DashboardPage() {
             📊 Tableau de Bord - {isAdmin ? 'Vue d\'Ensemble Globale' : 'Ma Vue Personnelle'}
           </div>
           <div className="dashboard-actions">
-            {/* Sélecteur de Département pour Admin */}
-            {isAdmin && workspaces.length > 0 && (
-              <div className="workspace-selector">
-                <label htmlFor="workspace-select">Département:</label>
-                <select
-                  id="workspace-select"
-                  value={selectedWorkspace || ''}
-                  onChange={(e) => setSelectedWorkspace(e.target.value || null)}
-                  className="filter-select"
-                >
-                  <option value="">📍 Tous les départements</option>
-                  {workspaces.map(ws => (
-                    <option key={ws.id} value={ws.id}>
-                      {ws.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Workspace sélectionné via la sidebar globale */}
+            {currentWorkspace && (
+              <span className="current-workspace-badge" style={{ marginRight: '12px', padding: '4px 12px', background: '#e0e7ff', borderRadius: '6px', fontSize: '14px' }}>
+                📍 {currentWorkspace.name}
+              </span>
             )}
             <div className="period-filters">
               <select
