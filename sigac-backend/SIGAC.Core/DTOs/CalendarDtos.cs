@@ -11,6 +11,10 @@ public class CalendarEventDto
     public Guid? DossierId { get; set; }
     public Guid? SalleId { get; set; }
     public bool TouteLaJournee { get; set; }
+    public string Statut { get; set; } = "Planifie";
+    public int RappelAvant { get; set; } = 30;
+    public List<Guid> Participants { get; set; } = new();
+    public Guid? CreatedBy { get; set; }
 }
 
 public class CreateCalendarEventDto
@@ -23,4 +27,7 @@ public class CreateCalendarEventDto
     public Guid? DossierId { get; set; }
     public Guid? SalleId { get; set; }
     public bool TouteLaJournee { get; set; }
+    public string Statut { get; set; } = "Planifie";
+    public int RappelAvant { get; set; } = 30;
+    public List<Guid>? Participants { get; set; }
 }

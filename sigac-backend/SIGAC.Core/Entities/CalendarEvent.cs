@@ -11,6 +11,9 @@ public class CalendarEvent
     public Guid? DossierId { get; set; }
     public Guid? SalleId { get; set; }
     public bool TouteLaJournee { get; set; }
+    public string Statut { get; set; } = "Planifie"; // Planifie, EnCours, Termine, Reporte
+    public int RappelAvant { get; set; } = 30; // Minutes avant l'événement
+    public List<Guid> Participants { get; set; } = new(); // User IDs
     public Guid CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ModifiedAt { get; set; }

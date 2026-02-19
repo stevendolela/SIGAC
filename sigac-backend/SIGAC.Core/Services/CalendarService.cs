@@ -30,11 +30,14 @@ public class CalendarService : ICalendarService
             DossierId = dto.DossierId,
             SalleId = dto.SalleId,
             TouteLaJournee = dto.TouteLaJournee,
+            Statut = dto.Statut ?? "Planifie",
+            RappelAvant = dto.RappelAvant,
+            Participants = dto.Participants ?? new List<Guid>(),
             CreatedBy = actorUserId
         };
         await _repo.AddAsync(entity);
         await _repo.SaveChangesAsync();
-        var auditData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.CreatedBy };
+        var auditData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.Statut, entity.RappelAvant, entity.Participants, entity.CreatedBy };
         await _audit.LogActionAsync(actorUserId, "CREATE", nameof(CalendarEvent), entity.Id.ToString(), null, System.Text.Json.JsonSerializer.Serialize(auditData));
         return _mapper.Map<CalendarEventDto>(entity);
     }
@@ -58,7 +61,7 @@ public class CalendarService : ICalendarService
     public async Task<CalendarEventDto> UpdateAsync(Guid id, CreateCalendarEventDto dto, Guid actorUserId)
     {
         var entity = await _repo.GetByIdAsync(id) ?? throw new KeyNotFoundException("Événement introuvable");
-        var oldData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.CreatedBy };
+        var oldData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.Statut, entity.RappelAvant, entity.Participants, entity.CreatedBy };
         var old = System.Text.Json.JsonSerializer.Serialize(oldData);
         entity.Type = dto.Type;
         entity.Titre = dto.Titre;
@@ -68,10 +71,13 @@ public class CalendarService : ICalendarService
         entity.DossierId = dto.DossierId;
         entity.SalleId = dto.SalleId;
         entity.TouteLaJournee = dto.TouteLaJournee;
+        entity.Statut = dto.Statut ?? "Planifie";
+        entity.RappelAvant = dto.RappelAvant;
+        entity.Participants = dto.Participants ?? new List<Guid>();
         entity.ModifiedAt = DateTime.UtcNow;
         await _repo.UpdateAsync(entity);
         await _repo.SaveChangesAsync();
-        var newData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.CreatedBy, entity.ModifiedAt };
+        var newData = new { entity.Id, entity.Type, entity.Titre, entity.Description, entity.Debut, entity.Fin, entity.DossierId, entity.SalleId, entity.TouteLaJournee, entity.Statut, entity.RappelAvant, entity.Participants, entity.CreatedBy, entity.ModifiedAt };
         await _audit.LogActionAsync(actorUserId, "UPDATE", nameof(CalendarEvent), id.ToString(), old, System.Text.Json.JsonSerializer.Serialize(newData));
         return _mapper.Map<CalendarEventDto>(entity);
     }
