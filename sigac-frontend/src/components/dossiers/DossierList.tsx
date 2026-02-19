@@ -61,9 +61,8 @@ export default function DossierList({ onSelect }: Props) {
       if (q?.trim()) qs.set('search', q.trim())
       if (st) qs.set('status', st)
       if (pr) qs.set('priorite', pr)
-      // 🆕 Les admins voient TOUS les dossiers si aucun workspace n'est sélectionné
-      // Pour les autres rôles, on filtre toujours par workspace
-      if (currentWorkspace?.id && !isAdmin) {
+      // Filtrer par workspace sélectionné (tous les utilisateurs)
+      if (currentWorkspace?.id) {
         qs.set('workspaceId', currentWorkspace.id)
       }
       const resp = await api.get<PaginatedResult<DossierListDto>>(`/Dossiers?${qs.toString()}`)

@@ -3,7 +3,7 @@ import { dashboardApi } from '../api/dashboardApi'
 import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
 import { PERIOD_LABELS } from '../types/dashboard'
 import type { WorkspaceDto } from '../types/workspace'
-import workspaceApi from '../api/workspaceApi'
+import { useWorkspaceStore } from '../store/workspaceStore'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import './Dashboard.css'
 
@@ -15,46 +15,29 @@ export default function DashboardPage() {
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const [isManager, setIsManager] = useState<boolean>(false)
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null)
-  const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null) // Pour le sélecteur Admin
-  const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([])
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(30) // Default: 30 days
+  const { currentWorkspace } = useWorkspaceStore()
 
-  // Déterminer le rôle et workspace
+  // Déterminer le rôle
   useEffect(() => {
     try {
       const userStr = localStorage.getItem('user')
       const user = userStr ? JSON.parse(userStr) : null
       setIsAdmin(user?.role === 'Admin')
       setIsManager(user?.role === 'Manager')
-      // Utiliser defaultWorkspaceId pour les connexions des utilisateurs
-      setWorkspaceId(user?.defaultWorkspaceId || null)
-      setSelectedWorkspace(null) // Par défaut: "Tous les départements"
     } catch {
       setIsAdmin(false)
       setIsManager(false)
     }
   }, [])
 
-  // Charger les workspaces (départements) pour les Admin
-  useEffect(() => {
-    if (isAdmin) {
-      workspaceApi.getUserWorkspaces()
-        .then((workspaces) => {
-          setWorkspaces(workspaces || [])
-        })
-        .catch(err => console.error('Erreur chargement départements:', err))
-    }
-  }, [isAdmin])
-
   // Charger les statistiques
   const loadStats = async (mounted: { current: boolean }) => {
     setLoading(true)
     setError(null)
     try {
-      // Pour Admin, utiliser selectedWorkspace; pour les autres, utiliser workspaceId
-      const wsId = isAdmin ? selectedWorkspace : workspaceId
-      const statsData = await dashboardApi.getStatistics(periodFilter, wsId || undefined)
+      // Utiliser le workspace sélectionné globalement
+      const statsData = await dashboardApi.getStatistics(periodFilter, currentWorkspace?.id || undefined)
       if (!mounted.current) return
       setStats(statsData)
       setLastRefresh(new Date())
@@ -75,7 +58,7 @@ export default function DashboardPage() {
     return () => {
       mounted.current = false
     }
-  }, [refreshKey, periodFilter, selectedWorkspace, isAdmin, workspaceId])
+  }, [refreshKey, periodFilter, currentWorkspace?.id])
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'

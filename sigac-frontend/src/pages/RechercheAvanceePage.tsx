@@ -2,6 +2,7 @@ import { useState } from 'react'
 import api from '../api/api-client'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
+import { useWorkspaceStore } from '../store/workspaceStore'
 
 interface RechercheAvanceePageProps {
   onViewDossier?: (dossierId: string) => void
@@ -11,6 +12,7 @@ export default function RechercheAvanceePage({ onViewDossier }: RechercheAvancee
   const [results, setResults] = useState<DossierListDto[]>([])
   const [loading, setLoading] = useState(false)
   const { notify } = useToast()
+  const { currentWorkspace } = useWorkspaceStore()
 
   // Critères de recherche
   const [numeroDossier, setNumeroDossier] = useState('')
@@ -38,6 +40,8 @@ export default function RechercheAvanceePage({ onViewDossier }: RechercheAvancee
       if (priorite) params.set('priorite', priorite)
       if (dateDebutMin) params.set('dateDebutMin', dateDebutMin)
       if (dateDebutMax) params.set('dateDebutMax', dateDebutMax)
+      // Filtrer par workspace sélectionné
+      if (currentWorkspace?.id) params.set('workspaceId', currentWorkspace.id)
 
       const response = await api.get(`/Dossiers?${params.toString()}`)
       setResults(response.data.data || [])

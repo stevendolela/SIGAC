@@ -3,6 +3,7 @@ import { documentApi } from '../api/documentApi'
 import type { DocumentDto } from '../types/document'
 import type { DossierListDto } from '../types/dossier'
 import { useToast } from '../components/common/ToastProvider'
+import { useWorkspaceStore } from '../store/workspaceStore'
 import DossierDetailModal from './DossierDetailModal'
 import '../styles/documents-page.css'
 
@@ -70,6 +71,7 @@ export default function DocumentsPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const { notify } = useToast()
+  const { currentWorkspace } = useWorkspaceStore()
 
   // Vérification du rôle
   const userStr = localStorage.getItem('user')
@@ -112,20 +114,24 @@ export default function DocumentsPage() {
     }
   }, [selectedDossierId, dossiers, notify])
 
-  // Charger les dossiers (pour sélection dans assign modal)
+  // Charger les dossiers (pour sélection dans assign modal) - filtré par workspace
   useEffect(() => {
     const fetchDossiers = async () => {
       try {
-        // Charger les dossiers via l'API dossierApi
+        // Charger les dossiers via l'API dossierApi - filtré par workspace si sélectionné
         const { dossierApi } = await import('../api/dossierApi')
-        const result = await dossierApi.list({ page: 1, pageSize: 100 })
+        const result = await dossierApi.list({ 
+          page: 1, 
+          pageSize: 100,
+          workspaceId: currentWorkspace?.id 
+        })
         setDossiers(result.data || [])
       } catch (e: any) {
         console.error('Erreur chargement dossiers', e)
       }
     }
     fetchDossiers()
-  }, [])
+  }, [currentWorkspace?.id])
 
   // Énumérer les appareils vidéo disponibles
   async function enumerateVideoDevices() {
