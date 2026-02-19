@@ -342,11 +342,19 @@ public class DossierService : IDossierService
             return false;
         }
 
-        // Vérifier que le rapporteur est un juge
+        // Vérifier que le rapporteur est un utilisateur autorisé (Admin, Manager ou Collaborateur)
         var rapporteur = await _userRepository.GetByIdAsync(rapporteurId);
-        if (rapporteur == null || rapporteur.Role != UserRole.Collaborateur)
+        if (rapporteur == null)
         {
-            throw new ArgumentException("Le rapporteur doit être un juge constitutionnel");
+            throw new ArgumentException("Utilisateur introuvable");
+        }
+        
+        // Accepter Admin, Manager et Collaborateur comme responsables
+        if (rapporteur.Role != UserRole.Admin && 
+            rapporteur.Role != UserRole.Manager && 
+            rapporteur.Role != UserRole.Collaborateur)
+        {
+            throw new ArgumentException("Le responsable doit être un Admin, Manager ou Collaborateur");
         }
 
         var ancienRapporteur = dossier.RapporteurId;

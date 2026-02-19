@@ -111,7 +111,8 @@ public class DossierServiceTests
         var actorId = Guid.NewGuid();
 
         var dossier = new Dossier { Id = dossierId, NumeroDossier = "CC-2025-002", Titre = "X", TypeAffaireId = Guid.NewGuid(), Priorite = PrioriteDossier.Normale };
-        var nonJudgeUser = new User { Id = rapporteurId, NomComplet = "Assistant", Role = UserRole.Admin };
+        // Assistant n'est pas autorisé comme responsable
+        var nonJudgeUser = new User { Id = rapporteurId, NomComplet = "Assistant", Role = UserRole.Assistant };
 
         _dossierRepo.Setup(r => r.GetByIdAsync(dossierId)).ReturnsAsync(dossier);
         _userRepo.Setup(r => r.GetByIdAsync(rapporteurId)).ReturnsAsync(nonJudgeUser);
