@@ -186,6 +186,13 @@ public class WorkspacesController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (Exception ex)
+        {
+            // Log l'erreur pour debug
+            Console.WriteLine($"[AddMember] Exception: {ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine($"[AddMember] StackTrace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Erreur serveur lors de l'ajout du membre", detail = ex.Message });
+        }
     }
 
     /// <summary>
