@@ -191,7 +191,16 @@ public class WorkspacesController : ControllerBase
             // Log l'erreur pour debug
             Console.WriteLine($"[AddMember] Exception: {ex.GetType().Name}: {ex.Message}");
             Console.WriteLine($"[AddMember] StackTrace: {ex.StackTrace}");
-            return StatusCode(500, new { message = "Erreur serveur lors de l'ajout du membre", detail = ex.Message });
+            var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+            var innerInner = ex.InnerException?.InnerException?.Message ?? "No inner-inner exception";
+            Console.WriteLine($"[AddMember] InnerException: {innerMessage}");
+            Console.WriteLine($"[AddMember] InnerInnerException: {innerInner}");
+            return StatusCode(500, new { 
+                message = "Erreur serveur lors de l'ajout du membre", 
+                detail = ex.Message,
+                inner = innerMessage,
+                innerInner = innerInner
+            });
         }
     }
 
