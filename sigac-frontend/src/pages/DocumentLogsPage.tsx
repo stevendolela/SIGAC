@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar, Download, Eye, User, Clock, Globe, Filter, FileText, Search, FolderOpen, Edit, Trash2, Plus } from 'lucide-react'
 import { getApiBaseUrl } from '../api/api-client'
+import { useWorkspaceStore } from '../store/workspaceStore'
 
 interface HistoriqueLog {
   id: string
@@ -43,6 +44,9 @@ export default function HistoriqueDossiersPage() {
   const [page, setPage] = useState(1)
   const pageSize = 50
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null)
+  
+  // Récupérer le workspace sélectionné
+  const { selectedWorkspaceId, showAllWorkspaces } = useWorkspaceStore()
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,7 +54,7 @@ export default function HistoriqueDossiersPage() {
       await loadLogs(dossiersData)
     }
     loadData()
-  }, [])
+  }, [selectedWorkspaceId, showAllWorkspaces])
 
   const loadDossiers = async () => {
     try {
@@ -58,8 +62,13 @@ export default function HistoriqueDossiersPage() {
       if (!token) return []
 
       const apiUrl = getApiBaseUrl()
-      // Charger tous les dossiers pour Admin (limite élevée)
-      const response = await fetch(`${apiUrl}/dossiers?page=1&pageSize=5000`, {
+      // Charger les dossiers (filtrer par workspace si sélectionné)
+      let url = `${apiUrl}/dossiers?page=1&pageSize=5000`
+      if (selectedWorkspaceId && !showAllWorkspaces) {
+        url += `&workspaceId=${selectedWorkspaceId}`
+      }
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +104,14 @@ export default function HistoriqueDossiersPage() {
 
       // Charger les audit logs UNIQUEMENT pour Documents ET Dossiers (filtrage côté serveur)
       const apiUrl = getApiBaseUrl()
-      const response = await fetch(`${apiUrl}/auditlogs?entityType=Document,Dossier&limit=10000`, {
+      
+      // Construire l'URL avec le workspaceId si sélectionné
+      let url = `${apiUrl}/auditlogs?entityType=Document,Dossier&limit=10000`
+      if (selectedWorkspaceId && !showAllWorkspaces) {
+        url += `&workspaceId=${selectedWorkspaceId}`
+      }
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

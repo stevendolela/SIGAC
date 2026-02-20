@@ -37,6 +37,7 @@ public class AuditLogsController : ControllerBase
     /// <param name="userId">ID de l'utilisateur</param>
     /// <param name="startDate">Date de début</param>
     /// <param name="endDate">Date de fin</param>
+    /// <param name="workspaceId">ID du workspace pour filtrer les logs (optionnel)</param>
     /// <param name="limit">Nombre maximum de résultats (défaut: 1000, max: 10000)</param>
     /// <returns>Liste des logs d'audit</returns>
     [HttpGet]
@@ -46,6 +47,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] Guid? userId = null,
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
+        [FromQuery] Guid? workspaceId = null,
         [FromQuery] int limit = 1000)
     {
         try
@@ -99,6 +101,29 @@ public class AuditLogsController : ControllerBase
             if (endDate.HasValue)
             {
                 query = query.Where(a => a.Timestamp <= endDate.Value);
+            }
+
+            // Filtrer par workspace si spécifié
+            if (workspaceId.HasValue)
+            {
+                // Récupérer les IDs des dossiers appartenant à ce workspace
+                var dossierIds = await _context.Dossiers
+                    .Where(d => d.WorkspaceId == workspaceId.Value)
+                    .Select(d => d.Id.ToString())
+                    .ToListAsync();
+
+                // Récupérer les IDs des documents appartenant aux dossiers du workspace
+                var documentIds = await _context.Documents
+                    .Where(doc => doc.Dossier != null && doc.Dossier.WorkspaceId == workspaceId.Value)
+                    .Select(doc => doc.Id.ToString())
+                    .ToListAsync();
+
+                // Combiner les IDs
+                var allEntityIds = dossierIds.Concat(documentIds).ToList();
+
+                // Filtrer les logs pour n'inclure que ceux liés au workspace
+                query = query.Where(a => 
+                    a.EntityId != null && allEntityIds.Contains(a.EntityId));
             }
 
             // Ordonner par date décroissante et limiter
