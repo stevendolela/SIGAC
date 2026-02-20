@@ -491,7 +491,8 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(wu => wu.TenantId);
 
             // Role reste en integer (EF Core default mapping)
-            entity.Property(wu => wu.IsActive).HasDefaultValue(true);
+            // IsActive doit être required et toujours envoyé explicitement
+            entity.Property(wu => wu.IsActive).IsRequired();
         });
 
         // Configuration AuditLog (ADAPTÉ)
