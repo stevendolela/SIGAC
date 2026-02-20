@@ -162,10 +162,12 @@ public class WorkspacesController : ControllerBase
     public async Task<IActionResult> AddMember(Guid id, [FromBody] AddWorkspaceMemberDto dto)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var userRoleStr = User.FindFirst(ClaimTypes.Role)?.Value;
+        var userRole = Enum.TryParse<UserRole>(userRoleStr, out var role) ? role : (UserRole?)null;
         
         try
         {
-            await _workspaceService.AddMemberAsync(id, dto, userId);
+            await _workspaceService.AddMemberAsync(id, dto, userId, userRole);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

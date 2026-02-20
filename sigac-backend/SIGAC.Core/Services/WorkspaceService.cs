@@ -268,10 +268,13 @@ public class WorkspaceService : IWorkspaceService
         return _mapper.Map<List<WorkspaceMemberDto>>(members);
     }
 
-    public async Task AddMemberAsync(Guid workspaceId, AddWorkspaceMemberDto dto, Guid userId)
+    public async Task AddMemberAsync(Guid workspaceId, AddWorkspaceMemberDto dto, Guid userId, UserRole? userRole = null)
     {
-        // Vérifier permissions (Admin ou Owner uniquement)
-        if (!await HasPermissionAsync(workspaceId, userId, WorkspaceRole.Admin))
+        // Si userRole est passé directement (Admin système), bypass la vérification
+        bool isSystemAdmin = userRole == UserRole.Admin;
+        
+        // Vérifier permissions (Admin système ou Admin/Owner du workspace)
+        if (!isSystemAdmin && !await HasPermissionAsync(workspaceId, userId, WorkspaceRole.Admin))
         {
             throw new UnauthorizedAccessException("Seuls les admins et owners peuvent ajouter des membres");
         }

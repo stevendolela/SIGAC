@@ -47,7 +47,7 @@ public interface IWorkspaceService
     /// <summary>
     /// Ajouter un membre au workspace
     /// </summary>
-    Task AddMemberAsync(Guid workspaceId, AddWorkspaceMemberDto dto, Guid userId);
+    Task AddMemberAsync(Guid workspaceId, AddWorkspaceMemberDto dto, Guid userId, UserRole? userRole = null);
     
     /// <summary>
     /// Mettre à jour le rôle d'un membre
