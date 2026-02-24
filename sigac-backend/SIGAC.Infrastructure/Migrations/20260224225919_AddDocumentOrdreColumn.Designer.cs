@@ -13,8 +13,8 @@ using SIGAC.Infrastructure.Data;
 namespace SIGAC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260224223227_AddDocumentOrdre")]
-    partial class AddDocumentOrdre
+    [Migration("20260224225919_AddDocumentOrdreColumn")]
+    partial class AddDocumentOrdreColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
