@@ -18,8 +18,7 @@ import {
   Download,
   Mail,
   Shield,
-  Network,
-  FolderTree
+  Network
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import Logo from './Logo'
@@ -49,7 +48,6 @@ type ViewType =
   | 'external-import'
   | 'rights-management'
   | 'tenants'
-  | 'file-explorer'
 
 interface MenuItem {
   view: ViewType
@@ -144,12 +142,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           label: 'Documents',
           icon: FileText,
           color: '#f97316'
-        },
-        {
-          view: 'file-explorer' as ViewType,
-          label: 'Explorateur',
-          icon: FolderTree,
-          color: '#22c55e'
         },
         {
           view: 'courrier' as ViewType,

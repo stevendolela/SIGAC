@@ -10,7 +10,7 @@ import AudiencesPage from './pages/AudiencesPage'
 import SallesPage from './pages/SallesPage'
 import RechercheAvanceePage from './pages/RechercheAvanceePage'
 import CreateDossierPage from './pages/CreateDossierPage'
-import DocumentsPage from './pages/DocumentsPage'
+import DocumentsPageUnified from './pages/DocumentsPageUnified'
 import { getApiBaseUrl, setApiBaseUrl } from './api/api-client'
 import ApiSwitcher from './components/common/ApiSwitcher'
 import ApiHealth from './components/common/ApiHealth'
@@ -29,7 +29,6 @@ import LoginHistoryPage from './pages/LoginHistoryPage'
 import ImportDossiersPage from './pages/ImportDossiersPage'
 import ExternalDocumentImportPage from './pages/ExternalDocumentImportPage'
 import CourrierPage from './pages/CourrierPage'
-import FileExplorerPage from './pages/FileExplorerPage'
 import { Routes, Route } from 'react-router-dom'
 import { TypesAffairesPage } from './pages/TypesAffairesPage'
 import TenantsPage from './pages/TenantsPage'
@@ -207,8 +206,7 @@ export default function App() {
           {view === 'recherche' && <RechercheAvanceePage onViewDossier={handleViewDossierFromAudience} />}
           {view === 'audiences' && <AudiencesPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
           {view === 'calendrier' && <CalendarPage onViewDossier={handleViewDossierFromAudience} onManageSalles={handleManageSalles} />}
-          {view === 'documents' && <DocumentsPage />}
-          {view === 'file-explorer' && <FileExplorerPage />}
+          {view === 'documents' && <DocumentsPageUnified />}
           {view === 'courrier' && <CourrierPage />}
           {view === 'salles' && <SallesPage />}
           {view === 'mon-profil' && <MonProfilPage />}
