@@ -41,6 +41,7 @@ import CreateWorkspaceModal from './components/workspace/CreateWorkspaceModal'
 import WorkspaceSettings from './pages/WorkspaceSettings'
 import Sidebar from './components/common/Sidebar'
 import { migrateUserDataInCache } from './utils/roleMigration'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
   // Migrer les données de cache au démarrage (anciens rôles → nouveaux rôles)
@@ -259,6 +260,7 @@ export default function App() {
           />
         </>
       )}
+      <Analytics />
     </div>
   )
 }
