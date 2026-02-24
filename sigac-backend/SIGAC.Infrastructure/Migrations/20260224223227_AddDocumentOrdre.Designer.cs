@@ -13,8 +13,8 @@ using SIGAC.Infrastructure.Data;
 namespace SIGAC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260219233510_AddCalendarEventFields")]
-    partial class AddCalendarEventFields
+    [Migration("20260224223227_AddDocumentOrdre")]
+    partial class AddDocumentOrdre
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -523,6 +523,9 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.Property<int>("NumeroVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Ordre")
                         .HasColumnType("integer");
 
                     b.Property<long>("TailleFichier")
@@ -1551,9 +1554,7 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");

@@ -522,6 +522,9 @@ namespace SIGAC.Infrastructure.Migrations
                     b.Property<int>("NumeroVersion")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Ordre")
+                        .HasColumnType("integer");
+
                     b.Property<long>("TailleFichier")
                         .HasColumnType("bigint");
 
@@ -1548,9 +1551,7 @@ namespace SIGAC.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");

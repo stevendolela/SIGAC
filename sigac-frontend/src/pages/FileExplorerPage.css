@@ -1,0 +1,516 @@
+/* File Explorer Page - Styles Windows Explorer */
+
+.file-explorer-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8fafc;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+/* Loading */
+.file-explorer-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: #64748b;
+}
+
+.file-explorer-loading .spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Header */
+.file-explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.file-explorer-header .header-left h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.file-explorer-header .stats {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Toolbar */
+.file-explorer-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+}
+
+.search-box svg {
+  color: #94a3b8;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.25rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+/* Buttons */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+}
+
+.btn-icon:hover {
+  background: #f1f5f9;
+  color: #3b82f6;
+}
+
+.btn-icon.active {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Error */
+.file-explorer-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* Content */
+.file-explorer-content {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 3rem;
+  color: #94a3b8;
+}
+
+.empty-state svg {
+  margin-bottom: 1rem;
+}
+
+/* Dossier Item */
+.dossier-item {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dossier-item:last-child {
+  border-bottom: none;
+}
+
+.dossier-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dossier-header:hover {
+  background: #f8fafc;
+}
+
+.dossier-expand {
+  color: #94a3b8;
+}
+
+.dossier-icon {
+  color: #f59e0b;
+}
+
+.dossier-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.dossier-numero {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.dossier-titre {
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dossier-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dossier-status {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  color: white;
+  font-weight: 500;
+}
+
+.dossier-count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Documents Container */
+.dossier-documents {
+  background: #fafbfc;
+  border-top: 1px solid #f1f5f9;
+  padding: 0.5rem 0;
+}
+
+.dossier-documents.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* No Documents */
+.no-documents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #94a3b8;
+  gap: 0.5rem;
+}
+
+/* Document Item - List View */
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  transition: background 0.15s;
+}
+
+.document-item:hover {
+  background: #f1f5f9;
+}
+
+.doc-drag {
+  cursor: grab;
+  color: #cbd5e1;
+}
+
+.doc-drag:hover {
+  color: #64748b;
+}
+
+.doc-ordre {
+  width: 32px;
+}
+
+.ordre-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 4px;
+}
+
+/* File Icons */
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.file-icon.pdf {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.file-icon.image {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.file-icon.word {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.file-icon.excel {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.file-icon.other {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Document Info */
+.doc-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.doc-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Document Actions */
+.doc-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.document-item:hover .doc-actions {
+  opacity: 1;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+}
+
+.btn-action:hover {
+  background: #e2e8f0;
+}
+
+.btn-action:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-action.view:hover {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.btn-action.download:hover {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* Document Item - Grid View */
+.dossier-documents.grid .document-item {
+  padding: 0;
+}
+
+.doc-grid-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.doc-grid-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.doc-grid-card .file-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.5rem;
+}
+
+.doc-grid-card .doc-name {
+  font-size: 0.75rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 0.25rem;
+}
+
+.doc-grid-card .doc-size {
+  font-size: 0.625rem;
+  color: #94a3b8;
+}
+
+.doc-grid-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.doc-grid-card:hover .doc-grid-actions {
+  opacity: 1;
+}
+
+.doc-grid-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.doc-grid-actions button:hover {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .file-explorer-page {
+    padding: 1rem;
+  }
+  
+  .file-explorer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
+  .sort-controls {
+    justify-content: space-between;
+  }
+  
+  .dossier-meta {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+  
+  .document-item {
+    padding-left: 1.5rem;
+  }
+  
+  .doc-actions {
+    opacity: 1;
+  }
+}

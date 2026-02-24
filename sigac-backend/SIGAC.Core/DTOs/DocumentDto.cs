@@ -37,6 +37,9 @@ public class DocumentDto
     
     [System.Text.Json.Serialization.JsonPropertyName("uploadedAt")]
     public DateTime UploadedAt { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("ordre")]
+    public int Ordre { get; set; }
 }
 
 /// <summary>
@@ -48,5 +51,21 @@ public class AssignDocumentDto
     /// ID du dossier cible
     /// </summary>
     public Guid DossierId { get; set; }
+}
+
+/// <summary>
+/// DTO pour mettre à jour l'ordre d'un document
+/// </summary>
+public class UpdateDocumentOrdreDto
+{
+    /// <summary>
+    /// ID du document (utilisé pour batch update)
+    /// </summary>
+    public Guid DocumentId { get; set; }
+    
+    /// <summary>
+    /// Nouvel ordre d'affichage
+    /// </summary>
+    public int Ordre { get; set; }
 }
 

@@ -1145,6 +1145,62 @@ public class DocumentsController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Met à jour l'ordre d'un document dans son dossier
+    /// </summary>
+    [HttpPut("{id}/ordre")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateDocumentOrdre(Guid id, [FromBody] UpdateDocumentOrdreDto dto)
+    {
+        try
+        {
+            var document = await _context.Documents.FindAsync(id);
+            if (document == null)
+                return NotFound(new { message = "Document non trouvé" });
+
+            document.Ordre = dto.Ordre;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Ordre du document {DocumentId} mis à jour: {Ordre}", id, dto.Ordre);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour de l'ordre du document {DocumentId}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Met à jour l'ordre de plusieurs documents en batch
+    /// </summary>
+    [HttpPut("batch-ordre")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UpdateDocumentsOrdreBatch([FromBody] List<UpdateDocumentOrdreDto> dtos)
+    {
+        try
+        {
+            foreach (var dto in dtos)
+            {
+                var document = await _context.Documents.FindAsync(dto.DocumentId);
+                if (document != null)
+                {
+                    document.Ordre = dto.Ordre;
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Ordre de {Count} documents mis à jour", dtos.Count);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la mise à jour par batch de l'ordre des documents");
+            return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
 }
 
 public class TestScannerRequest

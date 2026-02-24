@@ -14,6 +14,11 @@ public class Document
     public int NumeroVersion { get; set; } = 1;
     
     /// <summary>
+    /// Ordre d'affichage du document dans le dossier (pour tri personnalisé)
+    /// </summary>
+    public int Ordre { get; set; } = 0;
+    
+    /// <summary>
     /// Contenu du fichier encodé en Base64 (stockage DB pour Render)
     /// </summary>
     public string? FileData { get; set; }

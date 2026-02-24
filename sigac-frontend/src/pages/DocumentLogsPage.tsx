@@ -46,7 +46,8 @@ export default function HistoriqueDossiersPage() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null)
   
   // Récupérer le workspace sélectionné
-  const { selectedWorkspaceId, showAllWorkspaces } = useWorkspaceStore()
+  const { currentWorkspace, showAllWorkspaces } = useWorkspaceStore()
+  const selectedWorkspaceId = currentWorkspace?.id || null
 
   useEffect(() => {
     const loadData = async () => {
