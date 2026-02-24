@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import Logo from './components/common/Logo'
 import LoginPage from './pages/LoginPage'
 import AuthHeader from './components/AuthHeader'
@@ -259,6 +260,7 @@ export default function App() {
           />
         </>
       )}
+      <Analytics />
     </div>
   )
 }
