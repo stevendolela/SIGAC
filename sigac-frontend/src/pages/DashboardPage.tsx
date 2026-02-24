@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import { dashboardApi } from '../api/dashboardApi'
 import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
 import { PERIOD_LABELS } from '../types/dashboard'
@@ -136,7 +137,7 @@ export default function DashboardPage() {
               title="Actualiser les données"
               aria-label="Actualiser les données"
             >
-              🔄
+              <RefreshCw size={18} />
             </button>
           </div>
         </div>
