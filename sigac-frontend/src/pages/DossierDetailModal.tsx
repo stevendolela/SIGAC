@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { FolderOpen, X, FileText, Calendar, Settings, History, Upload, Eye, Download, Trash2, User, Users, CheckCircle2, Clock, AlertTriangle, Archive, Sparkles, Zap, RefreshCw, Loader2, ExternalLink, Plus } from 'lucide-react'
 import { dossierApi } from '../api/dossierApi'
 import { documentApi, type DocumentVisualisationLogDto } from '../api/documentApi'
 import { userApi } from '../api/userApi'
@@ -9,6 +10,53 @@ import { useToast } from '../components/common/ToastProvider'
 import AudienceList from '../components/audiences/AudienceList'
 import AudienceForm from '../components/audiences/AudienceForm'
 import Modal from '../components/common/Modal'
+
+// Mapping nombre → string pour les enums (backend envoie des nombres)
+const STATUS_ENUM_MAP: Record<number | string, string> = {
+  0: 'Nouveau', 1: 'EnCours', 2: 'EnValidation', 3: 'Valide', 4: 'Termine',
+  'Nouveau': 'Nouveau', 'EnCours': 'EnCours', 'EnValidation': 'EnValidation', 'Valide': 'Valide', 'Termine': 'Termine'
+}
+
+const PRIORITE_ENUM_MAP: Record<number | string, string> = {
+  0: 'Basse', 1: 'Normale', 2: 'Haute', 3: 'Urgente',
+  'Basse': 'Basse', 'Normale': 'Normale', 'Haute': 'Haute', 'Urgente': 'Urgente'
+}
+
+// Helpers pour normaliser les valeurs
+const getStatus = (val: any): string => STATUS_ENUM_MAP[val] || 'Nouveau'
+const getPriorite = (val: any): string => PRIORITE_ENUM_MAP[val] || 'Normale'
+
+// Labels et couleurs du statut
+const STATUS_LABELS: Record<string, string> = {
+  Nouveau: 'Nouveau',
+  EnCours: 'En cours',
+  EnValidation: 'En validation',
+  Valide: 'Validé',
+  Termine: 'Terminé'
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  Nouveau: '#3b82f6',
+  EnCours: '#f59e0b',
+  EnValidation: '#8b5cf6',
+  Valide: '#10b981',
+  Termine: '#6b7280'
+}
+
+// Labels et couleurs de la priorité
+const PRIORITE_LABELS: Record<string, string> = {
+  Basse: 'Basse',
+  Normale: 'Normale',
+  Haute: 'Haute',
+  Urgente: 'Urgente'
+}
+
+const PRIORITE_COLORS: Record<string, string> = {
+  Basse: '#94a3b8',
+  Normale: '#10b981',
+  Haute: '#f59e0b',
+  Urgente: '#ef4444'
+}
 
 interface Props {
   dossierId: string
@@ -43,51 +91,10 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     return type.replace(/([A-Z])/g, ' $1').trim()
   }
 
-  // Helper functions pour les badges
-  function getStatusBadge(status?: string | null) {
-    const colors: Record<string, { bg: string; text: string; label: string }> = {
-      'Nouveau': { bg: '#dbeafe', text: '#1e40af', label: '🆕 Nouveau' },
-      'EnCours': { bg: '#fef3c7', text: '#92400e', label: '📝 En Cours' },
-      'EnValidation': { bg: '#e0e7ff', text: '#3730a3', label: '💭 En Validation' },
-      'Valide': { bg: '#d1fae5', text: '#065f46', label: '✅ Validé' },
-      'Termine': { bg: '#f3f4f6', text: '#374151', label: '📦 Terminé' }
-    }
-    const config = colors[status || ''] || { bg: '#f3f4f6', text: '#6b7280', label: status || '-' }
-    return (
-      <span style={{
-        padding: '6px 12px',
-        borderRadius: 6,
-        fontSize: 13,
-        fontWeight: 600,
-        background: config.bg,
-        color: config.text,
-        display: 'inline-block'
-      }}>
-        {config.label}
-      </span>
-    )
-  }
-
-  function getPriorityBadge(priority?: string | null) {
-    const colors: Record<string, { bg: string; text: string; icon: string }> = {
-      'Normale': { bg: '#e0e7ff', text: '#3730a3', icon: '📋' },
-      'Haute': { bg: '#fef3c7', text: '#92400e', icon: '⚠️' },
-      'Critique': { bg: '#fee2e2', text: '#991b1b', icon: '🔥' }
-    }
-    const config = colors[priority || ''] || { bg: '#f3f4f6', text: '#6b7280', icon: '📌' }
-    return (
-      <span style={{
-        padding: '4px 10px',
-        borderRadius: 4,
-        fontSize: 12,
-        fontWeight: 600,
-        background: config.bg,
-        color: config.text,
-        display: 'inline-block'
-      }}>
-        {config.icon} {priority || '-'}
-      </span>
-    )
+  // Helper pour formater la date
+  function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
   useEffect(() => {
@@ -135,7 +142,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
       const blob = await documentApi.view(doc.id)
       const url = URL.createObjectURL(blob)
       window.open(url, '_blank')
-      notify({ type: 'success', message: '👁️ Document ouvert' })
+      notify({ type: 'success', message: 'Document ouvert' })
       if (showVisHistory) {
         setTimeout(() => loadVisualisations(), 500)
       }
@@ -149,7 +156,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     try {
       await documentApi.remove(doc.id)
       setDocs(prev => prev.filter(d => d.id !== doc.id))
-      notify({ type: 'success', message: '🗑️ Document supprimé' })
+      notify({ type: 'success', message: 'Document supprimé' })
     } catch (e) {
       setError('Suppression impossible')
       notify({ type: 'error', message: 'Suppression impossible' })
@@ -205,7 +212,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     setUploading(true)
     try {
       await documentApi.upload(dossierId, selectedFile, typeDocument)
-      notify({ type: 'success', message: '✅ Document uploadé avec succès !' })
+      notify({ type: 'success', message: 'Document uploadé avec succès !' })
       const updatedDocs = await documentApi.listByDossier(dossierId)
       setDocs(updatedDocs)
       setSelectedFile(null)
@@ -244,147 +251,163 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
     setShowAudienceModal(true)
   }
 
-  // Composants helper
-  function InfoCard({ title, icon, children }: { title: string; icon?: string; children: React.ReactNode }) {
-    return (
-      <div style={{
-        background: 'white',
-        border: '1px solid #e2e8f0',
-        borderRadius: 12,
-        padding: 20,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-      }}>
-        <div style={{ 
-          fontSize: 14, 
-          fontWeight: 600, 
-          color: '#475569', 
-          marginBottom: 16,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          {icon && <span>{icon}</span>}
-          <span>{title}</span>
-        </div>
-        {children}
-      </div>
-    )
-  }
-
-  function InfoRow({ label, value }: { label: string; value: string }) {
-    return (
-      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-        <span style={{ color: '#64748b', fontSize: 13 }}>{label}:</span>
-        <span style={{ color: '#1e293b', fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{value}</span>
-      </div>
-    )
-  }
-
-  function TabButton({ tab, label, icon }: { tab: typeof activeTab; label: string; icon: string }) {
-    const isActive = activeTab === tab
-    return (
-      <button
-        onClick={() => setActiveTab(tab)}
-        style={{
-          flex: 1,
-          padding: '12px 16px',
-          border: 'none',
-          background: isActive ? 'white' : 'transparent',
-          color: isActive ? '#5b21b6' : '#64748b',
-          fontWeight: isActive ? 600 : 400,
-          fontSize: 14,
-          cursor: 'pointer',
-          borderBottom: isActive ? '2px solid #5b21b6' : '2px solid transparent',
-          transition: 'all 0.2s'
-        }}
-      >
-        {icon} {label}
-      </button>
-    )
-  }
-
   return (
-    <Modal isOpen onClose={onClose} size="xl" title={`Dossier ${detail?.numeroDossier || ''}`}>
-      <div style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+    <Modal isOpen onClose={onClose} size="xl" title="">
+      <div style={{ maxHeight: '85vh', overflowY: 'auto', margin: -24 }}>
         {loading && (
-          <div style={{ padding: 40, textAlign: 'center' }}>
-            <div style={{ 
-              margin: '0 auto 16px',
-              width: 40,
-              height: 40,
-              border: '4px solid #f3f4f6',
-              borderTopColor: '#5b21b6',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
+          <div style={{ padding: 60, textAlign: 'center' }}>
+            <Loader2 size={48} color="#6366f1" style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
             <p style={{ color: '#64748b' }}>Chargement du dossier...</p>
           </div>
         )}
         
         {error && (
           <div style={{ 
-            padding: 16, 
+            padding: 20, 
+            margin: 24,
             background: '#fef2f2', 
             border: '1px solid #fecaca', 
-            borderRadius: 8,
+            borderRadius: 12,
             color: '#991b1b',
-            marginBottom: 16
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
           }}>
-            <strong>❌ Erreur:</strong> {error}
+            <AlertTriangle size={24} />
+            <span>{error}</span>
           </div>
         )}
         
         {detail && (
           <div>
-            {/* En-tête moderne avec gradient */}
+            {/* En-tête moderne avec gradient et motif */}
             <div style={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
               padding: '28px 32px',
-              borderRadius: '12px 12px 0 0',
               color: 'white',
-              marginBottom: 0
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 6, letterSpacing: '0.5px' }}>
-                    📋 Dossier N°
-                  </div>
-                  <h2 style={{ margin: 0, fontSize: 28, fontWeight: 700, lineHeight: 1.3 }}>
-                    {detail.numeroDossier}
-                  </h2>
-                  <div style={{ fontSize: 18, marginTop: 8, opacity: 0.95 }}>
-                    {detail.titre}
-                  </div>
-                  
-                  {/* Informations clés */}
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: 20, 
-                    marginTop: 16,
-                    fontSize: 14,
-                    opacity: 0.95
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>⚖️</span>
-                      <span><strong>Type:</strong> {formatTypeAffaire(detail.type || detail.typeAffaire)}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>📅</span>
-                      <span><strong>Dépôt:</strong> {(detail.dateDepot || detail.dateDebut || detail.createdAt) ? new Date(detail.dateDepot || detail.dateDebut || detail.createdAt!).toLocaleDateString('fr-FR', { 
-                        day: 'numeric', 
-                        month: 'long', 
-                        year: 'numeric' 
-                      }) : 'Non renseignée'}</span>
-                    </div>
-                  </div>
+              {/* Motif décoratif */}
+              <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', bottom: -30, left: '30%', width: 100, height: 100, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+              
+              <button 
+                onClick={onClose} 
+                style={{ 
+                  position: 'absolute', top: 20, right: 20, 
+                  background: 'rgba(255,255,255,0.15)', 
+                  border: 'none', borderRadius: '10px', 
+                  padding: '8px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >
+                <X size={18} color="white" />
+              </button>
+              
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <FolderOpen size={16} style={{ opacity: 0.9 }} />
+                  <span style={{ fontSize: 13, opacity: 0.9, letterSpacing: '0.5px', fontWeight: 500 }}>Dossier</span>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  {getStatusBadge(detail.status)}
-                  <div style={{ marginTop: 10 }}>
-                    {getPriorityBadge(detail.priorite)}
-                  </div>
+                <h2 style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px' }}>
+                  {detail.numeroDossier}
+                </h2>
+                <div style={{ fontSize: 16, marginTop: 8, opacity: 0.95, maxWidth: '85%' }}>
+                  {detail.titre}
+                </div>
+                
+                <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+                  <span style={{ 
+                    backgroundColor: STATUS_COLORS[getStatus(detail.status)], 
+                    backdropFilter: 'blur(10px)',
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }}>
+                    <CheckCircle2 size={14} />
+                    {STATUS_LABELS[getStatus(detail.status)]}
+                  </span>
+                  <span style={{ 
+                    backgroundColor: PRIORITE_COLORS[getPriorite(detail.priorite)], 
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }}>
+                    <Zap size={14} />
+                    {PRIORITE_LABELS[getPriorite(detail.priorite)]}
+                  </span>
+                  <span style={{ 
+                    backgroundColor: 'rgba(255,255,255,0.2)', 
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <Calendar size={14} />
+                    {formatDate(detail.dateDepot || detail.dateDebut || detail.createdAt)}
+                  </span>
                 </div>
               </div>
+            </div>
+
+            {/* Navigation par onglets moderne */}
+            <div style={{ 
+              display: 'flex', 
+              borderBottom: '1px solid #e2e8f0', 
+              background: 'white', 
+              padding: '0 32px',
+              gap: 4
+            }}>
+              {[
+                { id: 'documents', label: 'Documents', icon: <FileText size={16} /> },
+                { id: 'audiences', label: 'Réunions', icon: <Calendar size={16} /> },
+                { id: 'actions', label: 'Actions', icon: <Settings size={16} /> },
+                { id: 'historique', label: 'Historique', icon: <History size={16} /> }
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                  style={{
+                    padding: '16px 20px', 
+                    border: 'none', 
+                    background: activeTab === tab.id ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)' : 'transparent',
+                    color: activeTab === tab.id ? '#6366f1' : '#64748b',
+                    fontWeight: activeTab === tab.id ? 600 : 500,
+                    borderBottom: activeTab === tab.id ? '3px solid #6366f1' : '3px solid transparent',
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    borderRadius: '8px 8px 0 0',
+                    fontSize: '14px'
+                  }}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             {/* Grille d'informations principales */}
@@ -393,16 +416,60 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: 16,
               padding: '24px 32px',
-              background: '#f8fafc'
+              background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)'
             }}>
               {/* Parties */}
-              <InfoCard title="Parties" icon="👥">
-                <InfoRow label="Demandeur" value={detail.demandeur} />
-                {detail.defendeur && <InfoRow label="Tiers concerné" value={detail.defendeur} />}
-              </InfoCard>
+              <div style={{
+                background: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              }}>
+                <div style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: '#475569', 
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <Users size={16} color="#6366f1" />
+                  <span>Parties</span>
+                </div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                  <span style={{ color: '#64748b', fontSize: 13 }}>Demandeur:</span>
+                  <span style={{ color: '#1e293b', fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{detail.demandeur}</span>
+                </div>
+                {detail.defendeur && (
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Tiers concerné:</span>
+                    <span style={{ color: '#1e293b', fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{detail.defendeur}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Responsable assigné */}
-              <InfoCard title="Responsable assigné" icon="👤">
+              <div style={{
+                background: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              }}>
+                <div style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: '#475569', 
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <User size={16} color="#6366f1" />
+                  <span>Responsable assigné</span>
+                </div>
                 {detail.rapporteur ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ 
@@ -415,7 +482,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                       justifyContent: 'center',
                       fontSize: 20,
                       fontWeight: 700,
-                      color: '#5b21b6'
+                      color: '#6366f1'
                     }}>
                       {(detail.rapporteur.nomComplet || detail.rapporteur.username).charAt(0).toUpperCase()}
                     </div>
@@ -438,29 +505,51 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     Aucun responsable assigné
                   </div>
                 )}
-              </InfoCard>
+              </div>
 
               {/* Informations générales */}
-              <InfoCard title="Informations" icon="📊">
-                <InfoRow label="Catégorie" value={formatTypeAffaire(detail.type || detail.typeAffaire)} />
-                <InfoRow 
-                  label="Date de dépôt" 
-                  value={(detail.dateDepot || detail.dateDebut || detail.createdAt) ? new Date(detail.dateDepot || detail.dateDebut || detail.createdAt!).toLocaleDateString('fr-FR') : '-'} 
-                />
-              </InfoCard>
+              <div style={{
+                background: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              }}>
+                <div style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: '#475569', 
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <FileText size={16} color="#6366f1" />
+                  <span>Informations</span>
+                </div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                  <span style={{ color: '#64748b', fontSize: 13 }}>Catégorie:</span>
+                  <span style={{ color: '#1e293b', fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{formatTypeAffaire(detail.type || detail.typeAffaire)}</span>
+                </div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                  <span style={{ color: '#64748b', fontSize: 13 }}>Date de dépôt:</span>
+                  <span style={{ color: '#1e293b', fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{formatDate(detail.dateDepot || detail.dateDebut || detail.createdAt)}</span>
+                </div>
+              </div>
             </div>
 
             {/* Description si présente */}
             {detail.description && (
-              <div style={{ padding: '0 32px 24px', background: '#f8fafc' }}>
+              <div style={{ padding: '0 32px 24px', background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)' }}>
                 <div style={{ 
                   background: 'white', 
                   border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  padding: 20
+                  borderRadius: 12,
+                  padding: 20,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span>📝</span>
+                    <FileText size={16} color="#6366f1" />
                     <span>Description</span>
                   </div>
                   <div style={{ color: '#334155', lineHeight: 1.6, fontSize: 14 }}>
@@ -470,21 +559,8 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
               </div>
             )}
 
-            {/* Tabs de navigation */}
-            <div style={{ 
-              display: 'flex', 
-              borderBottom: '1px solid #e2e8f0',
-              background: '#f8fafc',
-              padding: '0 32px'
-            }}>
-              <TabButton tab="documents" label="Documents" icon="📄" />
-              <TabButton tab="audiences" label="Réunions" icon="📅" />
-              <TabButton tab="actions" label="Actions" icon="⚙️" />
-              <TabButton tab="historique" label="Historique" icon="📜" />
-            </div>
-
             {/* Contenu des tabs */}
-            <div style={{ padding: '24px 32px', minHeight: 300 }}>
+            <div style={{ padding: '24px 32px', minHeight: 300, background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)' }}>
               {/* Tab Documents */}
               {activeTab === 'documents' && (
                 <div>
@@ -492,12 +568,13 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                   <div style={{ 
                     marginBottom: 24, 
                     padding: 20, 
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)', 
+                    background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)', 
                     borderRadius: 12, 
-                    border: '2px dashed #c7d2fe' 
+                    border: '2px dashed #c7d2fe',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                   }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#3730a3', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>📤</span>
+                    <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#6366f1', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Upload size={18} />
                       <span>Uploader un nouveau document</span>
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -527,19 +604,22 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                           fontWeight: 500
                         }}
                       >
-                        <option value="Document">📄 Document</option>
-                        <option value="Requête">📋 Requête</option>
-                        <option value="Pièce justificative">📎 Pièce justificative</option>
-                        <option value="Rapport">📊 Rapport</option>
-                        <option value="Décision">✅ Décision</option>
-                        <option value="Autre">📌 Autre</option>
+                        <option value="Document">● Document</option>
+                        <option value="Requête">● Requête</option>
+                        <option value="Pièce justificative">● Pièce justificative</option>
+                        <option value="Rapport">● Rapport</option>
+                        <option value="Décision">● Décision</option>
+                        <option value="Autre">● Autre</option>
                       </select>
                       <button 
                         onClick={handleUpload}
                         disabled={!selectedFile || uploading}
                         style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
                           padding: '10px 24px',
-                          background: !selectedFile || uploading ? '#cbd5e1' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: !selectedFile || uploading ? '#cbd5e1' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                           color: 'white',
                           border: 'none',
                           borderRadius: 8,
@@ -547,10 +627,10 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                           cursor: !selectedFile || uploading ? 'not-allowed' : 'pointer',
                           fontSize: 14,
                           transition: 'all 0.2s',
-                          boxShadow: !selectedFile || uploading ? 'none' : '0 2px 8px rgba(102, 126, 234, 0.3)'
+                          boxShadow: !selectedFile || uploading ? 'none' : '0 2px 8px rgba(99, 102, 241, 0.3)'
                         }}
                       >
-                        {uploading ? '⏳ Upload en cours...' : '📤 Uploader'}
+                        {uploading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Upload en cours...</> : <><Upload size={16} /> Uploader</>}
                       </button>
                     </div>
                     {selectedFile && (
@@ -561,9 +641,13 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         padding: 12,
                         background: 'white',
                         borderRadius: 6,
-                        border: '1px solid #e0e7ff'
+                        border: '1px solid #e0e7ff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
                       }}>
-                        📎 <b>{selectedFile.name}</b> • {(selectedFile.size / 1024).toFixed(1)} Ko
+                        <FileText size={16} style={{ color: '#6366f1' }} />
+                        <b>{selectedFile.name}</b> • {(selectedFile.size / 1024).toFixed(1)} Ko
                       </div>
                     )}
                   </div>
@@ -582,7 +666,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     fontSize: 14,
                     color: '#0c4a6e'
                   }}>
-                    <span>📅</span>
+                    <Calendar size={18} style={{ color: '#0284c7' }} />
                     <span style={{ fontWeight: 500 }}>Date de création du dossier:</span>
                     <span style={{ fontWeight: 600 }}>
                       {detail?.dateDepot 
@@ -605,7 +689,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                       borderRadius: 8,
                       border: '1px dashed #cbd5e1'
                     }}>
-                      <div style={{ fontSize: 48, marginBottom: 12 }}>📂</div>
+                      <FolderOpen size={48} style={{ color: '#cbd5e1', marginBottom: 12 }} />
                       <p>Aucun document dans ce dossier</p>
                     </div>
                   ) : (
@@ -633,7 +717,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                             }}>
                               <td style={{ padding: '14px 16px', fontSize: 14, color: '#1e293b' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span>📄</span>
+                                  <FileText size={16} style={{ color: '#6366f1' }} />
                                   <span style={{ fontWeight: 500 }}>{doc.nomFichier}</span>
                                 </div>
                               </td>
@@ -667,10 +751,13 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                                       fontSize: 12,
                                       fontWeight: 600,
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s'
+                                      transition: 'all 0.2s',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 4
                                     }}
                                   >
-                                    👁️ Voir
+                                    <Eye size={14} /> Voir
                                   </button>
                                   <button 
                                     onClick={() => download(doc)}
@@ -683,10 +770,13 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                                       fontSize: 12,
                                       fontWeight: 600,
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s'
+                                      transition: 'all 0.2s',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 4
                                     }}
                                   >
-                                    📥 Télécharger
+                                    <Download size={14} /> Télécharger
                                   </button>
                                   <button 
                                     onClick={() => remove(doc)}
@@ -699,10 +789,12 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                                       fontSize: 12,
                                       fontWeight: 600,
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s'
+                                      transition: 'all 0.2s',
+                                      display: 'flex',
+                                      alignItems: 'center'
                                     }}
                                   >
-                                    🗑️
+                                    <Trash2 size={14} />
                                   </button>
                                 </div>
                               </td>
@@ -722,8 +814,8 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         borderRadius: 8,
                         padding: 20
                       }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 16 }}>
-                          📊 Historique des visualisations
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <History size={16} style={{ color: '#6366f1' }} /> Historique des visualisations
                         </div>
                         {visualisations.length === 0 ? (
                           <div style={{ color: '#94a3b8', textAlign: 'center', padding: 20 }}>
@@ -754,7 +846,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                                         background: v.typeVisualisation === 'view' ? '#dbeafe' : '#fef3c7',
                                         color: v.typeVisualisation === 'view' ? '#1e40af' : '#92400e'
                                       }}>
-                                        {v.typeVisualisation === 'view' ? '👁️ Vue' : '📥 DL'}
+                                        {v.typeVisualisation === 'view' ? 'Vue' : 'DL'}
                                       </span>
                                     </td>
                                   </tr>
@@ -781,7 +873,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         fontWeight: 500
                       }}
                     >
-                      {showVisHistory ? '🔽 Masquer historique' : '📊 Voir historique visualisations'}
+                      {showVisHistory ? <><Eye size={14} /> Masquer historique</> : <><History size={14} /> Voir historique visualisations</>}
                     </button>
                   </div>
                 </div>
@@ -795,17 +887,20 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                       onClick={handleNewAudience}
                       style={{
                         padding: '10px 20px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                         color: 'white',
                         border: 'none',
                         borderRadius: 8,
                         fontWeight: 600,
                         cursor: 'pointer',
                         fontSize: 14,
-                        boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)'
                       }}
                     >
-                      📅 Planifier une réunion
+                      <Plus size={16} /> Planifier une réunion
                     </button>
                   </div>
                   <AudienceList
@@ -827,7 +922,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     padding: 24
                   }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#1e293b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>�</span>
+                      <User size={18} style={{ color: '#6366f1' }} />
                       <span>Affecter un responsable</span>
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -856,16 +951,19 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         disabled={!rapporteurId}
                         style={{
                           padding: '10px 24px',
-                          background: !rapporteurId ? '#cbd5e1' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: !rapporteurId ? '#cbd5e1' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                           color: 'white',
                           border: 'none',
                           borderRadius: 8,
                           fontWeight: 600,
                           cursor: !rapporteurId ? 'not-allowed' : 'pointer',
-                          fontSize: 14
+                          fontSize: 14,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
                         }}
                       >
-                        ✅ Affecter
+                        <CheckCircle2 size={16} /> Affecter
                       </button>
                     </div>
                   </div>
@@ -878,7 +976,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                     padding: 24
                   }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#1e293b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>🔄</span>
+                      <RefreshCw size={18} style={{ color: '#8b5cf6' }} />
                       <span>Changer le statut du dossier</span>
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -894,11 +992,11 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         }}
                       >
                         <option value="">-- Nouveau statut --</option>
-                        <option value="1">🆕 Nouveau</option>
-                        <option value="2">📝 En Cours</option>
-                        <option value="3">💭 En Validation</option>
-                        <option value="4">✅ Validé</option>
-                        <option value="5">📦 Terminé</option>
+                        <option value="1">● Nouveau</option>
+                        <option value="2">● En Cours</option>
+                        <option value="3">● En Validation</option>
+                        <option value="4">● Validé</option>
+                        <option value="5">● Terminé</option>
                       </select>
                       <input
                         placeholder="Commentaire (optionnel)"
@@ -918,16 +1016,19 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                         disabled={!nouveauStatut}
                         style={{
                           padding: '10px 24px',
-                          background: !nouveauStatut ? '#cbd5e1' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: !nouveauStatut ? '#cbd5e1' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                           color: 'white',
                           border: 'none',
                           borderRadius: 8,
                           fontWeight: 600,
                           cursor: !nouveauStatut ? 'not-allowed' : 'pointer',
-                          fontSize: 14
+                          fontSize: 14,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
                         }}
                       >
-                        🔄 Modifier
+                        <RefreshCw size={16} /> Modifier
                       </button>
                     </div>
                   </div>
@@ -977,7 +1078,7 @@ export default function DossierDetailModal({ dossierId, onClose }: Props) {
                       borderRadius: 8,
                       border: '1px dashed #cbd5e1'
                     }}>
-                      <div style={{ fontSize: 48, marginBottom: 12 }}>📜</div>
+                      <History size={48} style={{ color: '#cbd5e1', marginBottom: 12 }} />
                       <p>Aucun historique disponible</p>
                     </div>
                   )}
