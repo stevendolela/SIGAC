@@ -6,6 +6,10 @@ import type { UserDto } from '../types/user'
 import { useToast } from '../components/common/ToastProvider'
 import { SkeletonTableRows } from '../components/common/LoadingSkeleton'
 import { formatDateToISO } from '../utils/dateUtils'
+import { 
+  Users, RefreshCw, LayoutGrid, Table, Plus, X, Edit2, 
+  Phone, MapPin, Calendar, BookOpen, Briefcase, User, Search, AlertTriangle, UserCheck, UserX
+} from 'lucide-react'
 import '../styles/create-chat-modal.css'
 
 export default function JugeProfilesPage() {
@@ -165,7 +169,177 @@ export default function JugeProfilesPage() {
 
   return (
     <div className="panel" aria-labelledby="juges-heading">
-      <div className="panel-title" id="juges-heading">📋 Profils des Collaborateurs</div>
+      {/* Header moderne */}
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ 
+          fontSize: '32px', 
+          fontWeight: 800, 
+          color: '#1e293b', 
+          margin: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Users size={32} style={{ color: '#8b5cf6' }} />
+          Équipe & Profils
+        </h1>
+        <p style={{ color: '#64748b', marginTop: '8px', fontSize: '15px' }}>
+          Gérez les profils professionnels de votre équipe
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+        gap: '16px', 
+        marginBottom: '24px' 
+      }}>
+        {/* Total Membres */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #8b5cf6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Users size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {jugesList.length}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Total Membres
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Avec Profil */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <UserCheck size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {items.length}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Profils Complets
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sans Profil */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: `4px solid ${jugesSansProfile.length > 0 ? '#f59e0b' : '#10b981'}`
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: jugesSansProfile.length > 0 
+                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <UserX size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {jugesSansProfile.length}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Sans Profil
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Taux de Complétion */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #3b82f6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Briefcase size={22} color="white" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {jugesList.length > 0 ? Math.round((items.length / jugesList.length) * 100) : 0}%
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Taux Complétion
+              </div>
+              <div style={{ 
+                marginTop: '8px',
+                height: '6px',
+                background: '#e2e8f0',
+                borderRadius: '3px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${jugesList.length > 0 ? (items.length / jugesList.length) * 100 : 0}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
+                  borderRadius: '3px',
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Formulaire inline de création/édition */}
       {showForm && (
@@ -192,10 +366,9 @@ export default function JugeProfilesPage() {
               background: showForm === 'create' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
+              justifyContent: 'center'
             }}>
-              {showForm === 'create' ? '➕' : '✏️'}
+              {showForm === 'create' ? <Plus size={24} color="white" /> : <Edit2 size={24} color="white" />}
             </div>
             <div style={{ flex: 1 }}>
               <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
@@ -210,14 +383,20 @@ export default function JugeProfilesPage() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                fontSize: '24px',
                 cursor: 'pointer',
                 color: '#6b7280',
-                padding: '4px 8px'
+                padding: '8px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
               }}
               title="Fermer"
+              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              ✕
+              <X size={24} />
             </button>
           </div>
 
@@ -360,31 +539,61 @@ export default function JugeProfilesPage() {
               className="btn btn-secondary"
               onClick={() => resetForm()}
               disabled={creating || updating}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              Annuler
+              <X size={16} /> Annuler
             </button>
             <button
               type="button"
               className="btn"
               onClick={showForm === 'create' ? handleCreate : handleUpdate}
               disabled={creating || updating}
-              style={{ background: showForm === 'create' ? '#10b981' : '#3b82f6' }}
+              style={{ 
+                background: showForm === 'create' 
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
             >
-              {creating || updating ? '⏳ En cours...' : showForm === 'create' ? '💾 Créer le profil' : '💾 Enregistrer'}
+              {creating || updating ? (
+                <>
+                  <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                  En cours...
+                </>
+              ) : showForm === 'create' ? (
+                <>
+                  <Plus size={16} /> Créer le profil
+                </>
+              ) : (
+                <>
+                  <Edit2 size={16} /> Enregistrer
+                </>
+              )}
             </button>
           </div>
         </div>
       )}
       
-      <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
-          className="focus-outline"
-          placeholder="🔍 Rechercher collaborateur ou spécialisation..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          aria-label="Rechercher collaborateur"
-          style={{ maxWidth: 340, flex: 1 }}
-        />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
+          <Search size={18} style={{ 
+            position: 'absolute', 
+            left: '12px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            color: '#94a3b8'
+          }} />
+          <input
+            className="focus-outline"
+            placeholder="Rechercher collaborateur ou spécialisation..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            aria-label="Rechercher collaborateur"
+            style={{ paddingLeft: '40px', width: '100%' }}
+          />
+        </div>
         
         {/* Toggle vue */}
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 8, padding: 4 }}>
@@ -399,10 +608,13 @@ export default function JugeProfilesPage() {
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: 14,
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            📋 Tableau
+            <Table size={16} /> Tableau
           </button>
           <button
             onClick={() => setViewMode('cards')}
@@ -415,10 +627,13 @@ export default function JugeProfilesPage() {
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: 14,
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🎴 Cartes
+            <LayoutGrid size={16} /> Cartes
           </button>
         </div>
         
@@ -426,19 +641,43 @@ export default function JugeProfilesPage() {
           className="btn"
           disabled={loading}
           onClick={() => load()}
-          style={{ minWidth: 140 }}
+          style={{ 
+            minWidth: 140,
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
           aria-label="Recharger la liste des membres"
-        >🔄 Rafraîchir</button>
+        >
+          <RefreshCw size={16} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
+          Actualiser
+        </button>
         {search && (
-          <button className="btn btn-secondary" onClick={() => setSearch('')} aria-label="Effacer recherche">❌ Effacer</button>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setSearch('')} 
+            aria-label="Effacer recherche"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <X size={16} /> Effacer
+          </button>
         )}
         {isAdmin && jugesSansProfile.length > 0 && (
           <button 
             className="btn" 
             onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            style={{ background: showForm === 'create' ? '#ef4444' : '#10b981', marginLeft: 'auto' }}
+            style={{ 
+              background: showForm === 'create' 
+                ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            {showForm === 'create' ? '❌ Annuler' : '➕ Créer un profil'}
+            {showForm === 'create' ? <><X size={16} /> Annuler</> : <><Plus size={16} /> Créer un profil</>}
           </button>
         )}
       </div>
@@ -447,21 +686,36 @@ export default function JugeProfilesPage() {
       {!loading && jugesSansProfile.length > 0 && (
         <div style={{ 
           marginBottom: 16, 
-          padding: 12, 
-          background: '#fef3c7', 
-          borderRadius: 8, 
+          padding: '16px 20px', 
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', 
+          borderRadius: 12, 
           border: '1px solid #fbbf24',
-          fontSize: 14
+          fontSize: 14,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap'
         }}>
-          <strong>⚠️ {jugesSansProfile.length} membre(s) sans profil :</strong>{' '}
-          {jugesSansProfile.map(j => j.nomComplet || j.username).join(', ')}
+          <AlertTriangle size={20} style={{ color: '#d97706', flexShrink: 0 }} />
+          <span>
+            <strong>{jugesSansProfile.length} membre(s) sans profil :</strong>{' '}
+            {jugesSansProfile.map(j => j.nomComplet || j.username).join(', ')}
+          </span>
           {isAdmin && (
             <button 
               className="btn" 
               onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-              style={{ marginLeft: 12, padding: '4px 12px', fontSize: 13 }}
+              style={{ 
+                marginLeft: 'auto', 
+                padding: '6px 14px', 
+                fontSize: 13,
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
-              ➕ Créer
+              <Plus size={14} /> Créer
             </button>
           )}
         </div>
@@ -483,7 +737,18 @@ export default function JugeProfilesPage() {
               background: '#f8fafc',
               borderRadius: 12
             }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+              <div style={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}>
+                <Users size={40} style={{ color: '#94a3b8' }} />
+              </div>
               <div style={{ color: '#64748b', fontSize: 16, marginBottom: 8 }}>
                 Aucun profil professionnel n'a encore été créé.
               </div>
@@ -491,9 +756,15 @@ export default function JugeProfilesPage() {
                 <button 
                   className="btn" 
                   onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                  style={{ background: '#10b981', marginTop: 12 }}
+                  style={{ 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                    marginTop: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
                 >
-                  ➕ Créer le premier profil
+                  <Plus size={16} /> Créer le premier profil
                 </button>
               )}
             </div>
@@ -501,7 +772,18 @@ export default function JugeProfilesPage() {
           
           {filtered.length === 0 && items.length > 0 && (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
+              <div style={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}>
+                <Search size={40} style={{ color: '#94a3b8' }} />
+              </div>
               <p style={{ margin: 0, color: '#64748b' }}>
                 Aucun collaborateur ne correspond à la recherche "{search}".
               </p>
@@ -534,14 +816,13 @@ export default function JugeProfilesPage() {
                   width: 60,
                   height: 60,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 28,
                   flexShrink: 0
                 }}>
-                  👨‍⚖️
+                  <User size={28} color="white" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ 
@@ -565,8 +846,8 @@ export default function JugeProfilesPage() {
               <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
                 {p.specialisations && (
                   <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      ⚖️ Spécialisations
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Briefcase size={14} /> Spécialisations
                     </div>
                     <div style={{ fontSize: 14, color: '#1e293b', lineHeight: 1.5 }}>
                       {p.specialisations}
@@ -576,8 +857,8 @@ export default function JugeProfilesPage() {
                 
                 {p.telephone && (
                   <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      📞 Téléphone
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Phone size={14} /> Téléphone
                     </div>
                     <div style={{ fontSize: 14, color: '#1e293b' }}>
                       {p.telephone}
@@ -587,8 +868,8 @@ export default function JugeProfilesPage() {
 
                 {p.adresse && (
                   <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      🏠 Adresse
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <MapPin size={14} /> Adresse
                     </div>
                     <div style={{ fontSize: 14, color: '#1e293b' }}>
                       {p.adresse}
@@ -598,8 +879,8 @@ export default function JugeProfilesPage() {
 
                 {p.dateNomination && (
                   <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      📅 Date d'entrée
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={14} /> Date d'entrée
                     </div>
                     <div style={{ fontSize: 14, color: '#1e293b' }}>
                       {new Date(p.dateNomination).toLocaleDateString('fr-FR', {
@@ -613,8 +894,8 @@ export default function JugeProfilesPage() {
 
                 {p.biographie && (
                   <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600 }}>
-                      📖 Biographie
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <BookOpen size={14} /> Biographie
                     </div>
                     <div style={{ 
                       fontSize: 14, 
@@ -641,11 +922,14 @@ export default function JugeProfilesPage() {
                     onClick={() => openEditModal(p)}
                     style={{ 
                       width: '100%',
-                      background: '#3b82f6',
-                      justifyContent: 'center'
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      justifyContent: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
                     }}
                   >
-                    ✏️ Modifier le profil
+                    <Edit2 size={16} /> Modifier le profil
                   </button>
                 </div>
               )}
@@ -684,14 +968,13 @@ export default function JugeProfilesPage() {
                           width: 36,
                           height: 36,
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 18,
                           flexShrink: 0
                         }}>
-                          👤
+                          <User size={18} color="white" />
                         </div>
                         <span style={{ fontWeight: 600, color: '#1e293b' }}>{userName}</span>
                       </div>
@@ -708,11 +991,14 @@ export default function JugeProfilesPage() {
                           style={{ 
                             padding: '6px 14px', 
                             fontSize: 13, 
-                            background: '#3b82f6'
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
                           }}
                           title="Modifier le profil"
                         >
-                          ✏️ Éditer
+                          <Edit2 size={14} /> Éditer
                         </button>
                       </td>
                     )}
@@ -722,7 +1008,18 @@ export default function JugeProfilesPage() {
               {filtered.length === 0 && items.length === 0 && (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 40 }}>
-                    <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+                    <div style={{ 
+                      width: 80, 
+                      height: 80, 
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 16px'
+                    }}>
+                      <Users size={40} style={{ color: '#94a3b8' }} />
+                    </div>
                     <div style={{ color: '#64748b', fontSize: 16, marginBottom: 8 }}>
                       Aucun profil professionnel n'a encore été créé.
                     </div>
@@ -730,9 +1027,15 @@ export default function JugeProfilesPage() {
                       <button 
                         className="btn" 
                         onClick={() => { resetForm(); setShowForm('create'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                        style={{ background: '#10b981', marginTop: 12 }}
+                        style={{ 
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                          marginTop: 12,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
                       >
-                        ➕ Créer le premier profil
+                        <Plus size={16} /> Créer le premier profil
                       </button>
                     )}
                   </td>
@@ -741,7 +1044,9 @@ export default function JugeProfilesPage() {
               {filtered.length === 0 && items.length > 0 && (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} style={{ textAlign: 'center', padding: 24, color: '#64748b' }}>
-                    🔍 Aucun collaborateur ne correspond à la recherche "{search}".
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Search size={18} /> Aucun collaborateur ne correspond à la recherche "{search}".
+                    </div>
                   </td>
                 </tr>
               )}
