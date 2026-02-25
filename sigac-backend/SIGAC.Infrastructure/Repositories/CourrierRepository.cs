@@ -58,7 +58,13 @@ public class CourrierRepository : ICourrierRepository
 
     public async Task UpdateAsync(Courrier courrier)
     {
-        _context.Courriers.Update(courrier);
+        // Ne pas appeler Update() si l'entité est déjà trackée
+        var entry = _context.Entry(courrier);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Courriers.Update(courrier);
+        }
+        // Sinon, les modifications sont automatiquement trackées par EF Core
         await Task.CompletedTask;
     }
 

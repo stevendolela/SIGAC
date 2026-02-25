@@ -506,6 +506,7 @@ public class CourrierService : ICourrierService
         courrier.Historiques.Add(new CourrierHistorique
         {
             Id = Guid.NewGuid(),
+            CourrierId = courrier.Id,
             Action = "Changement de statut",
             Details = commentaire ?? $"Passage de {ancienStatut} à {nouveauStatut}",
             AncienStatut = ancienStatut.ToString(),
@@ -537,6 +538,7 @@ public class CourrierService : ICourrierService
         courrier.Historiques.Add(new CourrierHistorique
         {
             Id = Guid.NewGuid(),
+            CourrierId = courrier.Id,
             Action = "Attribution",
             Details = $"Courrier assigné à {user.NomComplet ?? user.Username}",
             UserId = userId,
@@ -566,6 +568,7 @@ public class CourrierService : ICourrierService
         courrier.Historiques.Add(new CourrierHistorique
         {
             Id = Guid.NewGuid(),
+            CourrierId = courrier.Id,
             Action = "Liaison dossier",
             Details = $"Lié au dossier {dossier.NumeroDossier}",
             UserId = userId,
