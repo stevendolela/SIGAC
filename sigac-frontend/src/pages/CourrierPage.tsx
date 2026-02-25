@@ -290,9 +290,18 @@ export default function CourrierPage() {
   const handleChangerStatut = async (courrierId: string, nouveauStatut: StatutCourrier) => {
     try {
       const updated = await courrierApi.changerStatut(courrierId, nouveauStatut)
-      setSelectedCourrier(updated)
+      
+      // Si le statut est "Traite", archiver automatiquement
+      if (nouveauStatut === 'Traite') {
+        const archived = await courrierApi.changerStatut(courrierId, 'Archive')
+        setSelectedCourrier(archived)
+        notify({ type: 'success', message: `✅ Courrier traité et archivé automatiquement` });
+      } else {
+        setSelectedCourrier(updated)
+        notify({ type: 'success', message: `✅ Statut mis à jour : ${STATUT_COURRIER_LABELS[nouveauStatut]}` });
+      }
+      
       loadCourriers()
-      notify({ type: 'success', message: `✅ Statut mis à jour : ${STATUT_COURRIER_LABELS[nouveauStatut]}` });
       loadStats()
     } catch (e: any) {
       setError(e.message || 'Erreur lors du changement de statut')
@@ -401,7 +410,11 @@ export default function CourrierPage() {
         {stats && (
           <div className="courrier-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
             {/* Stat: Total */}
-            <div className="stat-card stat-total" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}>
+            <div 
+              className="stat-card stat-total" 
+              onClick={() => { setFilterStatut(''); setFilterUrgence(''); setPage(1); }}
+              style={{ background: !filterStatut && !filterUrgence ? '#f0f9ff' : 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: !filterStatut && !filterUrgence ? '2px solid #3b82f6' : '1px solid #e2e8f0', transition: 'all 0.2s', cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</span>
                 <Mail size={20} style={{ color: '#3b82f6' }} />
@@ -411,7 +424,11 @@ export default function CourrierPage() {
             </div>
 
             {/* Stat: À traiter */}
-            <div className="stat-card stat-warning" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #f59e0b`, transition: 'all 0.2s' }}>
+            <div 
+              className="stat-card stat-warning" 
+              onClick={() => { setFilterStatut('EnTraitement'); setFilterUrgence(''); setPage(1); }}
+              style={{ background: filterStatut === 'EnTraitement' || filterStatut === 'Recu' ? '#fffbeb' : 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: filterStatut === 'EnTraitement' || filterStatut === 'Recu' ? '2px solid #f59e0b' : '1px solid #e2e8f0', borderLeft: `4px solid #f59e0b`, transition: 'all 0.2s', cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>À traiter</span>
                 <Zap size={20} style={{ color: '#f59e0b' }} />
@@ -421,7 +438,11 @@ export default function CourrierPage() {
             </div>
 
             {/* Stat: Urgents */}
-            <div className="stat-card stat-urgent" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #ef4444`, transition: 'all 0.2s' }}>
+            <div 
+              className="stat-card stat-urgent" 
+              onClick={() => { setFilterStatut(''); setFilterUrgence('Urgente'); setPage(1); }}
+              style={{ background: filterUrgence === 'Urgente' || filterUrgence === 'TresUrgente' ? '#fef2f2' : 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: filterUrgence === 'Urgente' || filterUrgence === 'TresUrgente' ? '2px solid #ef4444' : '1px solid #e2e8f0', borderLeft: `4px solid #ef4444`, transition: 'all 0.2s', cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Urgents</span>
                 <AlertCircle size={20} style={{ color: '#ef4444' }} />
@@ -431,7 +452,11 @@ export default function CourrierPage() {
             </div>
 
             {/* Stat: Traités */}
-            <div className="stat-card stat-success" style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', borderLeft: `4px solid #10b981`, transition: 'all 0.2s' }}>
+            <div 
+              className="stat-card stat-success" 
+              onClick={() => { setFilterStatut('Traite'); setFilterUrgence(''); setPage(1); }}
+              style={{ background: filterStatut === 'Traite' || filterStatut === 'Archive' ? '#f0fdf4' : 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: filterStatut === 'Traite' || filterStatut === 'Archive' ? '2px solid #10b981' : '1px solid #e2e8f0', borderLeft: `4px solid #10b981`, transition: 'all 0.2s', cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Traités</span>
                 <CheckCircle2 size={20} style={{ color: '#10b981' }} />
