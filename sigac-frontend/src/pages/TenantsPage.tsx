@@ -1,243 +1,175 @@
 /**
- * TenantsPage - Phase 3 Frontend
- * Page de gestion des tenants (organisations)
- * Affiche une liste paginée avec recherche et filtrage
+ * TenantsPage - Page de gestion des tenants (organisations)
+ * En cours de construction - Admin uniquement
  */
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  TenantListDto,
-  TenantPlan,
-  TenantPlanLabels,
-  TenantPaginationResult,
-} from "../types/tenant";
-import { TenantApi } from "../api/tenantApi";
-import "../styles.css";
-
-interface TenantPageState {
-  tenants: TenantListDto[];
-  loading: boolean;
-  error: string | null;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  totalItems: number;
-}
+import { useEffect, useState } from 'react';
+import { Building2, Lock, Construction, ArrowLeft, Wrench } from 'lucide-react';
 
 export const TenantsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [state, setState] = useState<TenantPageState>({
-    tenants: [],
-    loading: true,
-    error: null,
-    page: 1,
-    pageSize: 10,
-    totalPages: 0,
-    totalItems: 0,
-  });
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Charger les tenants au montage et quand la page change
   useEffect(() => {
-    const fetchTenants = async () => {
-      try {
-        setState((prev) => ({ ...prev, loading: true, error: null }));
-        const result: TenantPaginationResult = await TenantApi.getTenantsPaginated(
-          state.page,
-          state.pageSize
-        );
-        setState((prev) => ({
-          ...prev,
-          tenants: result.data,
-          totalPages: result.pagination.totalPages,
-          totalItems: result.pagination.totalItems,
-          loading: false,
-        }));
-      } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          error: `Erreur: ${err instanceof Error ? err.message : "Impossible de charger les tenants"}`,
-          loading: false,
-        }));
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'Admin') {
+        window.history.back();
+      } else {
+        setIsAdmin(true);
       }
-    };
+    }
+  }, []);
 
-    fetchTenants();
-  }, [state.page, state.pageSize]);
-
-  const handlePageChange = (newPage: number) => {
-    setState((prev) => ({ ...prev, page: newPage }));
-  };
-
-  const handleNavigateToDetail = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}`);
-  };
-
-  const handleCreateNew = () => {
-    navigate("/tenants/create");
-  };
-
-  const getPlanBadgeColor = (plan: TenantPlan) => {
-    const colors: Record<TenantPlan, string> = {
-      [TenantPlan.Free]: "badge-secondary",
-      [TenantPlan.Starter]: "badge-info",
-      [TenantPlan.Professional]: "badge-success",
-      [TenantPlan.Enterprise]: "badge-warning",
-      [TenantPlan.Custom]: "badge-danger",
-    };
-    return colors[plan];
-  };
+  // Page d'accès refusé pour non-admin
+  if (!isAdmin) {
+    return (
+      <div className="panel">
+        <div style={{
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          borderRadius: '16px',
+          padding: '24px 32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 20px rgba(239, 68, 68, 0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '12px',
+              padding: '12px',
+              display: 'flex'
+            }}>
+              <Lock size={32} color="white" />
+            </div>
+            <div>
+              <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 700 }}>
+                Accès Refusé
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.9)', margin: '4px 0 0 0', fontSize: '15px' }}>
+                Accès Administrateur Requis
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <div className="row mb-4">
-        <div className="col-md-8">
-          <h1>Gestion des Tenants (Organisations)</h1>
-          <p className="text-muted">
-            Gérez les organisations/tenants du système multi-locataire
-          </p>
-        </div>
-        <div className="col-md-4 text-end">
-          <button type="button" className="btn btn-primary" onClick={handleCreateNew}>
-            <i className="bi bi-plus-circle"></i> Nouveau Tenant
-          </button>
+    <div className="panel">
+      {/* Header moderne */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+        borderRadius: '16px',
+        padding: '24px 32px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 20px rgba(14, 165, 233, 0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px',
+            padding: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Building2 size={32} color="white" />
+          </div>
+          <div>
+            <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 700 }}>
+              Gestion des Tenants
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.9)', margin: '4px 0 0 0', fontSize: '15px' }}>
+              Gérez les organisations du système multi-locataire
+            </p>
+          </div>
         </div>
       </div>
 
-      {state.error && (
-        <div className="alert alert-danger" role="alert">
-          <i className="bi bi-exclamation-circle"></i> {state.error}
+      {/* Message en cours de construction */}
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '60px 40px',
+        textAlign: 'center',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '2px dashed #e5e7eb'
+      }}>
+        <div style={{
+          width: '80px',
+          height: '80px',
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          borderRadius: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 24px'
+        }}>
+          <Construction size={40} color="white" />
         </div>
-      )}
+        
+        <h2 style={{ 
+          fontSize: '24px', 
+          fontWeight: 700, 
+          color: '#1e293b', 
+          margin: '0 0 12px 0' 
+        }}>
+          Fonctionnalité en cours de développement
+        </h2>
+        
+        <p style={{ 
+          fontSize: '16px', 
+          color: '#64748b', 
+          margin: '0 0 24px 0',
+          maxWidth: '500px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          lineHeight: 1.6
+        }}>
+          La gestion des tenants et organisations multi-locataires est actuellement en cours de construction. 
+          Cette fonctionnalité sera disponible prochainement.
+        </p>
 
-      {state.loading ? (
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Chargement...</span>
-          </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          padding: '16px 24px',
+          background: '#fef3c7',
+          borderRadius: '12px',
+          maxWidth: '400px',
+          margin: '0 auto'
+        }}>
+          <Wrench size={20} color="#d97706" />
+          <span style={{ color: '#92400e', fontWeight: 600, fontSize: '14px' }}>
+            Réservé aux Administrateurs
+          </span>
         </div>
-      ) : (
-        <>
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Nom</th>
-                  <th>Slug</th>
-                  <th>Plan</th>
-                  <th>Utilisateurs</th>
-                  <th>Workspaces</th>
-                  <th>Créé le</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.tenants.map((tenant, index) => (
-                  <tr key={tenant.id}>
-                    <td>{(state.page - 1) * state.pageSize + index + 1}</td>
-                    <td>
-                      <strong>{tenant.name}</strong>
-                    </td>
-                    <td>
-                      <code>{tenant.slug}</code>
-                    </td>
-                    <td>
-                      <span className={`badge ${getPlanBadgeColor(tenant.planEnum)}`}>
-                        {TenantPlanLabels[tenant.planEnum]}
-                      </span>
-                    </td>
-                    <td>{tenant.userCount}</td>
-                    <td>{tenant.workspaceCount}</td>
-                    <td>{new Date(tenant.createdAt).toLocaleDateString("fr-FR")}</td>
-                    <td>
-                      {tenant.isActive ? (
-                        <span className="badge bg-success">Actif</span>
-                      ) : (
-                        <span className="badge bg-danger">Inactif</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => handleNavigateToDetail(tenant.id)}
-                        title="Voir les détails"
-                      >
-                        <i className="bi bi-eye"></i>
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-secondary ms-1"
-                        onClick={() => navigate(`/tenants/${tenant.id}/edit`)}
-                        title="Modifier"
-                      >
-                        <i className="bi bi-pencil"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
 
-          {state.tenants.length === 0 && (
-            <div className="alert alert-info text-center">
-              <i className="bi bi-info-circle"></i> Aucun tenant trouvé. Créez-en un pour démarrer.
-            </div>
-          )}
-
-          {/* Pagination */}
-          <nav aria-label="Pagination">
-            <ul className="pagination justify-content-center">
-              <li className={`page-item ${state.page === 1 ? "disabled" : ""}`}>
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(state.page - 1)}
-                  disabled={state.page === 1}
-                >
-                  Précédent
-                </button>
-              </li>
-
-              {Array.from({ length: Math.min(state.totalPages, 5) }, (_, i) => {
-                const pageNum = state.page - 2 + i;
-                if (pageNum < 1 || pageNum > state.totalPages) return null;
-                return (
-                  <li
-                    key={pageNum}
-                    className={`page-item ${state.page === pageNum ? "active" : ""}`}
-                  >
-                    <button
-                      className="page-link"
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  </li>
-                );
-              })}
-
-              <li
-                className={`page-item ${state.page === state.totalPages ? "disabled" : ""}`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(state.page + 1)}
-                  disabled={state.page === state.totalPages}
-                >
-                  Suivant
-                </button>
-              </li>
-            </ul>
-          </nav>
-
-          <div className="text-center text-muted small mt-2">
-            Total: {state.totalItems} tenant(s) - Page {state.page} sur {state.totalPages}
-          </div>
-        </>
-      )}
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginTop: '32px',
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '15px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+          }}
+        >
+          <ArrowLeft size={18} />
+          Retour
+        </button>
+      </div>
     </div>
   );
 };
