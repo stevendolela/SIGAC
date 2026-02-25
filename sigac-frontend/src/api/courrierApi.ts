@@ -131,7 +131,7 @@ const courrierApi = {
     nouveauStatut: StatutCourrier,
     commentaire?: string
   ): Promise<CourrierDetailDto> {
-    const resp = await api.post<CourrierDetailDto>(`/Courrier/${id}/changer-statut`, {
+    const resp = await api.patch<CourrierDetailDto>(`/Courrier/${id}/statut`, {
       nouveauStatut,
       commentaire
     })
@@ -142,7 +142,7 @@ const courrierApi = {
    * Assigne un courrier à un utilisateur
    */
   async assigner(courrierId: string, assigneAId: string): Promise<CourrierDetailDto> {
-    const resp = await api.post<CourrierDetailDto>(`/Courrier/${courrierId}/assigner`, {
+    const resp = await api.patch<CourrierDetailDto>(`/Courrier/${courrierId}/assigner`, {
       assigneAId
     })
     return resp.data
@@ -152,7 +152,7 @@ const courrierApi = {
    * Lie un courrier à un dossier existant
    */
   async lierAuDossier(courrierId: string, dossierId: string): Promise<CourrierDetailDto> {
-    const resp = await api.post<CourrierDetailDto>(`/Courrier/${courrierId}/lier-dossier`, {
+    const resp = await api.patch<CourrierDetailDto>(`/Courrier/${courrierId}/lier-dossier`, {
       dossierId
     })
     return resp.data
