@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, RefreshCw, FileUp, X, Scan } from 'lucide-react';
+import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, RefreshCw, FileUp, X, Scan, User, Calendar, Link2, FolderOpen, Archive, Settings, FileText, History, ExternalLink, Play, ChevronRight } from 'lucide-react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
@@ -1199,106 +1199,346 @@ export default function CourrierPage() {
       {/* Modal Détail */}
       {showDetailModal && selectedCourrier && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '900px', padding: 0, overflow: 'hidden'}}>
-            {/* En-tête moderne avec gradient style DossierDetailModal */}
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '950px', padding: 0, overflow: 'hidden', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'}}>
+            {/* En-tête moderne avec gradient et motif */}
             <div style={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              padding: '24px 32px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+              padding: '28px 32px',
               color: 'white',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              <button className="close-btn" onClick={() => setShowDetailModal(false)} style={{ color: 'white', top: '20px', right: '20px', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
-              <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 6, letterSpacing: '0.5px' }}>
-                📬 Courrier Réf.
-              </div>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
-                {selectedCourrier.reference}
-              </h2>
-              <div style={{ fontSize: 16, marginTop: 8, opacity: 0.95 }}>
-                {selectedCourrier.objet}
-              </div>
+              {/* Motif décoratif */}
+              <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', bottom: -30, left: '30%', width: 100, height: 100, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
               
-              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <span className="statut-badge" style={{ backgroundColor: STATUT_COURRIER_COLORS[selectedCourrier.statut], border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
-                  {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
-                </span>
-                <span className="urgence-badge" style={{ backgroundColor: URGENCE_COURRIER_COLORS[selectedCourrier.urgence], border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
-                  {URGENCE_COURRIER_LABELS[selectedCourrier.urgence]}
-                </span>
+              <button 
+                onClick={() => setShowDetailModal(false)} 
+                style={{ 
+                  position: 'absolute', top: 20, right: 20, 
+                  background: 'rgba(255,255,255,0.15)', 
+                  border: 'none', borderRadius: '10px', 
+                  padding: '8px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >
+                <X size={18} color="white" />
+              </button>
+              
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <Mail size={16} style={{ opacity: 0.9 }} />
+                  <span style={{ fontSize: 13, opacity: 0.9, letterSpacing: '0.5px', fontWeight: 500 }}>Courrier</span>
+                </div>
+                <h2 style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.5px' }}>
+                  {selectedCourrier.reference}
+                </h2>
+                <div style={{ fontSize: 16, marginTop: 8, opacity: 0.95, maxWidth: '85%' }}>
+                  {selectedCourrier.objet}
+                </div>
+                
+                <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+                  <span style={{ 
+                    backgroundColor: STATUT_COURRIER_COLORS[selectedCourrier.statut], 
+                    backdropFilter: 'blur(10px)',
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }}>
+                    <CheckCircle2 size={14} />
+                    {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
+                  </span>
+                  <span style={{ 
+                    backgroundColor: URGENCE_COURRIER_COLORS[selectedCourrier.urgence], 
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }}>
+                    <Zap size={14} />
+                    {URGENCE_COURRIER_LABELS[selectedCourrier.urgence]}
+                  </span>
+                  <span style={{ 
+                    backgroundColor: 'rgba(255,255,255,0.2)', 
+                    color: 'white', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    fontSize: '12px', 
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    {selectedCourrier.type === 'Entrant' ? <Inbox size={14} /> : <Send size={14} />}
+                    {selectedCourrier.type === 'Entrant' ? 'Entrant' : 'Sortant'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Navigation par onglets */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '0 32px' }}>
-              <button 
-                onClick={() => setActiveDetailTab('infos')}
-                style={{
-                  padding: '14px 20px', border: 'none', background: 'transparent',
-                  color: activeDetailTab === 'infos' ? '#5b21b6' : '#64748b',
-                  fontWeight: activeDetailTab === 'infos' ? 600 : 400,
-                  borderBottom: activeDetailTab === 'infos' ? '3px solid #5b21b6' : '3px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-              >ℹ️ Détails</button>
-              <button 
-                onClick={() => setActiveDetailTab('document')}
-                style={{
-                  padding: '14px 20px', border: 'none', background: 'transparent',
-                  color: activeDetailTab === 'document' ? '#5b21b6' : '#64748b',
-                  fontWeight: activeDetailTab === 'document' ? 600 : 400,
-                  borderBottom: activeDetailTab === 'document' ? '3px solid #5b21b6' : '3px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-              >📎 Document & OCR</button>
-              <button 
-                onClick={() => setActiveDetailTab('historique')}
-                style={{
-                  padding: '14px 20px', border: 'none', background: 'transparent',
-                  color: activeDetailTab === 'historique' ? '#5b21b6' : '#64748b',
-                  fontWeight: activeDetailTab === 'historique' ? 600 : 400,
-                  borderBottom: activeDetailTab === 'historique' ? '3px solid #5b21b6' : '3px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-              >📜 Historique</button>
+            {/* Navigation par onglets moderne */}
+            <div style={{ 
+              display: 'flex', 
+              borderBottom: '1px solid #e2e8f0', 
+              background: 'white', 
+              padding: '0 32px',
+              gap: 4
+            }}>
+              {[
+                { id: 'infos', label: 'Détails', icon: <FileText size={16} /> },
+                { id: 'document', label: 'Document & OCR', icon: <Paperclip size={16} /> },
+                { id: 'historique', label: 'Historique', icon: <History size={16} /> }
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveDetailTab(tab.id as 'infos' | 'document' | 'historique')}
+                  style={{
+                    padding: '16px 20px', 
+                    border: 'none', 
+                    background: activeDetailTab === tab.id ? 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)' : 'transparent',
+                    color: activeDetailTab === tab.id ? '#6366f1' : '#64748b',
+                    fontWeight: activeDetailTab === tab.id ? 600 : 500,
+                    borderBottom: activeDetailTab === tab.id ? '3px solid #6366f1' : '3px solid transparent',
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    borderRadius: '8px 8px 0 0',
+                    fontSize: '14px'
+                  }}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            <div className="modal-body" style={{ padding: '24px 32px', maxHeight: '65vh', overflowY: 'auto', background: '#f8fafc' }}>
+            <div className="modal-body" style={{ padding: '24px 32px', maxHeight: '60vh', overflowY: 'auto', background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)' }}>
               {activeDetailTab === 'infos' && (
                 <div style={{ display: 'grid', gap: 20 }}>
-                  <div className="detail-grid">
-                    <div className="detail-section card-like" style={{ margin: 0 }}>
-                      <h3>Expédition & Réception</h3>
-                      <div className="detail-row"><span className="detail-label">Expéditeur:</span><span className="detail-value">{selectedCourrier.expediteur}</span></div>
-                      <div className="detail-row"><span className="detail-label">Destinataire:</span><span className="detail-value">{selectedCourrier.destinataire}</span></div>
-                      <div className="detail-row"><span className="detail-label">Date Courrier:</span><span className="detail-value">{formatDate(selectedCourrier.dateCourrier)}</span></div>
-                      <div className="detail-row"><span className="detail-label">Date Réception:</span><span className="detail-value">{formatDateTime(selectedCourrier.dateReception)}</span></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+                    {/* Card Expédition */}
+                    <div style={{ 
+                      background: 'white', 
+                      borderRadius: '14px', 
+                      padding: '20px 24px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                        <div style={{ 
+                          width: 36, height: 36, borderRadius: '10px', 
+                          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <Send size={18} color="white" />
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>Expédition & Réception</h3>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <User size={16} style={{ color: '#6366f1' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expéditeur</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{selectedCourrier.expediteur}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <User size={16} style={{ color: '#8b5cf6' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destinataire</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{selectedCourrier.destinataire}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <Calendar size={16} style={{ color: '#a855f7' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date Courrier</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{formatDate(selectedCourrier.dateCourrier)}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <Clock size={16} style={{ color: '#ec4899' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date Réception</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{formatDateTime(selectedCourrier.dateReception)}</div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="detail-section card-like" style={{ margin: 0 }}>
-                      <h3>Liaisons & Attribution</h3>
-                      <div className="detail-row"><span className="detail-label">Réf. externe:</span><span className="detail-value">{selectedCourrier.referenceExterne || '-'}</span></div>
-                      <div className="detail-row"><span className="detail-label">Dossier lié:</span><span className="detail-value link">{selectedCourrier.dossierReference || 'Aucun'}</span></div>
-                      <div className="detail-row"><span className="detail-label">Assigné à:</span><span className="detail-value">{selectedCourrier.assigneANom || 'Non assigné'}</span></div>
+
+                    {/* Card Liaisons */}
+                    <div style={{ 
+                      background: 'white', 
+                      borderRadius: '14px', 
+                      padding: '20px 24px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                        <div style={{ 
+                          width: 36, height: 36, borderRadius: '10px', 
+                          background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <Link2 size={18} color="white" />
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>Liaisons & Attribution</h3>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <ExternalLink size={16} style={{ color: '#10b981' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Réf. externe</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{selectedCourrier.referenceExterne || '—'}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <FolderOpen size={16} style={{ color: '#14b8a6' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dossier lié</div>
+                            <div style={{ fontSize: '14px', color: selectedCourrier.dossierReference ? '#6366f1' : '#94a3b8', fontWeight: 500, marginTop: 2, cursor: selectedCourrier.dossierReference ? 'pointer' : 'default' }}>
+                              {selectedCourrier.dossierReference || 'Aucun'}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <User size={16} style={{ color: '#0d9488' }} />
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assigné à</div>
+                            <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, marginTop: 2 }}>{selectedCourrier.assigneANom || 'Non assigné'}</div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
                   {selectedCourrier.notes && (
-                    <div className="detail-section card-like" style={{ margin: 0 }}>
-                      <h3>📝 Notes</h3>
-                      <p className="notes-text">{selectedCourrier.notes}</p>
+                    <div style={{ 
+                      background: 'white', 
+                      borderRadius: '14px', 
+                      padding: '20px 24px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                        <div style={{ 
+                          width: 36, height: 36, borderRadius: '10px', 
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <FileText size={18} color="white" />
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>Notes</h3>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6, background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        {selectedCourrier.notes}
+                      </p>
                     </div>
                   )}
 
-                  <div className="detail-section card-like" style={{ margin: 0 }}>
-                    <h3>⚡ Actions rapides</h3>
-                    <div className="action-buttons">
+                  {/* Actions rapides */}
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', 
+                    borderRadius: '14px', 
+                    padding: '20px 24px',
+                    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                      <Zap size={20} color="#fbbf24" />
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'white' }}>Actions rapides</h3>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                       {selectedCourrier.statut === 'Recu' && (
-                        <button className="btn btn-warning" onClick={() => handleChangerStatut(selectedCourrier.id, 'EnTraitement')}>⚙️ Traiter</button>
+                        <button 
+                          onClick={() => handleChangerStatut(selectedCourrier.id, 'EnTraitement')}
+                          style={{
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.5)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.4)'; }}
+                        >
+                          <Settings size={16} />
+                          Mettre en traitement
+                        </button>
                       )}
                       {selectedCourrier.statut === 'EnTraitement' && (
-                        <button className="btn btn-success" onClick={() => handleChangerStatut(selectedCourrier.id, 'Traite')}>✅ Terminer</button>
+                        <button 
+                          onClick={() => handleChangerStatut(selectedCourrier.id, 'Traite')}
+                          style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.5)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)'; }}
+                        >
+                          <CheckCircle2 size={16} />
+                          Marquer comme traité
+                        </button>
                       )}
                       {selectedCourrier.statut !== 'Archive' && (
-                        <button className="btn btn-secondary" onClick={() => handleChangerStatut(selectedCourrier.id, 'Archive')}>📦 Archiver</button>
+                        <button 
+                          onClick={() => handleChangerStatut(selectedCourrier.id, 'Archive')}
+                          style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            backdropFilter: 'blur(10px)',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                        >
+                          <Archive size={16} />
+                          Archiver
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1309,56 +1549,254 @@ export default function CourrierPage() {
                 <div style={{ display: 'grid', gap: 20 }}>
                   {selectedCourrier.hasDocument ? (
                     <>
-                      <div className="detail-section document-section card-like" style={{ margin: 0 }}>
-                        <h3>📎 Fichier joint</h3>
-                        <div className="document-info">
-                          <span className="doc-icon">📄</span>
-                          <span className="doc-name">{selectedCourrier.nomFichier}</span>
-                          <button className="btn btn-secondary" onClick={() => handleDownloadDocument(selectedCourrier.id, selectedCourrier.nomFichier || 'document')}>⬇️ Télécharger</button>
+                      <div style={{ 
+                        background: 'white', 
+                        borderRadius: '14px', 
+                        padding: '24px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                          <div style={{ 
+                            width: 40, height: 40, borderRadius: '12px', 
+                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            <Paperclip size={20} color="white" />
+                          </div>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>Fichier joint</h3>
+                        </div>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
+                          padding: '16px 20px', 
+                          borderRadius: '12px',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div style={{ 
+                              width: 48, height: 48, borderRadius: '10px', 
+                              background: selectedCourrier.mimeType?.includes('pdf') ? '#ef4444' : '#3b82f6',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                            }}>
+                              <FileText size={24} color="white" />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{selectedCourrier.nomFichier}</div>
+                              <div style={{ fontSize: '12px', color: '#64748b', marginTop: 2 }}>
+                                {selectedCourrier.mimeType} • {selectedCourrier.tailleFichier ? `${(selectedCourrier.tailleFichier / 1024).toFixed(1)} KB` : ''}
+                              </div>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => handleDownloadDocument(selectedCourrier.id, selectedCourrier.nomFichier || 'document')}
+                            style={{
+                              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                              border: 'none',
+                              borderRadius: '10px',
+                              padding: '10px 18px',
+                              color: 'white',
+                              fontWeight: 600,
+                              fontSize: '13px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                          >
+                            <Download size={16} />
+                            Télécharger
+                          </button>
                         </div>
                       </div>
                       {selectedCourrier.texteOCR && (
-                        <div className="detail-section ocr-section card-like" style={{ margin: 0 }}>
-                          <h3>📝 Texte OCR extrait</h3>
-                          <div className="ocr-text" style={{ whiteSpace: 'pre-wrap', fontSize: '13px', color: '#334155' }}>{selectedCourrier.texteOCR}</div>
+                        <div style={{ 
+                          background: 'white', 
+                          borderRadius: '14px', 
+                          padding: '24px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{ 
+                                width: 40, height: 40, borderRadius: '12px', 
+                                background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              }}>
+                                <Scan size={20} color="white" />
+                              </div>
+                              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>Texte OCR extrait</h3>
+                            </div>
+                            {selectedCourrier.confianceOCR && (
+                              <span style={{ 
+                                background: selectedCourrier.confianceOCR > 80 ? '#dcfce7' : selectedCourrier.confianceOCR > 50 ? '#fef3c7' : '#fee2e2',
+                                color: selectedCourrier.confianceOCR > 80 ? '#166534' : selectedCourrier.confianceOCR > 50 ? '#92400e' : '#991b1b',
+                                padding: '4px 12px',
+                                borderRadius: '20px',
+                                fontSize: '12px',
+                                fontWeight: 600
+                              }}>
+                                Confiance: {selectedCourrier.confianceOCR}%
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ 
+                            whiteSpace: 'pre-wrap', 
+                            fontSize: '13px', 
+                            color: '#334155',
+                            background: '#f8fafc',
+                            padding: '16px 20px',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0',
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            lineHeight: 1.7
+                          }}>
+                            {selectedCourrier.texteOCR}
+                          </div>
                         </div>
                       )}
                     </>
                   ) : (
-                    <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>
-                      <div style={{ fontSize: 48, marginBottom: 12 }}>📂</div>
-                      <p>Aucun document joint à ce courrier</p>
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '60px 40px', 
+                      background: 'white',
+                      borderRadius: '14px',
+                      border: '2px dashed #e2e8f0'
+                    }}>
+                      <div style={{ 
+                        width: 80, height: 80, borderRadius: '50%', 
+                        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 20px'
+                      }}>
+                        <FolderOpen size={36} style={{ color: '#94a3b8' }} />
+                      </div>
+                      <p style={{ margin: 0, fontSize: '15px', color: '#64748b', fontWeight: 500 }}>Aucun document joint à ce courrier</p>
+                      <p style={{ margin: '8px 0 0', fontSize: '13px', color: '#94a3b8' }}>Vous pouvez ajouter un document via l'édition</p>
                     </div>
                   )}
                 </div>
               )}
 
               {activeDetailTab === 'historique' && (
-                <div className="detail-section history-section card-like" style={{ margin: 0 }}>
-                  <h3>📜 Historique des actions</h3>
-                  {selectedCourrier.historiques && selectedCourrier.historiques.length > 0 ? (
-                  <div className="history-timeline">
-                    {selectedCourrier.historiques.map((h, idx) => (
-                      <div key={h.id} className="history-item">
-                        <div className="history-dot" />
-                        <div className="history-content">
-                          <span className="history-action">{h.action}</span>
-                          {h.details && <span className="history-details">{h.details}</span>}
-                          <span className="history-meta">
-                            Par {h.userNom} - {formatDateTime(h.dateAction)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                <div style={{ 
+                  background: 'white', 
+                  borderRadius: '14px', 
+                  padding: '24px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                    <div style={{ 
+                      width: 40, height: 40, borderRadius: '12px', 
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <History size={20} color="white" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>Historique des actions</h3>
                   </div>
+                  {selectedCourrier.historiques && selectedCourrier.historiques.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                      {selectedCourrier.historiques.map((h, idx) => (
+                        <div key={h.id} style={{ 
+                          display: 'flex', 
+                          gap: 16,
+                          position: 'relative',
+                          paddingLeft: 24,
+                          paddingBottom: idx === selectedCourrier.historiques.length - 1 ? 0 : 24
+                        }}>
+                          {/* Ligne verticale */}
+                          {idx < selectedCourrier.historiques.length - 1 && (
+                            <div style={{ 
+                              position: 'absolute', 
+                              left: 7, 
+                              top: 24, 
+                              bottom: 0, 
+                              width: 2, 
+                              background: 'linear-gradient(180deg, #8b5cf6 0%, #e2e8f0 100%)'
+                            }} />
+                          )}
+                          {/* Point */}
+                          <div style={{ 
+                            position: 'absolute',
+                            left: 0,
+                            top: 4,
+                            width: 16, 
+                            height: 16, 
+                            borderRadius: '50%', 
+                            background: idx === 0 ? 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)' : '#e2e8f0',
+                            border: idx === 0 ? 'none' : '3px solid white',
+                            boxShadow: idx === 0 ? '0 2px 8px rgba(139, 92, 246, 0.4)' : '0 1px 3px rgba(0,0,0,0.1)'
+                          }} />
+                          {/* Contenu */}
+                          <div style={{ 
+                            flex: 1, 
+                            background: idx === 0 ? 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' : '#f8fafc', 
+                            padding: '14px 18px', 
+                            borderRadius: '10px',
+                            border: idx === 0 ? '1px solid #c4b5fd' : '1px solid #e2e8f0'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{h.action}</span>
+                              <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                {formatDateTime(h.dateAction)}
+                              </span>
+                            </div>
+                            {h.details && (
+                              <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#475569' }}>{h.details}</p>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: '#64748b' }}>
+                              <User size={12} />
+                              <span>{h.userNom}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <p style={{ textAlign: 'center', color: '#64748b', padding: 20 }}>Aucun historique disponible</p>
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                      <History size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
+                      <p style={{ margin: 0, fontSize: '14px' }}>Aucun historique disponible</p>
+                    </div>
                   )}
                 </div>
               )}
             </div>
-            <div className="modal-footer" style={{ padding: '16px 32px', background: 'white', borderTop: '1px solid #e2e8f0' }}>
-              <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
+            <div style={{ 
+              padding: '16px 32px', 
+              background: 'white', 
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 12
+            }}>
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                style={{
+                  background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '10px',
+                  padding: '10px 24px',
+                  color: '#475569',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#e2e8f0'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'}
+              >
                 Fermer
               </button>
             </div>
