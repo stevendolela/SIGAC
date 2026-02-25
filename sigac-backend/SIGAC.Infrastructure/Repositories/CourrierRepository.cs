@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SIGAC.Core.Entities;
+using SIGAC.Core.Enums;
 using SIGAC.Core.Interfaces;
 using SIGAC.Infrastructure.Data;
 
@@ -58,14 +59,28 @@ public class CourrierRepository : ICourrierRepository
 
     public async Task UpdateAsync(Courrier courrier)
     {
-        // Ne pas appeler Update() si l'entité est déjà trackée
         var entry = _context.Entry(courrier);
         if (entry.State == EntityState.Detached)
         {
-            _context.Courriers.Update(courrier);
+            _context.Courriers.Attach(courrier);
         }
-        // Sinon, les modifications sont automatiquement trackées par EF Core
+        entry.State = EntityState.Modified;
         await Task.CompletedTask;
+    }
+
+    public async Task UpdateStatutAsync(Guid id, StatutCourrier nouveauStatut, Guid modifiedBy)
+    {
+        await _context.Courriers
+            .Where(c => c.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(c => c.Statut, nouveauStatut)
+                .SetProperty(c => c.ModifiedAt, DateTime.UtcNow)
+                .SetProperty(c => c.ModifiedBy, modifiedBy));
+    }
+
+    public async Task AddHistoriqueAsync(CourrierHistorique historique)
+    {
+        await _context.Set<CourrierHistorique>().AddAsync(historique);
     }
 
     public async Task DeleteAsync(Guid id)

@@ -494,28 +494,30 @@ public class CourrierService : ICourrierService
     public async Task<CourrierDetailDto> ChangerStatutAsync(
         Guid id, StatutCourrier nouveauStatut, string? commentaire, Guid userId, UserRole userRole)
     {
+        // Vérifier que le courrier existe
         var courrier = await _courrierRepository.GetByIdAsync(id);
         if (courrier == null)
             throw new KeyNotFoundException("Courrier non trouvé");
 
         var ancienStatut = courrier.Statut;
-        courrier.Statut = nouveauStatut;
-        courrier.ModifiedAt = DateTime.UtcNow;
-        courrier.ModifiedBy = userId;
 
-        courrier.Historiques.Add(new CourrierHistorique
+        // Mise à jour directe via ExecuteUpdate (sans tracking)
+        await _courrierRepository.UpdateStatutAsync(id, nouveauStatut, userId);
+
+        // Ajouter l'historique
+        var historique = new CourrierHistorique
         {
             Id = Guid.NewGuid(),
-            CourrierId = courrier.Id,
+            CourrierId = id,
             Action = "Changement de statut",
             Details = commentaire ?? $"Passage de {ancienStatut} à {nouveauStatut}",
             AncienStatut = ancienStatut.ToString(),
             NouveauStatut = nouveauStatut.ToString(),
             UserId = userId,
             DateAction = DateTime.UtcNow
-        });
-
-        await _courrierRepository.UpdateAsync(courrier);
+        };
+        
+        await _courrierRepository.AddHistoriqueAsync(historique);
         await _courrierRepository.SaveChangesAsync();
 
         return (await GetCourrierByIdAsync(id, userId, userRole))!;

@@ -1,4 +1,5 @@
 using SIGAC.Core.Entities;
+using SIGAC.Core.Enums;
 
 namespace SIGAC.Core.Interfaces;
 
@@ -13,6 +14,8 @@ public interface ICourrierRepository
     Task<Courrier?> GetByReferenceAsync(string reference);
     Task AddAsync(Courrier courrier);
     Task UpdateAsync(Courrier courrier);
+    Task UpdateStatutAsync(Guid id, StatutCourrier nouveauStatut, Guid modifiedBy);
+    Task AddHistoriqueAsync(CourrierHistorique historique);
     Task DeleteAsync(Guid id);
     Task SaveChangesAsync();
 }
