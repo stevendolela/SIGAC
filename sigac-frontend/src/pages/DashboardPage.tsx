@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { RefreshCw, Mail, Inbox, Send, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { RefreshCw, Mail, Inbox, Send, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { dashboardApi } from '../api/dashboardApi'
 import courrierApi from '../api/courrierApi'
 import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
@@ -221,72 +221,82 @@ export default function DashboardPage() {
                 <div className="chart-section" style={{ marginTop: 24 }}>
                   <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Mail size={22} style={{ color: '#6366f1' }} />
-                    Statistiques Courriers
+                    Courriers
                   </div>
                   <div className="kpi-grid">
+                    {/* Total avec breakdown */}
                     <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
                       <div className="kpi-label">Total Courriers</div>
                       <div className="kpi-value">{courrierStats.totalCourriers}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Mail size={14} /> Tous les courriers
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Inbox size={12} /> {courrierStats.courriersEntrants} entrants
+                        </span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Send size={12} /> {courrierStats.courriersSortants} sortants
+                        </span>
                       </div>
                     </div>
 
-                    <div className="kpi-card" style={{ '--accent-color': '#3b82f6' } as React.CSSProperties}>
-                      <div className="kpi-label">Entrants</div>
-                      <div className="kpi-value">{courrierStats.courriersEntrants}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Inbox size={14} /> Courriers reçus
-                      </div>
-                    </div>
-
+                    {/* Taux de traitement */}
                     <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
-                      <div className="kpi-label">Sortants</div>
-                      <div className="kpi-value">{courrierStats.courriersSortants}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Send size={14} /> Courriers envoyés
+                      <div className="kpi-label">Taux de Traitement</div>
+                      <div className="kpi-value">
+                        {courrierStats.totalCourriers > 0 
+                          ? Math.round((courrierStats.traites / courrierStats.totalCourriers) * 100) 
+                          : 0}%
+                      </div>
+                      <div style={{ 
+                        width: '100%', 
+                        height: 6, 
+                        background: '#e2e8f0', 
+                        borderRadius: 3,
+                        marginTop: 8,
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${courrierStats.totalCourriers > 0 
+                            ? Math.min((courrierStats.traites / courrierStats.totalCourriers) * 100, 100) 
+                            : 0}%`,
+                          height: '100%',
+                          background: (courrierStats.traites / courrierStats.totalCourriers) > 0.7 ? '#10b981' : '#f59e0b',
+                          borderRadius: 3,
+                          transition: 'width 0.3s'
+                        }} />
+                      </div>
+                      <div className="kpi-description" style={{ fontSize: 12, marginTop: 4 }}>
+                        {courrierStats.traites} / {courrierStats.totalCourriers} traités
                       </div>
                     </div>
 
+                    {/* À traiter */}
                     <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
-                      <div className="kpi-label">En Attente</div>
-                      <div className="kpi-value">{courrierStats.enAttente}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Clock size={14} /> À traiter
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="kpi-grid" style={{ marginTop: 16 }}>
-                    <div className="kpi-card" style={{ '--accent-color': '#8b5cf6' } as React.CSSProperties}>
-                      <div className="kpi-label">En Traitement</div>
-                      <div className="kpi-value">{courrierStats.enTraitement}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <RefreshCw size={14} /> En cours
+                      <div className="kpi-label">À Traiter</div>
+                      <div className="kpi-value">{courrierStats.enAttente + courrierStats.enTraitement}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                        <span>{courrierStats.enAttente} en attente</span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span>{courrierStats.enTraitement} en cours</span>
                       </div>
                     </div>
 
-                    <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
-                      <div className="kpi-label">Traités</div>
-                      <div className="kpi-value">{courrierStats.traites}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <CheckCircle2 size={14} /> Terminés
-                      </div>
-                    </div>
-
-                    <div className="kpi-card" style={{ '--accent-color': '#ef4444' } as React.CSSProperties}>
+                    {/* Urgents */}
+                    <div className="kpi-card" style={{ 
+                      '--accent-color': courrierStats.urgents > 0 ? '#ef4444' : '#10b981' 
+                    } as React.CSSProperties}>
                       <div className="kpi-label">Urgents</div>
-                      <div className="kpi-value">{courrierStats.urgents}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <AlertTriangle size={14} /> Prioritaires
+                      <div className="kpi-value" style={{ 
+                        color: courrierStats.urgents > 0 ? '#ef4444' : '#10b981'
+                      }}>
+                        {courrierStats.urgents}
                       </div>
-                    </div>
-
-                    <div className="kpi-card" style={{ '--accent-color': '#0ea5e9' } as React.CSSProperties}>
-                      <div className="kpi-label">Aujourd'hui</div>
-                      <div className="kpi-value">{courrierStats.receptionnesAujourdHui}</div>
-                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Inbox size={14} /> Reçus aujourd'hui
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                        {courrierStats.urgents > 0 ? (
+                          <><AlertTriangle size={14} style={{ color: '#ef4444' }} /> À traiter en priorité</>
+                        ) : (
+                          <><CheckCircle2 size={14} style={{ color: '#10b981' }} /> Aucun urgent</>
+                        )}
                       </div>
                     </div>
                   </div>
