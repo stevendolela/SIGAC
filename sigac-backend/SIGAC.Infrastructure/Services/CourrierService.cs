@@ -158,8 +158,10 @@ public class CourrierService : ICourrierService
             Objet = dto.Objet,
             Expediteur = dto.Expediteur,
             Destinataire = dto.Destinataire,
-            DateCourrier = dto.DateCourrier,
-            DateReception = dto.DateReception ?? DateTime.UtcNow,
+            DateCourrier = DateTime.SpecifyKind(dto.DateCourrier, DateTimeKind.Utc),
+            DateReception = dto.DateReception.HasValue 
+                ? DateTime.SpecifyKind(dto.DateReception.Value, DateTimeKind.Utc) 
+                : DateTime.UtcNow,
             Statut = StatutCourrier.Recu,
             Urgence = dto.Urgence,
             ReferenceExterne = dto.ReferenceExterne,
@@ -221,7 +223,9 @@ public class CourrierService : ICourrierService
             Objet = ocrResult.ObjetDetecte ?? $"Courrier {reference}",
             Expediteur = ocrResult.ExpediteurDetecte ?? "À déterminer",
             Destinataire = ocrResult.DestinataireDetecte ?? "À déterminer",
-            DateCourrier = ocrResult.DateDetectee ?? DateTime.UtcNow,
+            DateCourrier = ocrResult.DateDetectee.HasValue 
+                ? DateTime.SpecifyKind(ocrResult.DateDetectee.Value, DateTimeKind.Utc) 
+                : DateTime.UtcNow,
             DateReception = DateTime.UtcNow,
             Statut = StatutCourrier.Recu,
             Urgence = dto.Urgence,
@@ -323,7 +327,7 @@ public class CourrierService : ICourrierService
             courrier.Destinataire = dto.Destinataire;
         }
         if (dto.DateCourrier.HasValue)
-            courrier.DateCourrier = dto.DateCourrier.Value;
+            courrier.DateCourrier = DateTime.SpecifyKind(dto.DateCourrier.Value, DateTimeKind.Utc);
         if (dto.Statut.HasValue && dto.Statut != courrier.Statut)
         {
             changes.Add($"Statut: {courrier.Statut} → {dto.Statut}");
