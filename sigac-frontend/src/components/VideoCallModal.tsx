@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { videoCallApi } from '../api/videoCallApi';
 import { VideoCallDto } from '../types/videoCall';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Minimize2, Maximize2, X, PhoneIncoming, PhoneOutgoing } from 'lucide-react';
 import '../styles/video-call.css';
 
 export interface CallEndedInfo {
@@ -41,6 +42,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [hasRemoteStream, setHasRemoteStream] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -701,23 +703,266 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   // WebRTC tourne en arrière-plan mais l'UI n'est pas visible
   const isHiddenForIncomingRinging = isIncoming && callStatus === 'ringing';
 
+  // Version minimisée - barre flottante en bas de l'écran
+  if (isMinimized) {
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        borderRadius: '16px',
+        padding: '12px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1)',
+        zIndex: 10000,
+        minWidth: '320px'
+      }}>
+        {/* Avatar et infos */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            fontWeight: 700,
+            color: 'white'
+          }}>
+            {receiverName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ color: 'white', fontWeight: 600, fontSize: '14px' }}>{receiverName}</div>
+            <div style={{ color: '#10b981', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                background: '#10b981',
+                animation: 'pulse 2s infinite'
+              }}></span>
+              {callStatus === 'active' ? formatTime(elapsedTime) : 'Connexion...'}
+            </div>
+          </div>
+        </div>
+
+        {/* Contrôles mini */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={toggleMute}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: 'none',
+              background: isMuted ? '#ef4444' : 'rgba(255,255,255,0.1)',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            title={isMuted ? 'Activer le micro' : 'Couper le micro'}
+          >
+            {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
+          <button
+            onClick={toggleVideo}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: 'none',
+              background: isVideoOff ? '#ef4444' : 'rgba(255,255,255,0.1)',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            title={isVideoOff ? 'Activer la vidéo' : 'Couper la vidéo'}
+          >
+            {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
+          </button>
+          <button
+            onClick={() => setIsMinimized(false)}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            title="Agrandir"
+          >
+            <Maximize2 size={18} />
+          </button>
+          <button
+            onClick={handleEndCall}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+              transition: 'all 0.2s'
+            }}
+            title="Terminer l'appel"
+          >
+            <PhoneOff size={18} />
+          </button>
+        </div>
+
+        {/* Vidéo locale miniature cachée pour maintenir le stream */}
+        <video
+          ref={localVideoRef}
+          autoPlay
+          muted
+          playsInline
+          style={{ display: 'none' }}
+        />
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          style={{ display: 'none' }}
+        />
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="video-call-overlay" style={{ 
       opacity: isHiddenForIncomingRinging ? 0 : 1,
       pointerEvents: isHiddenForIncomingRinging ? 'none' : 'auto',
-      transition: 'opacity 0.3s ease'
+      transition: 'opacity 0.3s ease',
+      background: 'rgba(0, 0, 0, 0.85)',
+      backdropFilter: 'blur(8px)'
     }}>
-      <div className="video-call-modal">
-        <div className="video-call-header">
-          <h3>{receiverName}</h3>
-          <div className="call-status">
-            {callStatus === 'connecting' && 'Connexion...'}
-            {callStatus === 'ringing' && (isIncoming ? 'Appel entrant...' : 'Sonnerie...')}
-            {callStatus === 'active' && formatTime(elapsedTime)}
+      <div className="video-call-modal" style={{
+        background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+        borderRadius: '24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+        overflow: 'hidden',
+        maxWidth: '900px',
+        width: '95%'
+      }}>
+        {/* Header moderne */}
+        <div style={{
+          padding: '16px 24px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {isIncoming ? <PhoneIncoming size={22} color="white" /> : <PhoneOutgoing size={22} color="white" />}
+            </div>
+            <div>
+              <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: 700 }}>{receiverName}</h3>
+              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+                {callStatus === 'connecting' && 'Connexion...'}
+                {callStatus === 'ringing' && (isIncoming ? 'Appel entrant...' : 'Sonnerie...')}
+                {callStatus === 'active' && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ 
+                      width: '8px', 
+                      height: '8px', 
+                      borderRadius: '50%', 
+                      background: '#10b981',
+                      animation: 'pulse 2s infinite'
+                    }}></span>
+                    En cours • {formatTime(elapsedTime)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Boutons header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => setIsMinimized(true)}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              title="Réduire"
+            >
+              <Minimize2 size={18} />
+            </button>
+            <button
+              onClick={handleEndCall}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'rgba(239, 68, 68, 0.8)',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              title="Fermer l'appel"
+            >
+              <X size={18} />
+            </button>
           </div>
         </div>
 
-        <div className="video-container">
+        <div className="video-container" style={{ 
+          position: 'relative', 
+          aspectRatio: '16/9', 
+          background: '#0f172a',
+          borderRadius: '0'
+        }}>
           {/* Placeholder quand pas de vidéo distante */}
           {!hasRemoteStream && (
             <div style={{
@@ -730,30 +975,37 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
               zIndex: 1
             }}>
               <div style={{
                 width: '120px',
                 height: '120px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '48px',
+                fontWeight: 700,
+                color: 'white',
                 marginBottom: '20px',
-                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)'
+                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)'
               }}>
                 {receiverName.charAt(0).toUpperCase()}
               </div>
-              <div style={{ color: 'white', fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+              <div style={{ color: 'white', fontSize: '22px', fontWeight: 600, marginBottom: '8px' }}>
                 {receiverName}
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
-                {callStatus === 'connecting' && '⏳ Connexion en cours...'}
-                {callStatus === 'ringing' && (isIncoming ? '📞 Appel entrant...' : '🔔 Ça sonne...')}
-                {callStatus === 'active' && '📹 En attente de la vidéo...'}
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {callStatus === 'connecting' && (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Connexion en cours...
+                  </>
+                )}
+                {callStatus === 'ringing' && (isIncoming ? 'Appel entrant...' : 'Ça sonne...')}
+                {callStatus === 'active' && 'En attente de la vidéo...'}
               </div>
             </div>
           )}
@@ -762,7 +1014,12 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
             className="remote-video"
             autoPlay
             playsInline
-            style={{ opacity: hasRemoteStream ? 1 : 0 }}
+            style={{ 
+              opacity: hasRemoteStream ? 1 : 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
           />
           <video
             ref={localVideoRef}
@@ -770,45 +1027,159 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
             autoPlay
             muted
             playsInline
+            style={{
+              position: 'absolute',
+              bottom: '16px',
+              right: '16px',
+              width: '180px',
+              height: '135px',
+              borderRadius: '12px',
+              objectFit: 'cover',
+              border: '3px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+            }}
           />
         </div>
 
-        <div className="video-call-controls">
+        {/* Contrôles modernes */}
+        <div style={{
+          padding: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '16px',
+          background: '#0f172a'
+        }}>
           {callStatus === 'ringing' && isIncoming ? (
             <>
-              <button className="control-btn accept-btn" onClick={handleAnswerCallInternal}>
-                <span>📞</span>
-                <span>Accepter</span>
+              <button 
+                onClick={handleAnswerCallInternal}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px 28px',
+                  borderRadius: '14px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <Phone size={20} />
+                Accepter
               </button>
-              <button className="control-btn reject-btn" onClick={handleRejectCall}>
-                <span>❌</span>
-                <span>Rejeter</span>
+              <button 
+                onClick={handleRejectCall}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px 28px',
+                  borderRadius: '14px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <PhoneOff size={20} />
+                Rejeter
               </button>
             </>
           ) : callStatus !== 'connecting' ? (
             <>
               <button
-                className={`control-btn ${isMuted ? 'active' : ''}`}
                 onClick={toggleMute}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: isMuted ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(255,255,255,0.1)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: isMuted ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
+                }}
                 title={isMuted ? 'Activer le micro' : 'Couper le micro'}
               >
-                <span>{isMuted ? '🔇' : '🎤'}</span>
+                {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
               </button>
               <button
-                className={`control-btn ${isVideoOff ? 'active' : ''}`}
                 onClick={toggleVideo}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: isVideoOff ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(255,255,255,0.1)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: isVideoOff ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
+                }}
                 title={isVideoOff ? 'Activer la caméra' : 'Désactiver la caméra'}
               >
-                <span>{isVideoOff ? '📷' : '📹'}</span>
+                {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
               </button>
-              <button className="control-btn end-call-btn" onClick={handleEndCall}>
-                <span>📞</span>
-                <span>Terminer</span>
+              <button 
+                onClick={handleEndCall}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '16px 32px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <PhoneOff size={20} />
+                Terminer
               </button>
             </>
           ) : null}
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .loading-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
