@@ -132,13 +132,29 @@ export default function DashboardPage() {
               Maj: {lastRefresh.toLocaleTimeString()}
             </span>
             <button
-              className={`refresh-icon-btn ${loading ? 'loading' : ''}`}
               onClick={() => setRefreshKey(k => k + 1)}
               disabled={loading}
               title="Actualiser les données"
               aria-label="Actualiser les données"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                borderRadius: 12,
+                border: 'none',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                color: 'white',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                transition: 'all 0.2s'
+              }}
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+              Actualiser
             </button>
           </div>
         </div>
