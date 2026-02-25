@@ -5,6 +5,7 @@ import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
 import { useToast } from '../components/common/ToastProvider';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useWorkspaceStore } from '../store/workspaceStore';
 import type {
   CourrierListDto,
   CourrierDetailDto,
@@ -63,12 +64,24 @@ export default function CourrierPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
+  // Workspace global store
+  const { currentWorkspace } = useWorkspaceStore()
+
   // Filtres
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<TypeCourrier | ''>('')
   const [filterStatut, setFilterStatut] = useState<StatutCourrier | ''>('')
   const [filterUrgence, setFilterUrgence] = useState<UrgenceCourrier | ''>('')
-  const [filterWorkspace, setFilterWorkspace] = useState('')
+  const [filterWorkspace, setFilterWorkspace] = useState(currentWorkspace?.id || '')
+
+  // Synchroniser filterWorkspace avec le store global
+  useEffect(() => {
+    setFilterWorkspace(currentWorkspace?.id || '')
+    setPage(1)
+    // Mettre à jour les formulaires avec le workspace sélectionné
+    setNewCourrier(prev => ({ ...prev, workspaceId: currentWorkspace?.id || undefined }))
+    setOcrData(prev => ({ ...prev, workspaceId: currentWorkspace?.id || undefined }))
+  }, [currentWorkspace])
 
   // Données référentielles
   const [workspaces, setWorkspaces] = useState<WorkspaceDto[]>([])
@@ -103,10 +116,11 @@ export default function CourrierPage() {
 
   // OCR
   const [ocrFile, setOcrFile] = useState<File | null>(null)
-  const [ocrData, setOcrData] = useState<ReceptionCourrierOcrDto>({
+  const [ocrData, setOcrData] = useState<ReceptionCourrierOcrDto>(() => ({
     type: 'Entrant',
-    urgence: 'Normale'
-  })
+    urgence: 'Normale',
+    workspaceId: undefined
+  }))
   const [ocrLoading, setOcrLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -239,7 +253,8 @@ export default function CourrierPage() {
         expediteur: '',
         destinataire: '',
         dateCourrier: new Date().toISOString().split('T')[0],
-        urgence: 'Normale'
+        urgence: 'Normale',
+        workspaceId: filterWorkspace || undefined
       });
       notify({ type: 'success', message: '✅ Courrier créé avec succès' });
       loadCourriers();
@@ -258,7 +273,7 @@ export default function CourrierPage() {
       const result = await courrierApi.receptionnerAvecOcr(ocrFile, ocrData);
       setShowOcrModal(false);
       setOcrFile(null);
-      setOcrData({ type: 'Entrant', urgence: 'Normale' });
+      setOcrData({ type: 'Entrant', urgence: 'Normale', workspaceId: filterWorkspace || undefined });
       loadCourriers();
       loadStats();
       // Afficher le résultat
