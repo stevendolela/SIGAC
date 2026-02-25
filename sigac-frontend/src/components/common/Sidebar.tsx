@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -21,6 +21,7 @@ import {
   Network
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
+import courrierApi from '../../api/courrierApi'
 import Logo from './Logo'
 import WorkspaceAdminModal from '../workspace/WorkspaceAdminModal'
 import './Sidebar.css'
@@ -78,6 +79,24 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { currentWorkspace } = useWorkspaceStore()
   const [showWorkspaceAdmin, setShowWorkspaceAdmin] = useState(false)
+  const [courrierCount, setCourrierCount] = useState(0)
+
+  // Charger le compteur de courriers en attente
+  useEffect(() => {
+    const loadCourrierCount = async () => {
+      try {
+        const stats = await courrierApi.getStatistiques(currentWorkspace?.id || undefined)
+        // Courriers en attente = non traités (à traiter)
+        setCourrierCount(stats.enAttente || 0)
+      } catch (e) {
+        // Silently fail - pas critique
+      }
+    }
+    loadCourrierCount()
+    // Refresh toutes les 60 secondes
+    const interval = setInterval(loadCourrierCount, 60000)
+    return () => clearInterval(interval)
+  }, [currentWorkspace?.id])
 
   const menuItems: MenuSection[] = [
     {
@@ -147,7 +166,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           view: 'courrier' as ViewType,
           label: 'Courrier',
           icon: Mail,
-          color: '#0891b2'
+          color: '#0891b2',
+          badge: courrierCount
         }
       ]
     },
