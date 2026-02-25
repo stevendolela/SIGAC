@@ -210,14 +210,27 @@ export default function CourrierPage() {
   const handleCreateCourrier = async () => {
     setLoadingCreateCourrier(true);
     try {
-      const formData = new FormData();
-      Object.entries(newCourrier).forEach(([key, value]) => {
-        if (value) formData.append(key, value as string);
-      });
       if (newCourrierFile) {
-        formData.append('file', newCourrierFile);
+        // Avec fichier → utiliser reception-ocr endpoint
+        await courrierApi.receptionnerAvecOcr(newCourrierFile, {
+          type: newCourrier.type as TypeCourrier,
+          urgence: newCourrier.urgence as UrgenceCourrier,
+          notes: newCourrier.objet || undefined,
+          workspaceId: filterWorkspace || undefined,
+          assigneAId: undefined
+        });
+      } else {
+        // Sans fichier → créer avec JSON
+        await courrierApi.create({
+          type: newCourrier.type as TypeCourrier,
+          objet: newCourrier.objet,
+          expediteur: newCourrier.expediteur,
+          destinataire: newCourrier.destinataire,
+          dateCourrier: newCourrier.dateCourrier,
+          urgence: newCourrier.urgence as UrgenceCourrier,
+          workspaceId: filterWorkspace || undefined
+        });
       }
-      await courrierApi.createWithFile(formData);
       setShowCreateModal(false);
       setNewCourrierFile(null);
       setNewCourrier({
