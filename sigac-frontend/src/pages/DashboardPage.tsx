@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Mail, Inbox, Send, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { dashboardApi } from '../api/dashboardApi'
+import courrierApi from '../api/courrierApi'
 import type { DashboardStatisticsDto, PeriodFilter, TimelineDataDto, UserActivityDto } from '../types/dashboard'
+import type { CourrierStatsDto } from '../types/courrier'
 import { PERIOD_LABELS } from '../types/dashboard'
 import type { WorkspaceDto } from '../types/workspace'
 import { useWorkspaceStore } from '../store/workspaceStore'
@@ -11,6 +13,7 @@ import './Dashboard.css'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
+  const [courrierStats, setCourrierStats] = useState<CourrierStatsDto | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -42,6 +45,21 @@ export default function DashboardPage() {
       const statsData = await dashboardApi.getStatistics(periodFilter, currentWorkspace?.id || undefined)
       if (!mounted.current) return
       setStats(statsData)
+      
+      // Charger les stats courriers pour Admin et Manager
+      const userStr = localStorage.getItem('user')
+      const user = userStr ? JSON.parse(userStr) : null
+      if (user?.role === 'Admin' || user?.role === 'Manager') {
+        try {
+          const courrierStatsData = await courrierApi.getStatistiques(currentWorkspace?.id || undefined)
+          if (mounted.current) {
+            setCourrierStats(courrierStatsData)
+          }
+        } catch (e) {
+          console.warn('Impossible de charger les stats courriers:', e)
+        }
+      }
+      
       setLastRefresh(new Date())
     } catch (e: any) {
       if (mounted.current) {
@@ -196,6 +214,85 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Stats Courriers - Admin et Manager uniquement */}
+            {(isAdmin || isManager) && courrierStats && (
+              <>
+                <div className="chart-section" style={{ marginTop: 24 }}>
+                  <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Mail size={22} style={{ color: '#6366f1' }} />
+                    Statistiques Courriers
+                  </div>
+                  <div className="kpi-grid">
+                    <div className="kpi-card" style={{ '--accent-color': '#6366f1' } as React.CSSProperties}>
+                      <div className="kpi-label">Total Courriers</div>
+                      <div className="kpi-value">{courrierStats.totalCourriers}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Mail size={14} /> Tous les courriers
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#3b82f6' } as React.CSSProperties}>
+                      <div className="kpi-label">Entrants</div>
+                      <div className="kpi-value">{courrierStats.courriersEntrants}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Inbox size={14} /> Courriers reçus
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
+                      <div className="kpi-label">Sortants</div>
+                      <div className="kpi-value">{courrierStats.courriersSortants}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Send size={14} /> Courriers envoyés
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#f59e0b' } as React.CSSProperties}>
+                      <div className="kpi-label">En Attente</div>
+                      <div className="kpi-value">{courrierStats.enAttente}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Clock size={14} /> À traiter
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="kpi-grid" style={{ marginTop: 16 }}>
+                    <div className="kpi-card" style={{ '--accent-color': '#8b5cf6' } as React.CSSProperties}>
+                      <div className="kpi-label">En Traitement</div>
+                      <div className="kpi-value">{courrierStats.enTraitement}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <RefreshCw size={14} /> En cours
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#10b981' } as React.CSSProperties}>
+                      <div className="kpi-label">Traités</div>
+                      <div className="kpi-value">{courrierStats.traites}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <CheckCircle2 size={14} /> Terminés
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#ef4444' } as React.CSSProperties}>
+                      <div className="kpi-label">Urgents</div>
+                      <div className="kpi-value">{courrierStats.urgents}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <AlertTriangle size={14} /> Prioritaires
+                      </div>
+                    </div>
+
+                    <div className="kpi-card" style={{ '--accent-color': '#0ea5e9' } as React.CSSProperties}>
+                      <div className="kpi-label">Aujourd'hui</div>
+                      <div className="kpi-value">{courrierStats.receptionnesAujourdHui}</div>
+                      <div className="kpi-description" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Inbox size={14} /> Reçus aujourd'hui
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Performance Indicators - Row 2 */}
             <div className="chart-section">
