@@ -336,11 +336,15 @@ export default function CourrierPage() {
 
   async function handleViewCourrier(courrier: CourrierListDto) {
     try {
-      setSelectedCourrier(courrier as unknown as CourrierDetailDto);
-      setActiveDetailTab('infos');
       setShowDetailModal(true);
+      setActiveDetailTab('infos');
+      // Charger les détails complets avec l'historique
+      const details = await courrierApi.getById(courrier.id);
+      setSelectedCourrier(details);
     } catch (e) {
       console.error(e);
+      // Fallback sur les données de liste si erreur
+      setSelectedCourrier(courrier as unknown as CourrierDetailDto);
     }
   }
 
@@ -1475,64 +1479,93 @@ export default function CourrierPage() {
                     padding: '20px 24px',
                     boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                      <Zap size={20} color="#fbbf24" />
-                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'white' }}>Actions rapides</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Zap size={20} color="#fbbf24" />
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'white' }}>Actions rapides</h3>
+                      </div>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        background: 'rgba(255,255,255,0.1)',
+                        padding: '6px 12px',
+                        borderRadius: '8px'
+                      }}>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Statut actuel:</span>
+                        <span style={{ 
+                          background: STATUT_COURRIER_COLORS[selectedCourrier.statut],
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'white'
+                        }}>
+                          {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      {selectedCourrier.statut === 'Recu' && (
+                    
+                    {/* Changement de statut */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>Changer le statut :</div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {Object.entries(STATUT_COURRIER_LABELS).map(([key, label]) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              if (key !== selectedCourrier.statut) {
+                                handleChangerStatut(selectedCourrier.id, key as StatutCourrier);
+                              }
+                            }}
+                            disabled={key === selectedCourrier.statut}
+                            style={{
+                              background: key === selectedCourrier.statut 
+                                ? 'rgba(255,255,255,0.05)' 
+                                : STATUT_COURRIER_COLORS[key],
+                              border: key === selectedCourrier.statut 
+                                ? '2px solid rgba(255,255,255,0.3)' 
+                                : 'none',
+                              borderRadius: '8px',
+                              padding: '8px 14px',
+                              color: 'white',
+                              fontWeight: 600,
+                              fontSize: '12px',
+                              cursor: key === selectedCourrier.statut ? 'default' : 'pointer',
+                              opacity: key === selectedCourrier.statut ? 0.5 : 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              transition: 'transform 0.2s, box-shadow 0.2s'
+                            }}
+                            onMouseOver={(e) => {
+                              if (key !== selectedCourrier.statut) {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                              }
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            {key === 'Recu' && <Inbox size={14} />}
+                            {key === 'EnTraitement' && <Settings size={14} />}
+                            {key === 'Traite' && <CheckCircle2 size={14} />}
+                            {key === 'Archive' && <Archive size={14} />}
+                            {key === 'Rejete' && <AlertCircle size={14} />}
+                            {label}
+                            {key === selectedCourrier.statut && ' ✓'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Actions supplémentaires */}
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {selectedCourrier.hasDocument && (
                         <button 
-                          onClick={() => handleChangerStatut(selectedCourrier.id, 'EnTraitement')}
-                          style={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '10px 20px',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
-                            transition: 'transform 0.2s, box-shadow 0.2s'
-                          }}
-                          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.5)'; }}
-                          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.4)'; }}
-                        >
-                          <Settings size={16} />
-                          Mettre en traitement
-                        </button>
-                      )}
-                      {selectedCourrier.statut === 'EnTraitement' && (
-                        <button 
-                          onClick={() => handleChangerStatut(selectedCourrier.id, 'Traite')}
-                          style={{
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '10px 20px',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
-                            transition: 'transform 0.2s, box-shadow 0.2s'
-                          }}
-                          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.5)'; }}
-                          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)'; }}
-                        >
-                          <CheckCircle2 size={16} />
-                          Marquer comme traité
-                        </button>
-                      )}
-                      {selectedCourrier.statut !== 'Archive' && (
-                        <button 
-                          onClick={() => handleChangerStatut(selectedCourrier.id, 'Archive')}
+                          onClick={() => handleDownloadDocument(selectedCourrier.id, selectedCourrier.nomFichier || 'document')}
                           style={{
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
@@ -1551,8 +1584,8 @@ export default function CourrierPage() {
                           onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
                           onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                         >
-                          <Archive size={16} />
-                          Archiver
+                          <Download size={16} />
+                          Télécharger le document
                         </button>
                       )}
                     </div>
@@ -1770,6 +1803,39 @@ export default function CourrierPage() {
                             </div>
                             {h.details && (
                               <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#475569' }}>{h.details}</p>
+                            )}
+                            {/* Affichage des changements de statut */}
+                            {(h.ancienStatut || h.nouveauStatut) && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                                {h.ancienStatut && (
+                                  <span style={{ 
+                                    background: STATUT_COURRIER_COLORS[h.ancienStatut] || '#94a3b8',
+                                    padding: '3px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: 'white',
+                                    opacity: 0.7
+                                  }}>
+                                    {STATUT_COURRIER_LABELS[h.ancienStatut] || h.ancienStatut}
+                                  </span>
+                                )}
+                                {h.ancienStatut && h.nouveauStatut && (
+                                  <ChevronRight size={14} style={{ color: '#94a3b8' }} />
+                                )}
+                                {h.nouveauStatut && (
+                                  <span style={{ 
+                                    background: STATUT_COURRIER_COLORS[h.nouveauStatut] || '#94a3b8',
+                                    padding: '3px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: 'white'
+                                  }}>
+                                    {STATUT_COURRIER_LABELS[h.nouveauStatut] || h.nouveauStatut}
+                                  </span>
+                                )}
+                              </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: '#64748b' }}>
                               <User size={12} />
