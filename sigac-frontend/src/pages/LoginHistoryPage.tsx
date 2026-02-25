@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  History, Clock, User, Monitor, Globe, Shield, CheckCircle, XCircle, 
+  Search, Filter, RefreshCw, Copy, ChevronDown, ChevronRight, AlertTriangle,
+  Smartphone, Laptop, Info, Lock, Lightbulb, RotateCcw, X
+} from 'lucide-react';
 import './LoginHistoryPage.css';
 
 interface LoginHistory {
@@ -197,26 +202,181 @@ export default function LoginHistoryPage() {
     showNotification('Copié!', 'success');
   };
 
+  // Stats calculées
+  const stats = useMemo(() => {
+    const total = allHistory.length;
+    const successful = allHistory.filter(e => e.isSuccessful).length;
+    const failed = total - successful;
+    const uniqueDevices = new Set(allHistory.map(e => `${e.device}-${e.browser}-${e.os}`)).size;
+    return { total, successful, failed, uniqueDevices };
+  }, [allHistory]);
+
   return (
     <div className="login-history-container">
-      <div className="login-history-header">
-        <h1>📱 Historique de Connexion</h1>
-        <p>Consultez vos dernières connexions et vérifiez les accès à votre compte</p>
+      {/* Header moderne */}
+      <div style={{
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        borderRadius: '16px',
+        padding: '24px 32px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px',
+            padding: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <History size={32} color="white" />
+          </div>
+          <div>
+            <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 700 }}>
+              Historique de Connexion
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.9)', margin: '4px 0 0 0', fontSize: '15px' }}>
+              Consultez vos dernières connexions et vérifiez les accès à votre compte
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="login-history-controls">
+      {/* Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #3b82f6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Total Connexions</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.total}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <History size={24} color="white" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Réussies</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.successful}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <CheckCircle size={24} color="white" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #ef4444'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Échouées</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.failed}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <XCircle size={24} color="white" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #8b5cf6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Appareils Uniques</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.uniqueDevices}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <Laptop size={24} color="white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-history-controls" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <button 
           onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-          className="search-toggle-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 16px',
+            background: showAdvancedSearch ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : 'white',
+            color: showAdvancedSearch ? 'white' : '#374151',
+            border: showAdvancedSearch ? 'none' : '1px solid #e5e7eb',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 500,
+            transition: 'all 0.2s'
+          }}
           title="Afficher/Masquer la recherche avancée"
         >
-          {showAdvancedSearch ? '🔍 Masquer la recherche' : '🔍 Recherche avancée'}
+          {showAdvancedSearch ? <X size={18} /> : <Search size={18} />}
+          {showAdvancedSearch ? 'Masquer la recherche' : 'Recherche avancée'}
         </button>
         
         <select 
           value={limit} 
           onChange={(e) => setLimit(Number(e.target.value))}
-          className="limit-selector"
+          style={{
+            padding: '10px 16px',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb',
+            background: 'white',
+            cursor: 'pointer',
+            fontWeight: 500,
+            color: '#374151'
+          }}
         >
           <option value={10}>Les 10 dernières</option>
           <option value={25}>Les 25 dernières</option>
@@ -226,10 +386,24 @@ export default function LoginHistoryPage() {
         
         <button 
           onClick={loadLoginHistory}
-          className="refresh-btn"
           disabled={loading}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 16px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontWeight: 500,
+            opacity: loading ? 0.7 : 1,
+            transition: 'all 0.2s'
+          }}
         >
-          {loading ? '⏳ Chargement...' : '🔄 Rafraîchir'}
+          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          {loading ? 'Chargement...' : 'Rafraîchir'}
         </button>
       </div>
 
@@ -325,11 +499,26 @@ export default function LoginHistoryPage() {
             </div>
           </div>
 
-          <div className="search-actions">
-            <button onClick={resetFilters} className="reset-btn">
-              ↺ Réinitialiser les filtres
+          <div className="search-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '16px' }}>
+            <button 
+              onClick={resetFilters} 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              <RotateCcw size={18} />
+              Réinitialiser les filtres
             </button>
-            <span className="results-count">
+            <span style={{ color: '#64748b', fontWeight: 500 }}>
               {filteredHistory.length} résultats trouvés
             </span>
           </div>
@@ -367,14 +556,21 @@ export default function LoginHistoryPage() {
                 <React.Fragment key={entry.id}>
                   <tr className="login-history-row">
                     <td>
-                      <div className="timestamp-cell">
-                        <span className="time-icon">🕐</span>
+                      <div className="timestamp-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={16} color="#3b82f6" />
                         <span>{formatDate(entry.timestamp)}</span>
                       </div>
                     </td>
                     <td>
-                      <div className="user-cell">
-                        <span className="user-badge">👤</span>
+                      <div className="user-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          borderRadius: '8px',
+                          padding: '6px',
+                          display: 'flex'
+                        }}>
+                          <User size={16} color="white" />
+                        </div>
                         <div className="user-info">
                           <span className="username">{entry.userName}</span>
                           <span className="fullname">{entry.nomComplet}</span>
@@ -382,14 +578,22 @@ export default function LoginHistoryPage() {
                       </div>
                     </td>
                     <td>
-                      <div className="ip-cell">
+                      <div className="ip-cell" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Globe size={16} color="#64748b" />
                         <span className="ip-address">{entry.ipAddress}</span>
                         <button 
-                          className="copy-btn" 
                           onClick={() => copyToClipboard(entry.ipAddress)}
                           title="Copier l'adresse IP"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            display: 'flex',
+                            color: '#64748b'
+                          }}
                         >
-                          📋
+                          <Copy size={14} />
                         </button>
                       </div>
                     </td>
@@ -404,33 +608,84 @@ export default function LoginHistoryPage() {
                     </td>
                     <td>
                       <button 
-                        className="details-btn"
                         onClick={() => setShowDetails(showDetails === entry.id ? null : entry.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          background: showDetails === entry.id ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : 'white',
+                          color: showDetails === entry.id ? 'white' : '#374151',
+                          border: showDetails === entry.id ? 'none' : '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontWeight: 500,
+                          fontSize: '13px'
+                        }}
                       >
-                        {showDetails === entry.id ? '▼' : '▶'} Détails
+                        {showDetails === entry.id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        Détails
                       </button>
                     </td>
                   </tr>
                   {showDetails === entry.id && (
                     <tr className="login-history-details-row">
-                      <td colSpan={6}>
-                        <div className="details-panel">
-                          <div className="detail-item">
-                            <label>User-Agent Complet:</label>
-                            <div className="user-agent-box">
-                              <code>{entry.userAgent}</code>
+                      <td colSpan={7}>
+                        <div style={{
+                          background: '#f8fafc',
+                          borderRadius: '8px',
+                          padding: '16px',
+                          margin: '8px 0'
+                        }}>
+                          <div style={{ marginBottom: '12px' }}>
+                            <label style={{ fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>User-Agent Complet:</label>
+                            <div style={{
+                              background: 'white',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '6px',
+                              padding: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '12px'
+                            }}>
+                              <code style={{ fontSize: '13px', color: '#64748b', wordBreak: 'break-all' }}>{entry.userAgent}</code>
                               <button 
-                                className="copy-btn-small"
                                 onClick={() => copyToClipboard(entry.userAgent)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '6px 12px',
+                                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontWeight: 500,
+                                  fontSize: '13px',
+                                  whiteSpace: 'nowrap'
+                                }}
                               >
-                                📋 Copier
+                                <Copy size={14} />
+                                Copier
                               </button>
                             </div>
                           </div>
-                          <div className="detail-item">
-                            <label>Statut:</label>
-                            <span className="status-badge success">
-                              {entry.isSuccessful ? '✅ Connexion réussie' : '❌ Échec de connexion'}
+                          <div>
+                            <label style={{ fontWeight: 600, color: '#374151', display: 'block', marginBottom: '8px' }}>Statut:</label>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 12px',
+                              background: entry.isSuccessful ? '#dcfce7' : '#fee2e2',
+                              color: entry.isSuccessful ? '#16a34a' : '#dc2626',
+                              borderRadius: '6px',
+                              fontWeight: 500
+                            }}>
+                              {entry.isSuccessful ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                              {entry.isSuccessful ? 'Connexion réussie' : 'Échec de connexion'}
                             </span>
                           </div>
                         </div>
@@ -444,14 +699,57 @@ export default function LoginHistoryPage() {
         </div>
       )}
 
-      <div className="login-history-info">
-        <div className="info-card">
-          <h3>🔒 Sécurité</h3>
-          <p>Si vous voyez une connexion inhabituelle, changez immédiatement votre mot de passe.</p>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '16px',
+        marginTop: '24px'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px'
+        }}>
+          <div style={{
+            background: '#f59e0b',
+            borderRadius: '10px',
+            padding: '10px',
+            display: 'flex'
+          }}>
+            <Lock size={20} color="white" />
+          </div>
+          <div>
+            <h3 style={{ margin: '0 0 8px 0', color: '#92400e', fontSize: '16px', fontWeight: 600 }}>Sécurité</h3>
+            <p style={{ margin: 0, color: '#a16207', fontSize: '14px' }}>
+              Si vous voyez une connexion inhabituelle, changez immédiatement votre mot de passe.
+            </p>
+          </div>
         </div>
-        <div className="info-card">
-          <h3>💡 Conseil</h3>
-          <p>Consultez régulièrement cet historique pour détecter les accès non autorisés à votre compte.</p>
+        <div style={{
+          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px'
+        }}>
+          <div style={{
+            background: '#3b82f6',
+            borderRadius: '10px',
+            padding: '10px',
+            display: 'flex'
+          }}>
+            <Lightbulb size={20} color="white" />
+          </div>
+          <div>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1e40af', fontSize: '16px', fontWeight: 600 }}>Conseil</h3>
+            <p style={{ margin: 0, color: '#1d4ed8', fontSize: '14px' }}>
+              Consultez régulièrement cet historique pour détecter les accès non autorisés à votre compte.
+            </p>
+          </div>
         </div>
       </div>
     </div>
