@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TypeAffaireApi, TypeAffaireDto, CreateTypeAffaireDto } from '../api/typeAffaireApi'
 import { useToast } from '../components/common/ToastProvider'
+import { 
+  FolderOpen, Plus, X, Edit2, Trash2, RefreshCw, FileText, 
+  Info, CheckCircle, AlertCircle, Layers
+} from 'lucide-react'
 
 export const TypesAffairesPage = () => {
   const api = useMemo(() => new TypeAffaireApi(), [])
@@ -85,22 +89,164 @@ export const TypesAffairesPage = () => {
     }
   }
 
+  // Stats calculées
+  const stats = useMemo(() => {
+    const total = items.length;
+    const withDescription = items.filter(i => i.description && i.description.trim().length > 0).length;
+    const withoutDescription = total - withDescription;
+    return { total, withDescription, withoutDescription };
+  }, [items]);
+
   return (
     <div className="panel">
-      <div className="panel-title">📋 Types d'Affaires</div>
+      {/* Header moderne */}
+      <div style={{
+        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        borderRadius: '16px',
+        padding: '24px 32px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px',
+            padding: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Layers size={32} color="white" />
+          </div>
+          <div>
+            <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 700 }}>
+              Types d'Affaires
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.9)', margin: '4px 0 0 0', fontSize: '15px' }}>
+              Gérez les catégories de dossiers de votre organisation
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Action button */}
-      <div style={{ marginBottom: 20 }}>
+      {/* Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #8b5cf6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Total Types</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.total}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <Layers size={24} color="white" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Avec Description</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.withDescription}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <FileText size={24} color="white" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderLeft: '4px solid #f97316'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Sans Description</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{stats.withoutDescription}</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+              borderRadius: '10px',
+              padding: '10px',
+              display: 'flex'
+            }}>
+              <AlertCircle size={24} color="white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: 20, flexWrap: 'wrap' }}>
         <button 
-          className="btn" 
           onClick={openCreateModal}
           style={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
-            gap: 8 
+            gap: 8,
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '14px'
           }}
         >
-          ➕ Nouveau Type d'Affaire
+          <Plus size={18} />
+          Nouveau Type d'Affaire
+        </button>
+        <button 
+          onClick={reload}
+          disabled={loading}
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: 8,
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 600,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          Rafraîchir
         </button>
       </div>
 
@@ -143,18 +289,33 @@ export const TypesAffairesPage = () => {
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       <button
                         onClick={() => openEditModal(item)}
-                        className="btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: 13 }}
+                        style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px', 
+                          fontSize: 13,
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
                       >
-                        ✏️ Modifier
+                        <Edit2 size={14} />
+                        Modifier
                       </button>
                       <button
                         onClick={() => onDelete(item)}
                         style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
                           backgroundColor: 'white',
                           color: '#dc2626',
                           border: '2px solid #dc2626',
-                          borderRadius: 10,
+                          borderRadius: 6,
                           padding: '6px 12px',
                           fontSize: 13,
                           fontWeight: 600,
@@ -162,7 +323,8 @@ export const TypesAffairesPage = () => {
                           transition: 'all 0.2s'
                         }}
                       >
-                        🗑️ Supprimer
+                        <Trash2 size={14} />
+                        Supprimer
                       </button>
                     </div>
                   </td>
@@ -175,7 +337,19 @@ export const TypesAffairesPage = () => {
                     textAlign: 'center', 
                     color: '#9ca3af' 
                   }}>
-                    <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>📋</div>
+                    <div style={{ 
+                      width: 64, 
+                      height: 64, 
+                      margin: '0 auto 16px',
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0.5
+                    }}>
+                      <Layers size={32} color="white" />
+                    </div>
                     <div style={{ fontSize: 14, fontWeight: 500 }}>
                       Aucun type d'affaire pour l'instant.
                     </div>
@@ -265,34 +439,44 @@ export const TypesAffairesPage = () => {
                   justifyContent: 'space-between',
                   padding: '20px 24px',
                   borderBottom: '1px solid #e5e7eb',
-                  background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%)'
+                  background: editingItem 
+                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' 
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                 }}
               >
                 <h3 style={{
                   fontSize: 20,
                   fontWeight: 700,
-                  color: '#111827',
+                  color: 'white',
                   margin: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8
+                  gap: 12
                 }}>
-                  {editingItem ? '✏️ Modifier le type d\'affaire' : '➕ Nouveau type d\'affaire'}
+                  <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    display: 'flex'
+                  }}>
+                    {editingItem ? <Edit2 size={20} color="white" /> : <Plus size={20} color="white" />}
+                  </div>
+                  {editingItem ? 'Modifier le type d\'affaire' : 'Nouveau type d\'affaire'}
                 </h3>
                 <button
                   onClick={closeModal}
                   style={{
-                    background: 'none',
+                    background: 'rgba(255,255,255,0.2)',
                     border: 'none',
-                    color: '#9ca3af',
+                    color: 'white',
                     cursor: 'pointer',
-                    fontSize: 24,
-                    padding: 4,
-                    lineHeight: 1,
-                    transition: 'color 0.2s'
+                    borderRadius: '8px',
+                    padding: '8px',
+                    display: 'flex',
+                    transition: 'background 0.2s'
                   }}
                 >
-                  ✕
+                  <X size={20} />
                 </button>
               </div>
 
@@ -334,13 +518,19 @@ export const TypesAffairesPage = () => {
                       padding: 16, 
                       background: 'rgba(59, 130, 246, 0.1)', 
                       borderLeft: '4px solid #3b82f6',
-                      borderRadius: 8
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 12
                     }}>
-                      <div style={{ fontSize: 13, color: '#1e40af', fontWeight: 500, marginBottom: 4 }}>
-                        💡 Information
-                      </div>
-                      <div style={{ fontSize: 12, color: '#475569' }}>
-                        Le nom du type d'affaire est obligatoire et doit contenir au moins 3 caractères.
+                      <Info size={18} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 13, color: '#1e40af', fontWeight: 500, marginBottom: 4 }}>
+                          Information
+                        </div>
+                        <div style={{ fontSize: 12, color: '#475569' }}>
+                          Le nom du type d'affaire est obligatoire et doit contenir au moins 3 caractères.
+                        </div>
                       </div>
                     </div>
 
@@ -361,11 +551,30 @@ export const TypesAffairesPage = () => {
                       </button>
                       <button 
                         type="submit" 
-                        className="btn"
                         disabled={submitting || !formData.nom.trim()}
-                        style={{ minWidth: 160 }}
+                        style={{ 
+                          minWidth: 160,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 8,
+                          padding: '10px 20px',
+                          background: editingItem 
+                            ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                            : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          cursor: submitting || !formData.nom.trim() ? 'not-allowed' : 'pointer',
+                          opacity: submitting || !formData.nom.trim() ? 0.7 : 1
+                        }}
                       >
-                        {submitting ? '⏳ Enregistrement...' : (editingItem ? '✅ Enregistrer' : '✅ Créer')}
+                        {submitting ? (
+                          <><RefreshCw size={16} className="animate-spin" /> Enregistrement...</>
+                        ) : (
+                          <><CheckCircle size={16} /> {editingItem ? 'Enregistrer' : 'Créer'}</>
+                        )}
                       </button>
                     </div>
                   </div>
