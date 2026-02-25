@@ -220,7 +220,6 @@ export default function App() {
           {view === 'document-logs' && <HistoriqueDossiersPage />}
           {view === 'types-affaires' && <TypesAffairesPage />}
           {view === 'workspace-settings' && <WorkspaceSettings />}
-          {view === 'login-history' && <LoginHistoryPage />}
           {view === 'import-dossiers' && <ImportDossiersPage />}
           {view === 'external-import' && <ExternalDocumentImportPage />}
           {view === 'tenants' && <TenantsPage />}
