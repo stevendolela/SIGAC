@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Calendar, Download, Eye, User, Clock, Globe, Filter, FileText, Search, FolderOpen, Edit, Trash2, Plus } from 'lucide-react'
 import { getApiBaseUrl } from '../api/api-client'
 import { useWorkspaceStore } from '../store/workspaceStore'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 
 interface HistoriqueLog {
   id: string
@@ -873,8 +874,8 @@ export default function HistoriqueDossiersPage() {
         overflow: 'hidden'
       }}>
         {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
-            <div style={{ marginBottom: '16px' }}>Chargement...</div>
+          <div style={{ padding: '60px' }}>
+            <LoadingSpinner message="Chargement des historiques..." />
           </div>
         ) : error ? (
           <div style={{ padding: '60px', textAlign: 'center', color: '#ef4444' }}>

@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, Loader, FileUp, X, Scan } from 'lucide-react';
+import { Mail, Inbox, Send, AlertCircle, CheckCircle2, RotateCw, Trash2, Paperclip, Eye, Clock, MailOpen, Zap, Filter, Download, Plus, RefreshCw, FileUp, X, Scan } from 'lucide-react';
 import courrierApi from '../api/courrierApi';
 import workspaceApi from '../api/workspaceApi';
 import { userApi } from '../api/userApi';
 import { useToast } from '../components/common/ToastProvider';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import type {
   CourrierListDto,
   CourrierDetailDto,
@@ -621,9 +622,8 @@ export default function CourrierPage() {
       {/* Liste des courriers */}
       <div className="courrier-list">
         {loading ? (
-          <div className="loading-state" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '60px 20px', background: 'white', borderRadius: '16px' }}>
-            <Loader size={20} className="animate-spin" style={{ color: '#3b82f6' }} /> 
-            <span style={{ fontSize: '15px', color: '#64748b', fontWeight: 500 }}>Chargement des courriers...</span>
+          <div className="loading-state" style={{ padding: '60px 20px', background: 'white', borderRadius: '16px' }}>
+            <LoadingSpinner message="Chargement des courriers..." />
           </div>
         ) : courriers.length === 0 && !loading ? (
           <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center', background: 'white', borderRadius: '16px', border: '2px dashed #e2e8f0', marginTop: '20px' }}>
@@ -1066,7 +1066,7 @@ export default function CourrierPage() {
               >
                 {loadingCreateCourrier ? (
                   <>
-                    <Loader size={18} className="animate-spin" /> Création...
+                    <RefreshCw size={18} className="animate-spin" /> Création...
                   </>
                 ) : (
                   <>

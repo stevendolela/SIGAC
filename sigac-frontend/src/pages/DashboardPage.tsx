@@ -6,6 +6,7 @@ import { PERIOD_LABELS } from '../types/dashboard'
 import type { WorkspaceDto } from '../types/workspace'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 import './Dashboard.css'
 
 export default function DashboardPage() {
@@ -145,7 +146,7 @@ export default function DashboardPage() {
         {error && <div className="error">{error}</div>}
 
         {loading ? (
-          <div className="dashboard-loading">⏳ Chargement des statistiques...</div>
+          <LoadingSpinner message="Chargement des statistiques..." size="lg" />
         ) : stats ? (
           <>
             {/* KPI Cards - Row 1 */}

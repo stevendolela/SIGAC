@@ -11,6 +11,7 @@ import { useToast } from '../components/common/ToastProvider'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { getApiBaseUrl } from '../api/api-client'
 import DossierDetailModal from './DossierDetailModal'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 import './DocumentsPageUnified.css'
 
 interface DocumentItem {
@@ -671,8 +672,7 @@ export default function DocumentsPageUnified() {
       >
         {loading && (
           <div className="docs-loading">
-            <RefreshCw size={32} className="spin" />
-            <p>Chargement...</p>
+            <LoadingSpinner message="Chargement..." />
           </div>
         )}
 

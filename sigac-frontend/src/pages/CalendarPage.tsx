@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useToast } from '../components/common/ToastProvider'
+import LoadingSpinner from '../components/common/LoadingSpinner'
 import { CalendarApi } from '../api/calendarApi'
 import { dossierApi } from '../api/dossierApi'
 import { userApi } from '../api/userApi'
@@ -468,9 +469,8 @@ export default function CalendarPage({ onViewDossier, onManageSalles }: Calendar
 
       {/* Calendar View */}
       {loading ? (
-        <div className="calendar-container" style={{ textAlign: 'center', padding: 60 }}>
-          <div style={{ fontSize: 24, marginBottom: 12 }}>⏳</div>
-          <div style={{ color: '#6b7280' }}>Chargement du calendrier...</div>
+        <div className="calendar-container" style={{ padding: 60 }}>
+          <LoadingSpinner message="Chargement du calendrier..." size="lg" />
         </div>
       ) : viewMode === 'month' ? (
         renderMonthView()

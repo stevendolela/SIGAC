@@ -1,0 +1,38 @@
+/* Loading Spinner Component */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.loading-spinner.full-page {
+  position: fixed;
+  inset: 0;
+  background: #f8fafc;
+  z-index: 100;
+}
+
+.spinner-icon {
+  color: #6b7280;
+  animation: spinner-rotate 1s linear infinite;
+}
+
+.spinner-message {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
