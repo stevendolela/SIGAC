@@ -25,6 +25,27 @@ const TYPE_COURRIER_LABELS: Record<string, string> = {
   Sortant: 'Sortant'
 };
 
+// Mapping nombre → string pour les enums (backend envoie des nombres)
+const STATUT_ENUM_MAP: Record<number | string, string> = {
+  0: 'Recu', 1: 'EnTraitement', 2: 'Traite', 3: 'Archive', 4: 'Rejete',
+  'Recu': 'Recu', 'EnTraitement': 'EnTraitement', 'Traite': 'Traite', 'Archive': 'Archive', 'Rejete': 'Rejete'
+};
+
+const URGENCE_ENUM_MAP: Record<number | string, string> = {
+  0: 'Normale', 1: 'Importante', 2: 'Urgente', 3: 'TresUrgente',
+  'Normale': 'Normale', 'Importante': 'Importante', 'Urgente': 'Urgente', 'TresUrgente': 'TresUrgente'
+};
+
+const TYPE_ENUM_MAP: Record<number | string, string> = {
+  0: 'Entrant', 1: 'Sortant',
+  'Entrant': 'Entrant', 'Sortant': 'Sortant'
+};
+
+// Helpers pour normaliser les valeurs
+const getStatut = (val: any): string => STATUT_ENUM_MAP[val] || 'Recu';
+const getUrgence = (val: any): string => URGENCE_ENUM_MAP[val] || 'Normale';
+const getType = (val: any): string => TYPE_ENUM_MAP[val] || 'Entrant';
+
 const STATUT_COURRIER_LABELS: Record<string, string> = {
   Recu: 'Reçu',
   EnTraitement: 'En Traitement',
@@ -822,7 +843,7 @@ export default function CourrierPage() {
                     <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', textAlign: 'center' }}>
                       <span
                         style={{ 
-                          backgroundColor: STATUT_COURRIER_COLORS[courrier.statut], 
+                          backgroundColor: STATUT_COURRIER_COLORS[getStatut(courrier.statut)], 
                           color: 'white', 
                           padding: '6px 12px', 
                           borderRadius: '20px', 
@@ -832,14 +853,14 @@ export default function CourrierPage() {
                           minWidth: '85px'
                         }}
                       >
-                        {STATUT_COURRIER_LABELS[courrier.statut]}
+                        {STATUT_COURRIER_LABELS[getStatut(courrier.statut)]}
                       </span>
                     </td>
                     <td onClick={() => handleViewCourrier(courrier)} style={{ padding: '16px 12px', textAlign: 'center', borderRadius: '0 12px 12px 0' }}>
                       <span
                         style={{ 
-                          color: URGENCE_COURRIER_COLORS[courrier.urgence], 
-                          borderColor: URGENCE_COURRIER_COLORS[courrier.urgence], 
+                          color: URGENCE_COURRIER_COLORS[getUrgence(courrier.urgence)], 
+                          borderColor: URGENCE_COURRIER_COLORS[getUrgence(courrier.urgence)], 
                           border: '2px solid', 
                           padding: '5px 10px', 
                           borderRadius: '20px', 
@@ -850,8 +871,8 @@ export default function CourrierPage() {
                           gap: '4px'
                         }}
                       >
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: URGENCE_COURRIER_COLORS[courrier.urgence], display: 'inline-block' }}></span>
-                        {URGENCE_COURRIER_LABELS[courrier.urgence]}
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: URGENCE_COURRIER_COLORS[getUrgence(courrier.urgence)], display: 'inline-block' }}></span>
+                        {URGENCE_COURRIER_LABELS[getUrgence(courrier.urgence)]}
                       </span>
                     </td>
                   </tr>
@@ -1287,7 +1308,7 @@ export default function CourrierPage() {
                 
                 <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
                   <span style={{ 
-                    backgroundColor: STATUT_COURRIER_COLORS[selectedCourrier.statut], 
+                    backgroundColor: STATUT_COURRIER_COLORS[getStatut(selectedCourrier.statut)], 
                     backdropFilter: 'blur(10px)',
                     color: 'white', 
                     padding: '6px 14px', 
@@ -1300,10 +1321,10 @@ export default function CourrierPage() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                   }}>
                     <CheckCircle2 size={14} />
-                    {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
+                    {STATUT_COURRIER_LABELS[getStatut(selectedCourrier.statut)]}
                   </span>
                   <span style={{ 
-                    backgroundColor: URGENCE_COURRIER_COLORS[selectedCourrier.urgence], 
+                    backgroundColor: URGENCE_COURRIER_COLORS[getUrgence(selectedCourrier.urgence)], 
                     color: 'white', 
                     padding: '6px 14px', 
                     borderRadius: '20px', 
@@ -1315,7 +1336,7 @@ export default function CourrierPage() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                   }}>
                     <Zap size={14} />
-                    {URGENCE_COURRIER_LABELS[selectedCourrier.urgence]}
+                    {URGENCE_COURRIER_LABELS[getUrgence(selectedCourrier.urgence)]}
                   </span>
                   <span style={{ 
                     backgroundColor: 'rgba(255,255,255,0.2)', 
@@ -1519,14 +1540,14 @@ export default function CourrierPage() {
                       }}>
                         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Statut actuel:</span>
                         <span style={{ 
-                          background: STATUT_COURRIER_COLORS[selectedCourrier.statut],
+                          background: STATUT_COURRIER_COLORS[getStatut(selectedCourrier.statut)],
                           padding: '4px 10px',
                           borderRadius: '6px',
                           fontSize: '12px',
                           fontWeight: 600,
                           color: 'white'
                         }}>
-                          {STATUT_COURRIER_LABELS[selectedCourrier.statut]}
+                          {STATUT_COURRIER_LABELS[getStatut(selectedCourrier.statut)]}
                         </span>
                       </div>
                     </div>
@@ -1539,16 +1560,16 @@ export default function CourrierPage() {
                           <button
                             key={key}
                             onClick={() => {
-                              if (key !== selectedCourrier.statut) {
+                              if (key !== getStatut(selectedCourrier.statut)) {
                                 handleChangerStatut(selectedCourrier.id, key as StatutCourrier);
                               }
                             }}
-                            disabled={key === selectedCourrier.statut}
+                            disabled={key === getStatut(selectedCourrier.statut)}
                             style={{
-                              background: key === selectedCourrier.statut 
+                              background: key === getStatut(selectedCourrier.statut) 
                                 ? 'rgba(255,255,255,0.05)' 
                                 : STATUT_COURRIER_COLORS[key],
-                              border: key === selectedCourrier.statut 
+                              border: key === getStatut(selectedCourrier.statut) 
                                 ? '2px solid rgba(255,255,255,0.3)' 
                                 : 'none',
                               borderRadius: '8px',
@@ -1556,15 +1577,15 @@ export default function CourrierPage() {
                               color: 'white',
                               fontWeight: 600,
                               fontSize: '12px',
-                              cursor: key === selectedCourrier.statut ? 'default' : 'pointer',
-                              opacity: key === selectedCourrier.statut ? 0.5 : 1,
+                              cursor: key === getStatut(selectedCourrier.statut) ? 'default' : 'pointer',
+                              opacity: key === getStatut(selectedCourrier.statut) ? 0.5 : 1,
                               display: 'flex',
                               alignItems: 'center',
                               gap: 6,
                               transition: 'transform 0.2s, box-shadow 0.2s'
                             }}
                             onMouseOver={(e) => {
-                              if (key !== selectedCourrier.statut) {
+                              if (key !== getStatut(selectedCourrier.statut)) {
                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
                               }
@@ -1580,7 +1601,7 @@ export default function CourrierPage() {
                             {key === 'Archive' && <Archive size={14} />}
                             {key === 'Rejete' && <AlertCircle size={14} />}
                             {label}
-                            {key === selectedCourrier.statut && ' ✓'}
+                            {key === getStatut(selectedCourrier.statut) && ' ✓'}
                           </button>
                         ))}
                       </div>
