@@ -131,3 +131,15 @@ export const DownloadIcon = ({ size = 24, color = 'currentColor' }: { size?: num
     <path d="M12 15V3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
+
+export const PhoneIcon = ({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7293C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1469 21.5901 20.9046 21.7335 20.6408 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77383 17.3147 6.72534 15.2662 5.19 12.85C3.49998 10.2412 2.44824 7.27099 2.12 4.17999C2.09501 3.90347 2.12788 3.62476 2.21649 3.36162C2.30511 3.09849 2.447 2.85669 2.63346 2.65162C2.81993 2.44655 3.04711 2.28271 3.30064 2.17052C3.55417 2.05833 3.82841 2.00026 4.106 1.99999H7.106C7.59531 1.9952 8.06995 2.16708 8.43806 2.48354C8.80617 2.79999 9.04225 3.23945 9.106 3.71999C9.22418 4.68006 9.44775 5.62272 9.77 6.52999C9.90445 6.88792 9.93145 7.27691 9.84804 7.64992C9.76464 8.02293 9.57444 8.36349 9.3 8.63L8.04 9.89C9.44135 12.4136 11.4864 14.4586 14.01 15.86L15.27 14.6C15.5365 14.3256 15.8771 14.1354 16.2501 14.052C16.6231 13.9686 17.0121 13.9956 17.37 14.13C18.2773 14.4522 19.2199 14.6758 20.18 14.794C20.6654 14.8585 21.1084 15.0983 21.4258 15.4716C21.7431 15.8449 21.9117 16.3256 21.9 16.82L22 16.92Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const ChevronDownIcon = ({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9L12 15L18 9" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);

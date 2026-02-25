@@ -13,7 +13,7 @@ import { AudioPlayer } from './AudioPlayer';
 import { 
   ChatIcon, GroupIcon, VideoCallIcon, PlusIcon, CloseIcon, 
   TrashIcon, SendIcon, MicrophoneIcon, AttachmentIcon, EmojiIcon,
-  SearchIcon, CheckIcon, DocumentIcon
+  SearchIcon, CheckIcon, DocumentIcon, PhoneIcon, ChevronDownIcon
 } from './icons/ChatIcons';
 import '../styles/unified-chat.css';
 import '../styles/video-call.css';
@@ -521,6 +521,8 @@ const UnreadBadge: React.FC = React.memo(() => {
   const [isVideoCallModalOpen, setIsVideoCallModalOpen] = useState(false);
   const [videoCallReceiverId, setVideoCallReceiverId] = useState<string>('');
   const [videoCallReceiverName, setVideoCallReceiverName] = useState<string>('');
+  const [isAudioOnlyCall, setIsAudioOnlyCall] = useState(false);
+  const [showCallTypeDropdown, setShowCallTypeDropdown] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any | null>(null);
   const [isIncomingCallModalOpen, setIsIncomingCallModalOpen] = useState(false);
   const [shouldAcceptIncomingCall, setShouldAcceptIncomingCall] = useState(false);
@@ -879,8 +881,11 @@ const UnreadBadge: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [incomingCall]);
 
-  const handleStartVideoCall = () => {
+  const handleStartVideoCall = (audioOnly: boolean = false) => {
     if (!conversation || selectedChat?.type !== 'conversation') return;
+
+    // Fermer le dropdown
+    setShowCallTypeDropdown(false);
 
     // Déterminer l'ID et le nom de l'autre utilisateur
     const userStr = localStorage.getItem('user');
@@ -922,9 +927,10 @@ const UnreadBadge: React.FC = React.memo(() => {
       return;
     }
 
-    console.log('✅ Starting video call with:', { otherUserId, otherUserName });
+    console.log('✅ Starting call with:', { otherUserId, otherUserName, audioOnly });
     setVideoCallReceiverId(otherUserId);
     setVideoCallReceiverName(otherUserName);
+    setIsAudioOnlyCall(audioOnly);
     setIsVideoCallModalOpen(true);
   };
 
@@ -1685,14 +1691,122 @@ const UnreadBadge: React.FC = React.memo(() => {
                   </h3>
                   <div className="header-actions">
                     {selectedChat.type === 'conversation' && (
-                      <button
-                        className="video-call-btn"
-                        onClick={handleStartVideoCall}
-                        title="Démarrer un appel vidéo"
-                        style={{ padding: '8px 10px' }}
-                      >
-                        <VideoCallIcon size={16} color="white" />
-                      </button>
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          className="video-call-btn"
+                          onClick={() => setShowCallTypeDropdown(!showCallTypeDropdown)}
+                          title="Démarrer un appel"
+                          style={{ 
+                            padding: '8px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            borderRadius: '10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          <PhoneIcon size={16} color="white" />
+                          <ChevronDownIcon size={14} color="white" />
+                        </button>
+                        
+                        {/* Dropdown menu */}
+                        {showCallTypeDropdown && (
+                          <>
+                            {/* Overlay pour fermer le dropdown */}
+                            <div 
+                              style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 999
+                              }}
+                              onClick={() => setShowCallTypeDropdown(false)}
+                            />
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              right: 0,
+                              marginTop: '8px',
+                              background: 'white',
+                              borderRadius: '12px',
+                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                              minWidth: '180px',
+                              zIndex: 1000,
+                              overflow: 'hidden'
+                            }}>
+                              <button
+                                onClick={() => handleStartVideoCall(false)}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  color: '#1e293b',
+                                  transition: 'background 0.15s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '8px',
+                                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <VideoCallIcon size={16} color="white" />
+                                </div>
+                                Appel vidéo
+                              </button>
+                              <button
+                                onClick={() => handleStartVideoCall(true)}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  color: '#1e293b',
+                                  transition: 'background 0.15s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '8px',
+                                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <PhoneIcon size={16} color="white" />
+                                </div>
+                                Appel audio
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                     <button
                       className="delete-btn"
@@ -2163,6 +2277,7 @@ const UnreadBadge: React.FC = React.memo(() => {
         receiverId={videoCallReceiverId}
         receiverName={videoCallReceiverName}
         conversationId={selectedChat?.type === 'conversation' ? selectedChat.id : undefined}
+        isAudioOnly={isAudioOnlyCall}
       />
 
       {/* Modal de prévisualisation des fichiers */}

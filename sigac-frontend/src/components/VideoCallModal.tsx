@@ -22,6 +22,7 @@ interface VideoCallModalProps {
   incomingCallId?: string;
   shouldAcceptCall?: boolean; // Trigger acceptation depuis l'extérieur
   onCallAccepted?: () => void; // Callback quand l'appel est accepté
+  isAudioOnly?: boolean; // Appel audio uniquement (pas de vidéo)
 }
 
 export const VideoCallModal: React.FC<VideoCallModalProps> = ({
@@ -34,12 +35,13 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   isIncoming = false,
   incomingCallId,
   shouldAcceptCall = false,
-  onCallAccepted
+  onCallAccepted,
+  isAudioOnly = false
 }) => {
   const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'active' | 'ended'>('connecting');
   const [currentCall, setCurrentCall] = useState<VideoCallDto | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(isAudioOnly);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [hasRemoteStream, setHasRemoteStream] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -244,12 +246,13 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
       console.log('📱 Périphériques disponibles:', devices);
       const hasVideo = devices.some(d => d.kind === 'videoinput');
       const hasAudio = devices.some(d => d.kind === 'audioinput');
-      console.log(`📹 Caméra: ${hasVideo ? 'Oui' : 'Non'}, 🎤 Micro: ${hasAudio ? 'Oui' : 'Non'}`);
+      console.log(`📹 Caméra: ${hasVideo ? 'Oui' : 'Non'}, 🎤 Micro: ${hasAudio ? 'Oui' : 'Non'}, 📞 Audio only: ${isAudioOnly}`);
 
-      // Demander accès - version simplifiée d'abord
+      // Demander accès - si audio uniquement, ne pas demander la vidéo
       console.log('⏳ Demande de permissions...');
+      const requestVideo = !isAudioOnly && hasVideo;
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: hasVideo ? {
+        video: requestVideo ? {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: 'user'
@@ -726,7 +729,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
             width: '44px',
             height: '44px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            background: isAudioOnly 
+              ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+              : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -746,7 +751,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
                 background: '#10b981',
                 animation: 'pulse 2s infinite'
               }}></span>
-              {callStatus === 'active' ? formatTime(elapsedTime) : 'Connexion...'}
+              {isAudioOnly ? '🎤' : '📹'} {callStatus === 'active' ? formatTime(elapsedTime) : 'Connexion...'}
             </div>
           </div>
         </div>
@@ -772,25 +777,27 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
           >
             {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
-          <button
-            onClick={toggleVideo}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: 'none',
-              background: isVideoOff ? '#ef4444' : 'rgba(255,255,255,0.1)',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            title={isVideoOff ? 'Activer la vidéo' : 'Couper la vidéo'}
-          >
-            {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
-          </button>
+          {!isAudioOnly && (
+            <button
+              onClick={toggleVideo}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isVideoOff ? '#ef4444' : 'rgba(255,255,255,0.1)',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              title={isVideoOff ? 'Activer la vidéo' : 'Couper la vidéo'}
+            >
+              {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
+            </button>
+          )}
           <button
             onClick={() => setIsMinimized(false)}
             style={{
@@ -876,7 +883,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         {/* Header moderne */}
         <div style={{
           padding: '16px 24px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: isAudioOnly 
+            ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+            : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -896,8 +905,8 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
             <div>
               <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: 700 }}>{receiverName}</h3>
               <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
-                {callStatus === 'connecting' && 'Connexion...'}
-                {callStatus === 'ringing' && (isIncoming ? 'Appel entrant...' : 'Sonnerie...')}
+                {callStatus === 'connecting' && (isAudioOnly ? 'Appel audio • Connexion...' : 'Appel vidéo • Connexion...')}
+                {callStatus === 'ringing' && (isIncoming ? 'Appel entrant...' : (isAudioOnly ? 'Appel audio • Sonnerie...' : 'Appel vidéo • Sonnerie...'))}
                 {callStatus === 'active' && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ 
@@ -907,7 +916,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
                       background: '#10b981',
                       animation: 'pulse 2s infinite'
                     }}></span>
-                    En cours • {formatTime(elapsedTime)}
+                    {isAudioOnly ? 'Appel audio' : 'Appel vidéo'} • {formatTime(elapsedTime)}
                   </span>
                 )}
               </div>
@@ -1117,26 +1126,28 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
               >
                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
               </button>
-              <button
-                onClick={toggleVideo}
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '16px',
-                  border: 'none',
-                  background: isVideoOff ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(255,255,255,0.1)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s',
-                  boxShadow: isVideoOff ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
-                }}
-                title={isVideoOff ? 'Activer la caméra' : 'Désactiver la caméra'}
-              >
-                {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
-              </button>
+              {!isAudioOnly && (
+                <button
+                  onClick={toggleVideo}
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    border: 'none',
+                    background: isVideoOff ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                    boxShadow: isVideoOff ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
+                  }}
+                  title={isVideoOff ? 'Activer la caméra' : 'Désactiver la caméra'}
+                >
+                  {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+                </button>
+              )}
               <button 
                 onClick={handleEndCall}
                 style={{
