@@ -22,6 +22,9 @@ import {
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import courrierApi from '../../api/courrierApi'
+import { audienceApi } from '../../api/audienceApi'
+import { dashboardApi } from '../../api/dashboardApi'
+import { StatutAudience } from '../../types/audience'
 import Logo from './Logo'
 import WorkspaceAdminModal from '../workspace/WorkspaceAdminModal'
 import './Sidebar.css'
@@ -80,21 +83,45 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { currentWorkspace } = useWorkspaceStore()
   const [showWorkspaceAdmin, setShowWorkspaceAdmin] = useState(false)
   const [courrierCount, setCourrierCount] = useState(0)
+  const [reunionsCount, setReunionsCount] = useState(0)
+  const [documentsCount, setDocumentsCount] = useState(0)
 
-  // Charger le compteur de courriers en attente
+  // Charger les compteurs
   useEffect(() => {
-    const loadCourrierCount = async () => {
+    const loadCounts = async () => {
       try {
-        const stats = await courrierApi.getStatistiques(currentWorkspace?.id || undefined)
-        // Courriers en attente = non traités (à traiter)
-        setCourrierCount(stats.enAttente || 0)
+        // Courriers en attente
+        const courrierStats = await courrierApi.getStatistiques(currentWorkspace?.id || undefined)
+        setCourrierCount(courrierStats.enAttente || 0)
       } catch (e) {
-        // Silently fail - pas critique
+        // Silently fail
+      }
+
+      try {
+        // Réunions à venir (aujourd'hui et après)
+        const audiences = await audienceApi.list()
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const upcoming = audiences.filter(a => {
+          const audienceDate = new Date(a.dateAudience)
+          return audienceDate >= today && a.statut !== StatutAudience.Tenue && a.statut !== StatutAudience.Annulee
+        })
+        setReunionsCount(upcoming.length)
+      } catch (e) {
+        // Silently fail
+      }
+
+      try {
+        // Documents uploadés ce mois
+        const stats = await dashboardApi.getStatistics(30, currentWorkspace?.id || undefined)
+        setDocumentsCount(stats.documentsUploadCeMois || 0)
+      } catch (e) {
+        // Silently fail
       }
     }
-    loadCourrierCount()
+    loadCounts()
     // Refresh toutes les 60 secondes
-    const interval = setInterval(loadCourrierCount, 60000)
+    const interval = setInterval(loadCounts, 60000)
     return () => clearInterval(interval)
   }, [currentWorkspace?.id])
 
@@ -148,7 +175,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           view: 'audiences' as ViewType,
           label: 'Réunions',
           icon: Calendar,
-          color: '#ec4899'
+          color: '#ec4899',
+          badge: reunionsCount
         },
         {
           view: 'calendrier' as ViewType,
@@ -160,7 +188,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           view: 'documents' as ViewType,
           label: 'Documents',
           icon: FileText,
-          color: '#f97316'
+          color: '#f97316',
+          badge: documentsCount
         },
         {
           view: 'courrier' as ViewType,
