@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useToast } from '../components/common/ToastProvider'
 import AudienceForm from '../components/audiences/AudienceForm'
 import AudienceDetail from '../components/audiences/AudienceDetail'
@@ -8,6 +8,11 @@ import type { AudienceListDto } from '../types/audience'
 import { TypeAudience, StatutAudience, typeAudienceLabels, statutAudienceLabels } from '../types/audience'
 import type { DossierDetailDto } from '../types/dossierDetail'
 import { parseDateString, formatDateToISO, isSameDate, getDaysInMonthEU, getDayOfWeekEU } from '../utils/dateUtils'
+import { 
+  Calendar, CalendarCheck, CalendarX, CalendarClock, Plus, X, Edit2, Eye, 
+  RefreshCw, Building2, ChevronLeft, ChevronRight, MapPin, Clock, FileText,
+  List, LayoutGrid, AlertCircle, CheckCircle, XCircle, RotateCcw
+} from 'lucide-react'
 
 interface AudiencesPageProps {
   onViewDossier?: (dossierId: string) => void
@@ -137,15 +142,26 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   // Mapping des statuts avec les couleurs
   const getStatutInfo = (statut: StatutAudience) => {
-    const mapping: Record<StatutAudience, { bg: string; text: string; icon: string }> = {
-      [0]: { bg: '#dbeafe', text: '#1e40af', icon: '📅' }, // Planifiee
-      [1]: { bg: '#dcfce7', text: '#15803d', icon: '✅' }, // Confirmee
-      [2]: { bg: '#fce7f3', text: '#9f1239', icon: '🔄' }, // Reportee
-      [3]: { bg: '#fee2e2', text: '#991b1b', icon: '❌' }, // Annulee
-      [4]: { bg: '#d1fae5', text: '#065f46', icon: '✓' }  // Tenue
+    const mapping: Record<StatutAudience, { bg: string; text: string; icon: React.ReactNode }> = {
+      [0]: { bg: '#dbeafe', text: '#1e40af', icon: <CalendarClock size={12} /> }, // Planifiee
+      [1]: { bg: '#dcfce7', text: '#15803d', icon: <CheckCircle size={12} /> }, // Confirmee
+      [2]: { bg: '#fce7f3', text: '#9f1239', icon: <RotateCcw size={12} /> }, // Reportee
+      [3]: { bg: '#fee2e2', text: '#991b1b', icon: <XCircle size={12} /> }, // Annulee
+      [4]: { bg: '#d1fae5', text: '#065f46', icon: <CalendarCheck size={12} /> }  // Tenue
     }
     return mapping[statut] || mapping[0]
   }
+
+  // Stats calculées
+  const stats = useMemo(() => {
+    const total = audiences.length
+    const planifiees = audiences.filter(a => a.statut === StatutAudience.Planifiee).length
+    const confirmees = audiences.filter(a => a.statut === StatutAudience.Confirmee).length
+    const tenues = audiences.filter(a => a.statut === StatutAudience.Tenue).length
+    const reportees = audiences.filter(a => a.statut === StatutAudience.Reportee).length
+    const annulees = audiences.filter(a => a.statut === StatutAudience.Annulee).length
+    return { total, planifiees, confirmees, tenues, reportees, annulees }
+  }, [audiences])
 
   // Mapping des types avec les couleurs
   const getTypeInfo = (type: TypeAudience) => {
@@ -212,7 +228,160 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
   return (
     <div className="panel">
-      <div className="panel-title">📅 Gestion des Événements</div>
+      {/* Header moderne */}
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ 
+          fontSize: '32px', 
+          fontWeight: 800, 
+          color: '#1e293b', 
+          margin: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Calendar size={32} style={{ color: '#6366f1' }} />
+          Gestion des Réunions
+        </h1>
+        <p style={{ color: '#64748b', marginTop: '8px', fontSize: '15px' }}>
+          Planifiez et gérez vos événements et audiences
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+        gap: '16px', 
+        marginBottom: '24px' 
+      }}>
+        {/* Total */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #6366f1'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Calendar size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {stats.total}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Total Événements
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Planifiées */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #3b82f6'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <CalendarClock size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {stats.planifiees}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Planifiées
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirmées */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <CheckCircle size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {stats.confirmees}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Confirmées
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tenues */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderLeft: '4px solid #059669'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <CalendarCheck size={22} color="white" />
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b' }}>
+                {stats.tenues}
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Réalisées
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Formulaire inline création/édition */}
       {(showForm === 'create' || showForm === 'edit') && (
@@ -239,10 +408,9 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
               background: showForm === 'create' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
+              justifyContent: 'center'
             }}>
-              {showForm === 'create' ? '➕' : '✏️'}
+              {showForm === 'create' ? <Plus size={24} color="white" /> : <Edit2 size={24} color="white" />}
             </div>
             <div style={{ flex: 1 }}>
               <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
@@ -260,14 +428,20 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
               style={{
                 background: 'transparent',
                 border: 'none',
-                fontSize: '24px',
                 cursor: 'pointer',
                 color: '#6b7280',
-                padding: '4px 8px'
+                padding: '8px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
               }}
               title="Fermer"
+              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              ✕
+              <X size={24} />
             </button>
           </div>
 
@@ -307,10 +481,9 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
               background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
+              justifyContent: 'center'
             }}>
-              👁️
+              <Eye size={24} color="white" />
             </div>
             <div style={{ flex: 1 }}>
               <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937', fontWeight: '700' }}>
@@ -325,14 +498,20 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
               style={{
                 background: 'transparent',
                 border: 'none',
-                fontSize: '24px',
                 cursor: 'pointer',
                 color: '#6b7280',
-                padding: '4px 8px'
+                padding: '8px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
               }}
               title="Fermer"
+              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              ✕
+              <X size={24} />
             </button>
           </div>
 
@@ -348,40 +527,101 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
 
       {/* Affichage d'erreur */}
       {error && (
-        <div className="error" style={{ marginBottom: 20 }}>
-          ❌ {error}
+        <div style={{ 
+          marginBottom: 20,
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+          borderRadius: 12,
+          border: '1px solid #f87171',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <AlertCircle size={20} style={{ color: '#dc2626', flexShrink: 0 }} />
+          <span style={{ flex: 1, color: '#991b1b' }}>{error}</span>
           <button 
             className="btn" 
             onClick={loadAudiences}
-            style={{ marginLeft: 10, padding: '4px 12px', fontSize: 13 }}
+            style={{ 
+              padding: '6px 14px', 
+              fontSize: 13,
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
           >
-            🔄 Réessayer
+            <RefreshCw size={14} /> Réessayer
           </button>
         </div>
       )}
 
       {/* Mode switcher */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="tabs" style={{ margin: 0, flex: 1 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 8, padding: 4 }}>
           <button 
-            className={`tab ${viewMode === 'calendar' ? 'active' : ''}`}
             onClick={() => setViewMode('calendar')}
+            style={{
+              padding: '10px 20px',
+              background: viewMode === 'calendar' ? '#6366f1' : 'transparent',
+              color: viewMode === 'calendar' ? 'white' : '#64748b',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 14,
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            📅 Calendrier Mensuel
+            <LayoutGrid size={18} /> Calendrier
           </button>
           <button 
-            className={`tab ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
+            style={{
+              padding: '10px 20px',
+              background: viewMode === 'list' ? '#6366f1' : 'transparent',
+              color: viewMode === 'list' ? 'white' : '#64748b',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 14,
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            📋 Liste Complète
+            <List size={18} /> Liste
           </button>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn" onClick={() => onManageSalles?.()}>
-            🏛️ Gestion des salles
+          <button 
+            className="btn" 
+            onClick={() => onManageSalles?.()}
+            style={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <Building2 size={16} /> Gestion des salles
           </button>
-          <button className="btn" onClick={handleNewAudience}>
-          ➕ Planifier un événement
+          <button 
+            className="btn" 
+            onClick={handleNewAudience}
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <Plus size={16} /> Planifier
           </button>
         </div>
       </div>
@@ -401,29 +641,38 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
           <button 
             className="btn"
             onClick={() => navigateMonth('prev')}
-            style={{ fontSize: 20, padding: '8px 16px' }}
+            style={{ 
+              padding: '10px 16px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            ‹
+            <ChevronLeft size={20} />
           </button>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#667eea' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#6366f1' }}>
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
               <button 
                 onClick={navigateToToday}
                 style={{
-                  fontSize: 12,
-                  color: '#667eea',
+                  fontSize: 13,
+                  color: '#6366f1',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  textDecoration: 'underline',
-                  marginTop: 4
+                  marginTop: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  margin: '6px auto 0'
                 }}
               >
-                📍 Aujourd'hui
+                <MapPin size={14} /> Aujourd'hui
               </button>
             </div>
           </div>
@@ -431,14 +680,34 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
           <button 
             className="btn"
             onClick={() => navigateMonth('next')}
-            style={{ fontSize: 20, padding: '8px 16px' }}
+            style={{ 
+              padding: '10px 16px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            ›
+            <ChevronRight size={20} />
           </button>
         </div>
       )}
 
-      {loading && <div className="info">⏳ Chargement du calendrier...</div>}
+      {loading && (
+        <div style={{
+          padding: '24px',
+          background: '#f8fafc',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          color: '#64748b'
+        }}>
+          <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+          Chargement du calendrier...
+        </div>
+      )}
 
       {!loading && viewMode === 'calendar' && (
         <>
@@ -564,23 +833,32 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
                 return (
                   <tr key={audience.id}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>
-                        📅 {new Date(audience.dateAudience).toLocaleDateString('fr-FR', { 
+                      <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar size={14} style={{ color: '#6366f1' }} />
+                        {new Date(audience.dateAudience).toLocaleDateString('fr-FR', { 
                           weekday: 'short', 
                           day: '2-digit', 
                           month: 'short',
                           year: 'numeric'
                         })}
                       </div>
-                      <div style={{ fontSize: 13, color: '#64748b' }}>
-                        🕐 {formatTime(audience.dateAudience)}
+                      <div style={{ fontSize: 13, color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                        <Clock size={12} /> {formatTime(audience.dateAudience)}
                       </div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{audience.dossierNumero || 'N/A'}</div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>{audience.dossierTitre || '-'}</div>
+                      <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FileText size={14} style={{ color: '#64748b' }} />
+                        {audience.dossierNumero || 'N/A'}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{audience.dossierTitre || '-'}</div>
                     </td>
-                    <td style={{ fontSize: 13 }}>🏛️ {audience.lieu}</td>
+                    <td style={{ fontSize: 13 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Building2 size={14} style={{ color: '#8b5cf6' }} />
+                        {audience.lieu}
+                      </div>
+                    </td>
                     <td>
                       <span className="badge" style={{ background: typeInfo.bg, color: typeInfo.text }}>
                         {typeAudienceLabels[audience.typeAudience]}
@@ -594,10 +872,17 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
                     <td>
                       <button 
                         className="btn" 
-                        style={{ fontSize: 13, padding: '6px 12px' }}
+                        style={{ 
+                          fontSize: 13, 
+                          padding: '6px 14px',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
                         onClick={() => handleViewAudience(audience.id)}
                       >
-                        📝 Détails
+                        <Eye size={14} /> Détails
                       </button>
                     </td>
                   </tr>
@@ -607,8 +892,35 @@ export default function AudiencesPage({ onViewDossier, onManageSalles }: Audienc
           </table>
 
           {audiences.length === 0 && (
-            <div className="info" style={{ textAlign: 'center', padding: 40 }}>
-              📅 Aucune audience planifiée pour le moment
+            <div style={{ textAlign: 'center', padding: 60 }}>
+              <div style={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}>
+                <Calendar size={40} style={{ color: '#94a3b8' }} />
+              </div>
+              <p style={{ margin: 0, color: '#64748b', fontSize: 16 }}>
+                Aucune réunion planifiée pour le moment
+              </p>
+              <button 
+                className="btn" 
+                onClick={handleNewAudience}
+                style={{ 
+                  marginTop: 16,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Plus size={16} /> Planifier une réunion
+              </button>
             </div>
           )}
         </div>
